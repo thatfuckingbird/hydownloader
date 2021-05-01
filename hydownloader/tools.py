@@ -115,7 +115,7 @@ def test_internal(sites: str) -> None:
         'gelbooru_notes': {
             'url': "https://gelbooru.com/index.php?page=post&s=view&id=5997331",
             'filenames': {
-                "gelbooru/gelbooru_5997331_7726d401af0e6bf5b58809f65d08334e.png.json": ['"y": 72', '"x": 35', '"width": 246', '"height": 553', '"text": "Look over this way when you talk~"']
+                "gelbooru/gelbooru_5997331_7726d401af0e6bf5b58809f65d08334e.png.json": ['"y": 72', '"x": 35', '"width": 246', '"height": 553', '"body": "Look over this way when you talk~"']
             },
             'anchors': ["gelbooru5997331"]
         },
