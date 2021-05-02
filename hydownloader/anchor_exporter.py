@@ -126,13 +126,14 @@ def update_anchor(path: str, hydrus_master_db: str, sites: str, unrecognized_url
                 f.write(url.strip()+'\n')
         log.info("hydownloader-anchor-exporter", "Done writing recognized URLs")
 
+    log.info("hydownloader-anchor-exporter", "Inserting new anchors...")
     anchor_count = len(anchors.keys())
     processed = 0
     new_anchor_rows = 0
     for anchor in anchors:
         processed += 1
         if processed % 50 == 0:
-            log.info("hydownloader-anchor-exporter", f"Inserting new anchors {processed}/{anchor_count}")
+            print(f"Inserting new anchors {processed}/{anchor_count}")
         final_anchors = [anchor]
         if anchor.startswith("nijie"):
             for i in range(anchors[anchor]):
