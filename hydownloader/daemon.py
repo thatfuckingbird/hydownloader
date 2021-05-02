@@ -114,7 +114,7 @@ def subscription_worker() -> None:
                 check_started_time = time.time()
                 status_msg = f"checking subscription: {sub['id']} (downloader: {sub['downloader']}, keywords: {sub['keywords']})"
                 set_subscription_worker_status(status_msg)
-                log.info(f"subscription-{sub['id']}", status_msg)
+                log.info(f"subscription-{sub['id']}", status_msg.capitalize())
                 if initial_check:
                     log.info(f"subscription-{sub['id']}", "This is the first check for this subscription")
                 result = gallery_dl_utils.run_gallery_dl(
@@ -144,7 +144,7 @@ def subscription_worker() -> None:
                 db.add_or_update_subscriptions([sub])
                 status_msg = f"finished checking subscription: {sub['id']} (downloader: {sub['downloader']}, keywords: {sub['keywords']}), new files: {new_files}, skipped: {skipped_files}"
                 set_subscription_worker_status(status_msg)
-                log.info(f"subscription-{sub['id']}", status_msg)
+                log.info(f"subscription-{sub['id']}", status_msg.capitalize())
                 subs_due = db.get_due_subscriptions()
                 sub = subs_due[0] if subs_due else None
             with _worker_lock:
@@ -187,7 +187,7 @@ def url_queue_worker() -> None:
                 check_time = time.time()
                 status_msg = f"downloading URL: {urlinfo['url']}"
                 set_url_worker_status(status_msg)
-                log.info("single url downloader", status_msg)
+                log.info("single url downloader", status_msg.capitalize())
                 result = gallery_dl_utils.run_gallery_dl(
                     url=urlinfo['url'],
                     ignore_anchor=urlinfo['ignore_anchor'],
@@ -217,7 +217,7 @@ def url_queue_worker() -> None:
                 db.add_or_update_urls([urlinfo])
                 status_msg = f"finished checking URL: {urlinfo['url']}, new files: {new_files}, skipped: {skipped_files}"
                 set_url_worker_status(status_msg)
-                log.info("single url downloader", status_msg)
+                log.info("single url downloader", status_msg.capitalize())
                 urls_to_dl = db.get_urls_to_download()
                 urlinfo = urls_to_dl[0] if urls_to_dl else None
             with _worker_lock:
