@@ -370,11 +370,11 @@ def init_db(path: str) -> None:
 
 @cli.command(help='Queue multiple URLs at once.')
 @click.option('--path', type=str, required=True, help='Database path.')
-@click.option('--file', type=str, required=True, help='File with URLs, one URL in each line.')
+@click.option('--file', 'file_', type=str, required=True, help='File with URLs, one URL in each line.')
 @click.option('--additional-data', type=str, default=None, help='Additional metadata to associate with the downloaded files.')
 @click.option('--metadata-only', type=bool, default=False, help='Only download metadata.')
 @click.option('--overwrite-existing', type=bool, default=False, help='Overwrite existing files instead of skipping.')
-@click.option('--filter', type=str, default=None, help='Filter.')
+@click.option('--filter', 'filter_', type=str, default=None, help='Filter.')
 @click.option('--ignore-anchor', type=bool, default=False, help='Do not check or update download anchor file.')
 @click.option('--max-files', type=int, default=None, help='Maximum number of files to download.')
 def mass_add_urls(path: str, file_: str, additional_data: Optional[str], metadata_only: bool, overwrite_existing: bool, filter_: Optional[str], ignore_anchor: bool, max_files: Optional[int]) -> None:
@@ -397,11 +397,11 @@ def mass_add_urls(path: str, file_: str, additional_data: Optional[str], metadat
 
 @cli.command(help='Add multiple subscriptions at once.')
 @click.option('--path', type=str, required=True, help='Database path.')
-@click.option('--file', type=str, required=True, help='File with keywords, one query in each line.')
+@click.option('--file', 'file_', type=str, required=True, help='File with keywords, one query in each line.')
 @click.option('--downloader', type=str, required=True, help='The downloader to use.')
 @click.option('--additional-data', type=str, default=None, help='Additional metadata to associate with the downloaded files.')
 @click.option('--paused', type=bool, default=False, help='Set added subscriptions to paused.')
-@click.option('--filter', type=str, default=None, help='Filter.')
+@click.option('--filter', 'filter_', type=str, default=None, help='Filter.')
 @click.option('--abort-after', type=int, default=20, help='Abort after this many seen files.')
 @click.option('--max-files-initial', type=int, default=None, help='Maximum number of files to download on the first check.')
 @click.option('--max-files-regular', type=int, default=None, help='Maximum number of files to download on a regular check.')
