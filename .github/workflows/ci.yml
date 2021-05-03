@@ -1,0 +1,52 @@
+name: CI
+on:
+  push:
+    branches:
+      - 'master'
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    branches:
+      - 'master'
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9]
+        poetry-version: [1.0, 1.1.6]
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      - 
+        name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+      - 
+        name: Install Poetry ${{ matrix.poetry-version }}
+        uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: ${{ matrix.poetry-version }}
+      - name: Install FFMPEG
+        uses: FedericoCarboni/setup-ffmpeg@v1
+      -
+        name: Install package
+        run: poetry install
+      - 
+        name: Init DB
+        run: poetry run hydownloader-tools init-db --path db
+      - 
+        name: Environment
+        run: poetry run hydownloader-tools test --path db --sites environment
+      - 
+        name: Daemon
+        run: timeout --preserve-status --signal=SIGINT 5 poetry run hydownloader-daemon start --path db
+      -
+        name: Wheel build
+        run: poetry build
