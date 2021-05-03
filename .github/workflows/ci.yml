@@ -1,0 +1,51 @@
+name: CI
+on:
+  push:
+    branches:
+      - 'master'
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    branches:
+      - 'master'
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      matrix:
+        python-version: [3.9]
+        poetry-version: [1.1.6]
+        hy-sites: ["gelbooru", "pixiv", "danbooru", "3dbooru", "nijie", "sankaku", "idolcomplex", "artstation", "twitter", "deviantart"]
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      - 
+        name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+      - 
+        name: Install Poetry ${{ matrix.poetry-version }}
+        uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: ${{ matrix.poetry-version }}
+      - name: Install FFMPEG
+        uses: FedericoCarboni/setup-ffmpeg@v1
+      -
+        name: Install package
+        run: poetry install
+      - 
+        name: Init DB
+        run: poetry run hydownloader-tools init-db --path db
+      - 
+        name: Environment test
+        run: poetry run hydownloader-tools test --path db --sites environment
+      - 
+        name: ${{ matrix.hy-sites }} site test
+        run: poetry run hydownloader-tools test --path db --sites ${{ matrix.hy-sites }}
