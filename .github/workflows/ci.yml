@@ -14,12 +14,10 @@ on:
 jobs:
   CI:
     runs-on: ubuntu-latest
-    continue-on-error: true
     strategy:
       matrix:
         python-version: [3.9]
-        poetry-version: [1.1.6]
-        hy-sites: ["gelbooru", "pixiv", "danbooru", "3dbooru", "nijie", "sankaku", "idolcomplex", "artstation", "twitter", "deviantart"]
+        poetry-version: [1.0, 1.1.6]
     steps:
       -
         name: Checkout
@@ -44,8 +42,11 @@ jobs:
         name: Init DB
         run: poetry run hydownloader-tools init-db --path db
       - 
-        name: Environment test
+        name: Environment
         run: poetry run hydownloader-tools test --path db --sites environment
       - 
-        name: ${{ matrix.hy-sites }} site test
-        run: poetry run hydownloader-tools test --path db --sites ${{ matrix.hy-sites }}
+        name: Daemon
+        run: timeout --preserve-status --signal=SIGINT 5 poetry run hydownloader-daemon start --path db
+      -
+        name: Wheel build
+        run: poetry build
