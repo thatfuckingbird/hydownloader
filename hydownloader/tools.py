@@ -18,6 +18,7 @@
 
 import shutil
 import os
+import sys
 import sqlite3
 import time
 import subprocess
@@ -100,9 +101,10 @@ def check_results_of_post_url(data: dict, sitename: str) -> bool:
 def test(path: str, sites: str) -> None:
     log.init(path, True)
     db.init(path)
-    test_internal(sites)
+    if not test_internal(sites):
+        sys.exit(1)
 
-def test_internal(sites: str) -> None:
+def test_internal(sites: str) -> bool:
     post_url_data = {
         'gelbooru': {
             'url': "https://gelbooru.com/index.php?page=post&s=view&id=6002236",
@@ -246,20 +248,24 @@ def test_internal(sites: str) -> None:
                 major, minor, patch = tuple(map(int, version_str.split('.')))
                 if major != 1 or minor < 17 or minor == 17 and patch < 3:
                     log.error('hydownloader-test', f"Bad gallery-dl version: {version_str}, need 1.17.3 or newer")
+                    should_break = True
                 else:
                     log.info('hydownloader-test', f"Found gallery-dl version: {version_str}, this is OK")
             except ValueError as e:
                 log.error('hydownloader-test', "Could not recognize gallery-dl version", e)
+                should_break = True
             try:
                 ff_result = subprocess.run(['ffmpeg', '-version'], capture_output = True, text = True, check = False).stdout.split('\n')[0]
                 log.info('hydownloader-test', f"Found ffmpeg version: {ff_result}")
             except FileNotFoundError as e:
                 log.error('hydownloader-test', "Could not find ffmpeg", e)
+                should_break = True
             try:
                 yt_result = subprocess.run(['youtube-dl', '--version'], capture_output = True, text = True, check = False).stdout.strip()
                 log.info('hydownloader-test', f"Found youtube-dl version: {yt_result}")
             except FileNotFoundError as e:
                 log.error('hydownloader-test', "Could not find youtube-dl", e)
+                should_break = True
         elif site == "gelbooru":
             log.info("hydownloader-test", "Testing Gelbooru...")
 
@@ -339,10 +345,12 @@ def test_internal(sites: str) -> None:
             should_break = not check_results_of_post_url(post_url_data['deviantart'], site) or should_break
         else:
             log.error("hydownloader-test", f"Site name not recognized: {site}, no testing done")
+            return False
         if should_break:
             log.error("hydownloader-test", f"Stopping early due to errors while testing {site}, test environment kept for inspection")
-            break
+            return False
         clear_test_env()
+    return True
 
 @cli.command(help='Print a report about subscriptions and the URL queue, with a focus on finding dead, failing or erroneous subscriptions/URLs.')
 @click.option('--path', type=str, required=True, help='Database path.')

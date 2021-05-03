@@ -444,8 +444,7 @@ def route_resume_single_urls() -> dict:
 @route('/run_tests', method='POST')
 def route_run_tests() -> dict:
     check_access()
-    tools.test_internal(bottle.request.json['sites'])
-    return {'status': True}
+    return {'status': tools.test_internal(bottle.request.json['sites'])}
 
 @route('/run_report', method='POST')
 def route_run_report() -> dict:
