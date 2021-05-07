@@ -151,7 +151,7 @@ Here is a quick table of contents for the source code:
 
 * Finish the importer script
 * Mass reverse lookup (SauceNAO + local db)
-* Save all downloaded URLs (parse from log files or some other method)
+* Ability to archive URLs, subscription check data and logs so that they are not loaded by clients by default
 * When using the API, "run_tests" and other long lasting actions should run in a separate worker thread
 
 Maybe:
