@@ -380,6 +380,11 @@ def route_get_subscriptions() -> str:
         return json.dumps(db.get_subs_by_id(bottle.request.json['ids']))
     return json.dumps(db.get_subs_by_range())
 
+@route('/get_subscription_checks', method='POST')
+def route_get_subscription_checks() -> str:
+    check_access()
+    return json.dumps(db.get_subscription_checks(subscription_id=bottle.request.json['subscription_id']))
+
 @route('/delete_subscriptions', method='POST')
 def route_delete_subscriptions() -> dict:
     check_access()

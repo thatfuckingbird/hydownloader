@@ -188,6 +188,15 @@ def add_subscription_check(subscription_id: int, new_files: int, already_seen_fi
     c.execute('insert into subscription_checks(subscription_id, new_files, already_seen_files, time_started, time_finished, status) values (?,?,?,?,?,?)', (subscription_id,new_files,already_seen_files,time_started,time_finished,status))
     _conn.commit()
 
+def get_subscription_checks(subscription_id: Optional[int]) -> list[dict]:
+    check_init()
+    c = _conn.cursor()
+    if subscription_id:
+        c.execute('select * from subscription_checks where subscription_id = ?', (subscription_id,))
+    else:
+        c.execute('select * from subscription_checks')
+    return list(c.fetchall())
+
 def delete_urls(url_ids: list[int]) -> bool:
     check_init()
     c = _conn.cursor()
