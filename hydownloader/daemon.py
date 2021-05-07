@@ -247,7 +247,8 @@ def process_additional_data(subscription_id: Optional[int] = None, url_id: Optio
     """
     def is_filepath(candidate: str) -> bool:
         candidate = candidate.strip()
-        return ("/" in candidate or "\\" in candidate) and not candidate.startswith("[") and not "gallery-dl:" in candidate
+        # return ("/" in candidate or "\\" in candidate) and not candidate.startswith("[") and not "gallery-dl:" in candidate
+        return os.path.exists(candidate)
     skipped_count = 0
     new_count = 0
     if subscription_id is not None and os.path.isfile(db.get_rootpath()+f"/temp/subscription-{subscription_id}-gallery-dl-output.txt"):
