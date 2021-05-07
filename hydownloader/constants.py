@@ -29,7 +29,8 @@ DEFAULT_CONFIG : dict[str, Union[str, int, bool]] = {
     "daemon.host": "localhost",
     "daemon.ssl": True,
     "daemon.access_key": "change me you retard or get hacked",
-    "gallery-dl.archive-override": ""
+    "gallery-dl.archive-override": "",
+    "gallery-dl.data-override": ""
 }
 
 CREATE_SUBS_STATEMENT = """
