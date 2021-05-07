@@ -19,6 +19,7 @@
 import shutil
 import os
 import sys
+import random
 import sqlite3
 import time
 import subprocess
@@ -413,7 +414,9 @@ def mass_add_urls(path: str, file_: str, additional_data: Optional[str], metadat
 @click.option('--abort-after', type=int, default=20, help='Abort after this many seen files.')
 @click.option('--max-files-initial', type=int, default=None, help='Maximum number of files to download on the first check.')
 @click.option('--max-files-regular', type=int, default=None, help='Maximum number of files to download on a regular check.')
-def mass_add_subscriptions(path: str, file_: str, downloader: str, additional_data: Optional[str], paused: bool, filter_: Optional[str], abort_after: int, max_files_initial: Optional[int], max_files_regular: Optional[int]) -> None:
+@click.option('--check-interval', type=int, required=True, help='Check interval in seconds.')
+@click.option('--random-check-interval', type=int, default=0, help='A random number of seconds between 0 and this value will be added to the base check interval.')
+def mass_add_subscriptions(path: str, file_: str, downloader: str, additional_data: Optional[str], paused: bool, filter_: Optional[str], abort_after: int, max_files_initial: Optional[int], max_files_regular: Optional[int], check_interval: int, random_check_interval: int) -> None:
     log.init(path, True)
     db.init(path)
     for line in open(file_, 'r'):
@@ -428,7 +431,8 @@ def mass_add_subscriptions(path: str, file_: str, downloader: str, additional_da
                 'max_files_initial': max_files_initial,
                 'max_files_regular': max_files_regular,
                 'abort_after': abort_after,
-                'paused': paused
+                'paused': paused,
+                'check_interval': check_interval + random.randint(0, random_check_interval)
                 }])
             log.info("hydownloader-tools", f"Added subscription {line} with downloader {downloader}")
 
