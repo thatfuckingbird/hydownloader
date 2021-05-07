@@ -100,6 +100,25 @@ leave the test environment untouched so you can investigate the error.
 
 *Downloading works, automatically getting subscription info from URLs and checking file download status through API from the anchor database does not.
 
+## Multithreaded downloading
+
+This is an advanced topic. Unless you are scraping entire sites, it is likely that a single instance of hydownloader will be sufficient.
+If you think otherwise, read on.
+
+hydownloader does not natively support multiple URL or subscription downloads in parallel.
+Due to technical difficulties (handling logs, cache, temporary files, database locking, etc.) this feature would be better implemented in gallery-dl itself.
+However, gallery-dl currently also does not support this feature so it is not possible for hydownloader to rely on this.
+
+A workaround is running multiple instances of hydownloader with separate databases.
+In order to avoid downloading the same data multiple times on different instances, you can use the `gallery-dl.archive-override` configuration key
+in `hydownloader-config.json`. In all the secondary instances, set this to the absolute filepath of the `anchor.db` of your primary instance.
+Similarly, in the secondary instances, set `gallery-dl.data-override` to the path of the `data` folder of your primary instance.
+With these option properly set, no duplicate files will be downloaded, no matter how many instances you run at the same time.
+
+Note that the secondary instances will still have separate databases, logs, configuration files, cookies and session data.
+This means that for sites that need login, you will have to set it up for each instance separately (however, this also allows for downloading
+from multiple different at the same time) and if you use custom configuration, you will have to apply it to each instance.
+
 ## Privacy notice
 
 hydownloader contains absolutely no telemetry, analytics, remote logging, usage statistics, install ping or any other kind of spyware.
