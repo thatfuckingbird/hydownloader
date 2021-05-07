@@ -140,7 +140,7 @@ def subscription_worker() -> None:
                 sub['last_check'] = check_started_time
                 new_files, skipped_files = process_additional_data(subscription_id = sub['id'])
                 check_ended_time = time.time()
-                db.add_subscription_check(sub['id'], new_files=new_files, already_seen_files=skipped_files, time_started=check_started_time, time_finished=check_ended_time, status=result)
+                db.add_subscription_check(sub['id'], new_files=new_files, already_seen_files=skipped_files, time_started=check_started_time, time_finished=check_ended_time, status=result if result else 'ok')
                 db.add_or_update_subscriptions([sub])
                 status_msg = f"finished checking subscription: {sub['id']} (downloader: {sub['downloader']}, keywords: {sub['keywords']}), new files: {new_files}, skipped: {skipped_files}"
                 set_subscription_worker_status(status_msg)
