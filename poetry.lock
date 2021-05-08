@@ -32,7 +32,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "gallery-dl"
-version = "1.17.3"
+version = "1.17.4"
 description = "Command-line program to download image galleries and collections from several image hosting sites"
 category = "main"
 optional = false
@@ -114,8 +114,8 @@ click = [
     {file = "click-7.1.2.tar.gz", hash = "sha256:d2b5255c7c6349bc1bd1e59e08cd12acbbd63ce649f2588755783aa94dfb6b1a"},
 ]
 gallery-dl = [
-    {file = "gallery_dl-1.17.3-py3-none-any.whl", hash = "sha256:29c7aa33724ae2c1956137ac8e03dab65178beae6f1950cfc48d67a5097806ac"},
-    {file = "gallery_dl-1.17.3.tar.gz", hash = "sha256:5da10d931c371841575d988b4e91e9d4ce55c8c3c99aa6d4efa5abca34c75ec8"},
+    {file = "gallery_dl-1.17.4-py3-none-any.whl", hash = "sha256:79aae08d0a80af61e8646714244a0bd80027bd211d50dd5b511d203c941c499a"},
+    {file = "gallery_dl-1.17.4.tar.gz", hash = "sha256:4df80fd923b03b2413a3d1c50e32c3006d100ed5acc1400ace69d8dc2162d293"},
 ]
 idna = [
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},

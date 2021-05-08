@@ -291,7 +291,7 @@ DEFAULT_GALLERY_DL_USER_CONFIG = R"""{
         "pixiv":
         {
             "avatar": false,
-            "translated-tags": true,
+            "tags": "original",
             "ugoira": true
         },
         "reactor":
