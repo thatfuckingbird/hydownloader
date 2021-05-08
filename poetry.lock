@@ -94,7 +94,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "054a025f4e3a51bdfdb22956067e401a605ac22c2259f9b009d5a6a63a6b75f0"
+content-hash = "14c5d73f59e81fff9d4462f65fe968a4edb2f5dac6144d569beb98df9245abbe"
 
 [metadata.files]
 bottle = [
