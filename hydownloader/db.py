@@ -16,6 +16,7 @@
 
 import sqlite3
 import os
+import os.path
 import json
 import time
 import datetime
@@ -90,9 +91,12 @@ def create_db() -> None:
     c.execute(C.CREATE_URL_QUEUE_STATEMENT)
     c.execute(C.CREATE_ADDITIONAL_DATA_STATEMENT)
     c.execute(C.CREATE_SINGLE_URL_INDEX_STATEMENT)
+    c.execute(C.CREATE_KNOWN_URLS_STATEMENT)
+    c.execute(C.CREATE_LOG_FILES_TO_PARSE_STATEMENT)
     c.execute(C.CREATE_KEYWORD_INDEX_STATEMENT)
     c.execute(C.CREATE_VERSION_STATEMENT)
     c.execute(C.CREATE_SUBSCRIPTION_CHECKS_STATEMENT)
+    c.execute(C.CREATE_KNOWN_URL_INDEX_STATEMENT)
     c.execute('insert into version(version) values (?)', (__version__,))
     _conn.commit()
 
@@ -364,12 +368,43 @@ def report(verbose: bool) -> None:
 
     log.info('hydownloader-report', 'Report finished')
 
+def add_log_file_to_parse_queue(log_file: str) -> None:
+    check_init()
+    c = _conn.cursor()
+    log_file = os.path.relpath(log_file, start = get_rootpath())
+    c.execute('insert into log_files_to_parse(file) values (?)', (log_file,))
+    _conn.commit()
+
+def remove_log_file_from_parse_queue(log_file: str) -> None:
+    check_init()
+    c = _conn.cursor()
+    log_file = os.path.relpath(log_file, start = get_rootpath())
+    c.execute('delete from log_files_to_parse where file = ?', (log_file,))
+    _conn.commit()
+
+def get_queued_log_file() -> Optional[str]:
+    check_init()
+    c = _conn.cursor()
+    c.execute('select * from log_files_to_parse limit 1')
+    if obj := c.fetchone():
+        return obj['file']
+    return None
+
 def shutdown() -> None:
     global _inited
     if not _inited: return
     _conn.commit()
     _inited = False
     _conn.close()
+
+def add_known_urls(urls: list[str], subscription_id: Optional[int] = None, url_id: Optional[int] = None, status: int = 0) -> None:
+    check_init()
+    c = _conn.cursor()
+    for url in urls:
+        c.execute('select * from known_urls where url = ? and subscription_id is ? and url_id is ?', (url, subscription_id, url_id))
+        if not c.fetchone():
+            c.execute('insert into known_urls(url,subscription_id,url_id,status,time_added) values (?,?,?,?,?)', (url,subscription_id,url_id,status,time.time()))
+    _conn.commit()
 
 def get_conf(name : str) -> Union[str, int, bool]:
     check_init()

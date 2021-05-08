@@ -26,7 +26,7 @@ import subprocess
 import re
 from typing import Optional
 import click
-from hydownloader import db, log, gallery_dl_utils
+from hydownloader import db, log, gallery_dl_utils, output_postprocessors
 
 @click.group()
 def cli() -> None:
@@ -435,6 +435,13 @@ def mass_add_subscriptions(path: str, file_: str, downloader: str, additional_da
                 'check_interval': check_interval + random.randint(0, random_check_interval)
                 }])
             log.info("hydownloader-tools", f"Added subscription {line} with downloader {downloader}")
+
+@cli.command(help='Force a reparsing of all logfiles.')
+@click.option('--path', type=str, required=True, help='Database path.')
+def reparse_all_logfiles(path: str) -> None:
+    log.init(path, True)
+    db.init(path)
+    output_postprocessors.parse_log_files(True)
 
 def main() -> None:
     cli()

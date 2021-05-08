@@ -22,16 +22,14 @@ import threading
 import time
 import json
 import atexit
-import re
 import signal
 import http.cookiejar as ck
-from typing import Optional
 from wsgiref.simple_server import make_server, WSGIRequestHandler
 import ssl
 import click
 import bottle
 from bottle import route, hook
-from hydownloader import db, log, gallery_dl_utils, urls, __version__, uri_normalizer, tools, constants
+from hydownloader import db, log, gallery_dl_utils, urls, __version__, uri_normalizer, tools, constants, output_postprocessors
 
 class SSLWSGIRefServer(bottle.ServerAdapter):
     def __init__(self, ssl_cert : str, **kwargs):
@@ -138,7 +136,8 @@ def subscription_worker() -> None:
                 else:
                     sub['last_successful_check'] = check_started_time
                 sub['last_check'] = check_started_time
-                new_files, skipped_files = process_additional_data(subscription_id = sub['id'])
+                new_files, skipped_files = output_postprocessors.process_additional_data(subscription_id = sub['id'])
+                output_postprocessors.parse_log_files()
                 check_ended_time = time.time()
                 db.add_subscription_check(sub['id'], new_files=new_files, already_seen_files=skipped_files, time_started=check_started_time, time_finished=check_ended_time, status=result if result else 'ok')
                 db.add_or_update_subscriptions([sub])
@@ -211,7 +210,8 @@ def url_queue_worker() -> None:
                     urlinfo['status'] = 0
                     urlinfo['status_text'] = 'ok'
                 urlinfo['time_processed'] = check_time
-                new_files, skipped_files = process_additional_data(url_id = urlinfo['id'])
+                new_files, skipped_files = output_postprocessors.process_additional_data(url_id = urlinfo['id'])
+                output_postprocessors.parse_log_files()
                 urlinfo['new_files'] = new_files
                 urlinfo['already_seen_files'] = skipped_files
                 db.add_or_update_urls([urlinfo])
@@ -230,74 +230,6 @@ def url_queue_worker() -> None:
     except Exception as e:
         log.fatal("hydownloader", "Uncaught exception in URL worker thread", e)
         shutdown()
-
-def process_additional_data(subscription_id: Optional[int] = None, url_id: Optional[int] = None) -> tuple[int, int]:
-    """
-    This function scans log files outputted by gallery-dl and tries to recognize filenames in the output.
-    Based on which subscription or URL those files belong to, it queries the database for the associated additional_data
-    values (from the subscriptions or single_url_queue tables), then inserts these filename + data entries
-    into the additional_data database table (even if there is no additional_date for the given files).
-    This way it is possible to keep track which files were found by which URL downloads/subscriptions, and correctly
-    associate additional data with them (even if the files were not actually downloaded by the URL or sub because
-    some earlier download already got them).
-    If both the subscription and url ID arguments are None, then it scans all files in the temp directory, otherwise
-    exactly one of those must not be None and then it only scans for the file belonging to that URL or subscription.
-    When parsing gallery-dl output, it is much better to have false positives (recognize some output lines as filenames which are not)
-    than to miss any actual filenames, since invalid filename entries in the additional_data table are not a big deal.
-    """
-    def is_filepath(candidate: str) -> bool:
-        candidate = candidate.strip()
-        # return ("/" in candidate or "\\" in candidate) and not candidate.startswith("[") and not "gallery-dl:" in candidate
-        return os.path.exists(candidate)
-    skipped_count = 0
-    new_count = 0
-    if subscription_id is not None and os.path.isfile(db.get_rootpath()+f"/temp/subscription-{subscription_id}-gallery-dl-output.txt"):
-        f = open(db.get_rootpath()+f"/temp/subscription-{subscription_id}-gallery-dl-output.txt", 'r')
-        for line in f:
-            line = line.strip()
-            if not is_filepath(line):
-                log.debug("hydownloader", f"Does not look like a filepath: {line}")
-                continue
-            if line.startswith("# "):
-                log.debug("hydownloader", f"Looks like a skipped filepath: {line}")
-                line = line[1:]
-                line = line.strip()
-                skipped_count += 1
-            else:
-                log.debug("hydownloader", f"Looks like a new filepath: {line}")
-                new_count += 1
-            db.associate_additional_data(filename=line, subscription_id=subscription_id)
-        f.close()
-        os.remove(db.get_rootpath()+f"/temp/subscription-{subscription_id}-gallery-dl-output.txt")
-    elif url_id is not None and os.path.isfile(db.get_rootpath()+f"/temp/single-url-{url_id}-gallery-dl-output.txt"):
-        f = open(db.get_rootpath()+f"/temp/single-url-{url_id}-gallery-dl-output.txt", 'r')
-        for line in f:
-            line = line.strip()
-            if not is_filepath(line):
-                log.debug("hydownloader", f"Does not look like a filepath: {line}")
-                continue
-            if line.startswith("# "):
-                log.debug("hydownloader", f"Looks like a skipped filepath: {line}")
-                line = line[1:]
-                line = line.strip()
-                skipped_count += 1
-            else:
-                log.debug("hydownloader", f"Looks like a new filepath: {line}")
-                new_count += 1
-            db.associate_additional_data(filename=line, url_id=url_id)
-        f.close()
-        os.remove(db.get_rootpath()+f"/temp/single-url-{url_id}-gallery-dl-output.txt")
-    else:
-        log.info("hydownloader", "Checking for any leftover temporary gallery-dl output files...")
-        filenames = os.listdir(db.get_rootpath()+"/temp")
-        for filename in filenames:
-            if match := re.match("single-url-([0-9]+)-gallery-dl-output.txt", filename.strip()):
-                log.info("hydownloader", f"Processing leftover file {filename}...")
-                process_additional_data(url_id = int(match.group(1)))
-            elif match := re.match("subscription-([0-9]+)-gallery-dl-output.txt", filename.strip()):
-                log.info("hydownloader", f"Processing leftover file {filename}...")
-                process_additional_data(subscription_id = int(match.group(1)))
-    return new_count, skipped_count
 
 def add_cors_headers() -> None:
     bottle.response.headers['Access-Control-Allow-Origin'] = '*'
@@ -495,7 +427,8 @@ def start(path : str, debug : bool) -> None:
     log.init(path, debug)
     db.init(path)
 
-    process_additional_data()
+    output_postprocessors.process_additional_data()
+    output_postprocessors.parse_log_files()
 
     subs_thread = threading.Thread(target=subscription_worker, name='Subscription worker', daemon=True)
     subs_thread.start()

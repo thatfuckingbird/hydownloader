@@ -93,6 +93,22 @@ CREATE TABLE "version" (
 )
 """
 
+CREATE_KNOWN_URLS_STATEMENT = """
+CREATE TABLE "known_urls" (
+	"url"	TEXT,
+	"subscription_id"	INTEGER,
+	"url_id"	INTEGER,
+	"time_added"	INTEGER,
+	"status"	INTEGER DEFAULT 0
+)
+"""
+
+CREATE_LOG_FILES_TO_PARSE_STATEMENT = """
+CREATE TABLE "log_files_to_parse" (
+	"file"	TEXT
+)
+"""
+
 CREATE_SINGLE_URL_INDEX_STATEMENT = """
 CREATE INDEX "single_url_index" ON "single_url_queue" (
 	"url"
@@ -102,6 +118,12 @@ CREATE INDEX "single_url_index" ON "single_url_queue" (
 CREATE_KEYWORD_INDEX_STATEMENT = """
 CREATE INDEX "keyword_index" ON "subscriptions" (
 	"keywords"
+)
+"""
+
+CREATE_KNOWN_URL_INDEX_STATEMENT = """
+CREATE INDEX "known_url_index" ON "known_urls" (
+	"url"
 )
 """
 
