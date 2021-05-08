@@ -425,6 +425,12 @@ DEFAULT_GALLERY_DL_USER_CONFIG = R"""{
 DEFAULT_GALLERY_DL_CONFIG = R"""{
     "comment": "DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING. IT *WILL* BREAK HYDOWNLOADER.",
 
+    "output": {
+        "mode": "pipe",
+        "shorten": false,
+        "skip": true
+    },
+
     "extractor":
     {
         "cookies-update": true,
