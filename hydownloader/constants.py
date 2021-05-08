@@ -73,6 +73,7 @@ CREATE TABLE "single_url_queue" (
 	"already_seen_files"	INTEGER,
 	"paused"	INTEGER NOT NULL DEFAULT 0,
 	"comment"	TEXT,
+	"archived"	INTEGER NOT NULL DEFAULT 0,
 	PRIMARY KEY("id" AUTOINCREMENT)
 )
 """
@@ -134,7 +135,9 @@ CREATE TABLE "subscription_checks" (
 	"time_finished"	INTEGER,
 	"new_files"	INTEGER,
 	"already_seen_files"	INTEGER,
-	"status"	TEXT)
+	"status"	TEXT,
+	"archived"	INTEGER NOT NULL DEFAULT 0
+)
 """
 
 DEFAULT_GALLERY_DL_USER_CONFIG = R"""{
