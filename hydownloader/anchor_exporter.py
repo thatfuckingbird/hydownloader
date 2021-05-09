@@ -29,21 +29,23 @@ def cli() -> None:
 
 @cli.command(help='Add entries to an anchor database based on the URLs stored in a Hydrus database.')
 @click.option('--path', type=str, required=True, help='hydownloader database path.')
-@click.option('--hydrus-master-db', type=str, required=True, help='Filepath of Hydrus\' client.master.db file.')
+@click.option('--hydrus-db-folder', type=str, required=True, help='Hydrus database directory (where the .db files are located).')
 @click.option('--sites', type=str, required=True, default='all', help='A comma-separated list of sites to add anchor entries for. Currently supported: pixiv, gelbooru, nijie, lolibooru, danbooru, 3dbooru, sankaku, idolcomplex, artstation, twitter, deviantart, tumblr. The special \'all\' value can be used to mean all supported sites (this is the default).')
 @click.option('--unrecognized-urls-file', type=str, required=False, default=None, help="Write URLs that are not recognized by the anchor generator but could be related to the listed sites into a separate file. You can check this file to see if there are any URLs that should have been used for generating anchors but weren't.")
 @click.option('--recognized-urls-file', type=str, required=False, default=None, help="Write URLs that were recognized by the anchor generator to this file.")
-def update_anchor(path: str, hydrus_master_db: str, sites: str, unrecognized_urls_file: Optional[str], recognized_urls_file: Optional[str]) -> None:
+@click.option('--fill-known-urls', type=bool, required=False, default=False, help="Transfer all Hydrus URLs into the hydownloader database as known URLs.")
+def update_anchor(path: str, hydrus_db_folder: str, sites: str, unrecognized_urls_file: Optional[str], recognized_urls_file: Optional[str], fill_known_urls: bool) -> None:
     """
     This function goes through all URLs in a Hydrus database, and tries to match them to known site-specific URL patterns to
     generate anchor database entries that gallery-dl can recognize. For some sites, the anchor format differs
     from the gallery-dl default, these are set in gallery-dl-config.json.
+    If enabled, also fills up the known_urls table in the hydownloader DB with all URLs known by Hydrus.
     """
     log.init(path, True)
     db.init(path)
-    if not os.path.isfile(hydrus_master_db):
-        log.fatal("hydownloader-anchor-exporter", "The given client.master.db file does not exist!")
-    hydrus_db = sqlite3.connect(hydrus_master_db)
+    if not os.path.isfile(hydrus_db_folder+"/client.master.db"):
+        log.fatal("hydownloader-anchor-exporter", "The client.master.db database was not found at the given location!")
+    hydrus_db = sqlite3.connect(hydrus_db_folder+"/client.master.db")
     hydrus_db.row_factory = sqlite3.Row
     anchor_init_needed = not os.path.isfile(path+"/anchor.db")
     anchor_db = sqlite3.connect(path+"/anchor.db")
@@ -61,6 +63,23 @@ def update_anchor(path: str, hydrus_master_db: str, sites: str, unrecognized_url
     processed = 0
     suspicious_urls = set()
     recognized_urls = set()
+    current_url_ids = set()
+    deleted_url_ids = set()
+    if fill_known_urls:
+        if not os.path.isfile(hydrus_db_folder+"/client.db"):
+            log.fatal("hydownloader-anchor-exporter", "The client.db database was not found at the given location!")
+        client_db = sqlite3.connect(hydrus_db_folder+"/client.db")
+        client_db.row_factory = sqlite3.Row
+        cc = client_db.cursor()
+        log.info("hydownloader-anchor-exporter", "Querying Hydrus database for current URL IDs...")
+        cc.execute('select * from current_files natural inner join url_map')
+        for row in cc.fetchall():
+            current_url_ids.add(row['url_id'])
+        log.info("hydownloader-anchor-exporter", "Querying Hydrus database for deleted URL IDs...")
+        cc.execute('select * from deleted_files natural inner join url_map')
+        for row in cc.fetchall():
+            deleted_url_ids.add(row['url_id'])
+        client_db.close()
 
     sites_to_keywords : dict[str, Tuple[list[str], list[str]]] = {
         'pixiv': (["pixi"],[]),
@@ -99,6 +118,17 @@ def update_anchor(path: str, hydrus_master_db: str, sites: str, unrecognized_url
         processed += 1
         if processed % 1000 == 0:
             print(f"Processed {processed}/{all_rows} URLs")
+        if fill_known_urls:
+            known_url_status = 1
+            is_current = row['url_id'] in current_url_ids
+            is_deleted = row['url_id'] in deleted_url_ids
+            if is_current and is_deleted:
+                known_url_status = 4
+            elif is_deleted:
+                known_url_status = 3
+            elif is_current:
+                known_url_status = 2
+            db.add_hydrus_known_url(row['url'], known_url_status)
         for site in siteset:
             accepts, rejects = sites_to_keywords[site]
             url_ok = False
@@ -154,6 +184,7 @@ def update_anchor(path: str, hydrus_master_db: str, sites: str, unrecognized_url
     anchor_db.commit()
     anchor_db.close()
     hydrus_db.close()
+    db.shutdown()
 
 def main() -> None:
     cli()

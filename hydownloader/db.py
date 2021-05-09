@@ -390,6 +390,15 @@ def get_queued_log_file() -> Optional[str]:
         return obj['file']
     return None
 
+def add_hydrus_known_url(url: str, status: int) -> None:
+    check_init()
+    c = _conn.cursor()
+    c.execute('select * from known_urls where url = ? and status <> 0', (url,))
+    if c.fetchone():
+        c.execute('update known_urls set status = ? where url = ? and status <> 0', (status, url))
+    else:
+        c.execute('insert into known_urls(url,status,time_added) values (?,?,?)', (url, status, time.time()))
+
 def shutdown() -> None:
     global _inited
     if not _inited: return
