@@ -175,8 +175,9 @@ def anchor_patterns_from_url(url: str) -> list[str]:
     This function scans a URL (usually taken from a Hydrus database), and
     generates gallery-dl anchors (in the format that hydownloader uses).
     If multiple anchors can be generated from a single post URL (e.g. it can produce multiple files, like pixiv),
-    then this function also generates SQL LIKE-patterns that match all of the anchors belonging to the given post URL.
-    The basic, non-LIKE-pattern anchor should always be returned as the first entry in the result list.
+    then some of them might end with _% where % functions as a wildcard matching any number of characters.
+    This can be used to match all of the anchors belonging to the given post URL.
+    The basic, non-wildcard anchor should always be returned as the first entry in the result list.
     Check the pixiv patterns for an example.
 
     hydownloader anchor pattern examples for supported sites:

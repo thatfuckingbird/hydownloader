@@ -37,17 +37,28 @@ def downloader_for_url(url: str) -> str:
         return match.category
     return ''
 
-def check_db_for_anchor(anchor_pattern: str) -> bool:
+def check_db_for_anchors(anchor_patterns: list[str]) -> bool:
     """
     Checks whether the given SQL LIKE-pattern is present in the anchor database.
     """
+    if not anchor_patterns: return False
     global _anchor_conn
     if not _anchor_conn:
         _anchor_conn = sqlite3.connect(db.get_rootpath()+"/anchor.db", check_same_thread=False, timeout=24*60*60)
         _anchor_conn.row_factory = sqlite3.Row
     c = _anchor_conn.cursor()
-    c.execute('select entry from archive where entry like ?', (anchor_pattern,))
-    return len(c.fetchall()) > 0
+    conditions = []
+    values = []
+    for pattern in anchor_patterns:
+        if pattern.endswith("_%"):
+            conditions.append("entry >= ? and entry < ?")
+            values.append(pattern[:-2])
+            values.append(pattern[:-2]+"`") # ` is the next char after _
+        else:
+            conditions.append("entry = ?")
+            values.append(pattern)
+    c.execute("select 1 from archive where "+" or ".join(conditions)+" limit 1", values)
+    return c.fetchone() is not None
 
 def check_anchor_for_url(url: str) -> bool:
     """
@@ -56,9 +67,7 @@ def check_anchor_for_url(url: str) -> bool:
     """
     u = uri_normalizer.normalizes(url)
     patterns = urls.anchor_patterns_from_url(u)
-    for pattern in patterns:
-        if check_db_for_anchor(pattern): return True
-    return False
+    return check_db_for_anchors(patterns)
 
 def append_file_contents(from_file: str, to_file: str) -> None:
     """
