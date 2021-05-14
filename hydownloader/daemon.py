@@ -29,7 +29,7 @@ import ssl
 import click
 import bottle
 from bottle import route, hook
-from hydownloader import db, log, gallery_dl_utils, urls, __version__, uri_normalizer, tools, constants, output_postprocessors
+from hydownloader import db, log, gallery_dl_utils, urls, __version__, tools, constants, output_postprocessors
 
 class SSLWSGIRefServer(bottle.ServerAdapter):
     def __init__(self, ssl_cert : str, **kwargs):
