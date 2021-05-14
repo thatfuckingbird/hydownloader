@@ -289,15 +289,20 @@ def route_get_queued_urls() -> str:
             range_to = int(bottle.request.json['to'])
         except ValueError:
             return json.dumps([])
-        return json.dumps(db.get_queued_urls_by_range((range_from, range_to)))
+        return json.dumps(db.get_queued_urls_by_range(bottle.request.json.get("archived", False), (range_from, range_to)))
     if 'ids' in bottle.request.json:
-        return json.dumps(db.get_queued_urls_by_id(bottle.request.json['ids']))
-    return json.dumps(db.get_queued_urls_by_range())
+        return json.dumps(db.get_queued_urls_by_id(bottle.request.json['ids'], archived = bottle.request.json.get("archived", False)))
+    return json.dumps(db.get_queued_urls_by_range(bottle.request.json.get("archived", False)))
 
 @route('/add_or_update_subscriptions', method='POST')
 def route_add_or_update_subscriptions() -> dict:
     check_access()
     return {'status': db.add_or_update_subscriptions(bottle.request.json)}
+
+@route('/add_or_update_subscription_checks', method='POST')
+def route_add_or_update_subscription_checks() -> dict:
+    check_access()
+    return {'status': db.add_or_update_subscription_checks(bottle.request.json)}
 
 @route('/get_subscriptions', method='POST')
 def route_get_subscriptions() -> str:
@@ -316,7 +321,7 @@ def route_get_subscriptions() -> str:
 @route('/get_subscription_checks', method='POST')
 def route_get_subscription_checks() -> str:
     check_access()
-    return json.dumps(db.get_subscription_checks(subscription_id=bottle.request.json['subscription_id']))
+    return json.dumps(db.get_subscription_checks(subscription_id = bottle.request.json['subscription_id'], archived = bottle.request.json.get("archived", False)))
 
 @route('/delete_subscriptions', method='POST')
 def route_delete_subscriptions() -> dict:

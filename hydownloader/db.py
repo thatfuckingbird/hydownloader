@@ -32,16 +32,23 @@ def upsert_dict(table: str, d: dict) -> None:
     keys = d.keys()
     column_names = ",".join(keys)
     placeholders = ",".join(["?"]*len(keys))
-    update_part = ",".join([f"{key}=?" for key in keys if key != "id"])
+    update_part = ",".join(f"{key}=?" for key in keys if key not in ("id", "rowid"))
     values = []
     c = _conn.cursor()
     update = False
+    update_with_rowid = False
     if "id" in d:
         c.execute(f"select id from {table} where id = ?", (d["id"],))
         if c.fetchone(): update = True
+    elif "rowid" in d:
+        c.execute(f"select rowid from {table} where rowid = ?", (d["rowid"],))
+        if c.fetchone(): update_with_rowid = True
     if update:
         query = f"update {table} set {update_part} where id = ?"
         values = [d[key] for key in keys if key != "id"] + [d["id"]]
+    elif update_with_rowid:
+        query = f"update {table} set {update_part} where rowid = ?"
+        values = [d[key] for key in keys if key != "rowid"] + [d["rowid"]]
     else:
         query = f"insert into {table} ({column_names}) values ({placeholders})"
         values = [d[key] for key in keys]
@@ -186,19 +193,36 @@ def add_or_update_subscriptions(sub_data: list[dict]) -> bool:
             log.info("hydownloader", f"Updated subscription with ID {item['id']}")
     return True
 
+def add_or_update_subscription_checks(sub_data: list[dict]) -> bool:
+    for item in sub_data:
+        add = "rowid" not in item
+        if add: item["time_created"] = time.time()
+        upsert_dict("subscription_checks", item)
+        if add:
+            log.info("hydownloader", f"Added subscription check entry: rowid {item['rowid']}")
+        else:
+            log.info("hydownloader", f"Updated subscription check entry with rowid {item['rowid']}")
+    return True
+
 def add_subscription_check(subscription_id: int, new_files: int, already_seen_files: int, time_started: Union[float,int], time_finished: Union[float,int], status: str) -> None:
     check_init()
     c = _conn.cursor()
     c.execute('insert into subscription_checks(subscription_id, new_files, already_seen_files, time_started, time_finished, status) values (?,?,?,?,?,?)', (subscription_id,new_files,already_seen_files,time_started,time_finished,status))
     _conn.commit()
 
-def get_subscription_checks(subscription_id: Optional[int]) -> list[dict]:
+def get_subscription_checks(subscription_id: Optional[int], archived: bool) -> list[dict]:
     check_init()
     c = _conn.cursor()
     if subscription_id:
-        c.execute('select * from subscription_checks where subscription_id = ?', (subscription_id,))
+        if archived:
+            c.execute('select rowid, * from subscription_checks where subscription_id = ?', (subscription_id,))
+        else:
+            c.execute('select rowid, * from subscription_checks where subscription_id = ? and archived <> 1', (subscription_id,))
     else:
-        c.execute('select * from subscription_checks')
+        if archived:
+            c.execute('select rowid, * from subscription_checks')
+        else:
+            c.execute('select rowid, * from subscription_checks where archived <> 1')
     return list(c.fetchall())
 
 def delete_urls(url_ids: list[int]) -> bool:
@@ -238,21 +262,30 @@ def get_subs_by_id(sub_ids: list[int]) -> list[dict]:
             result.append(row)
     return result
 
-def get_queued_urls_by_range(range_: Optional[tuple[int, int]] = None) -> list[dict]:
+def get_queued_urls_by_range(archived: bool, range_: Optional[tuple[int, int]] = None) -> list[dict]:
     check_init()
     c = _conn.cursor()
     if range_ is None:
-        c.execute('select * from single_url_queue')
+        if archived:
+            c.execute('select * from single_url_queue')
+        else:
+            c.execute('select * from single_url_queue where archived <> 1')
     else:
-        c.execute('select * from single_url_queue where id >= ? and id <= ?', range_)
+        if archived:
+            c.execute('select * from single_url_queue where id >= ? and id <= ?', range_)
+        else:
+            c.execute('select * from single_url_queue where id >= ? and id <= ? and archived <> 1', range_)
     return list(c.fetchall())
 
-def get_queued_urls_by_id(url_ids: list[int]) -> list[dict]:
+def get_queued_urls_by_id(url_ids: list[int], archived: bool) -> list[dict]:
     check_init()
     c = _conn.cursor()
     result = []
     for i in url_ids:
-        c.execute('select * from single_url_queue where id = ?', (i,))
+        if archived:
+            c.execute('select * from single_url_queue where id = ?', (i,))
+        else:
+            c.execute('select * from single_url_queue where id = ? and archived <> 1', (i,))
         for row in c.fetchall():
             result.append(row)
     return result
