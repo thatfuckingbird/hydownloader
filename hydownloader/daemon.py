@@ -343,7 +343,10 @@ def route_set_cookies() -> dict:
     if not os.path.isfile(db.get_rootpath()+"/cookies.txt"):
         return {'status': False}
     jar = ck.MozillaCookieJar(db.get_rootpath()+"/cookies.txt")
-    jar.load(ignore_discard=True, ignore_expires=True)
+    try:
+        jar.load(ignore_discard=True, ignore_expires=True)
+    except ck.LoadError:
+        pass
     for c in bottle.request.json["cookies"]:
         name, value, domain, path, expires = c[0], c[1], c[2], c[3], c[4]
         #version, name, value, port, port_specified, domain, domain_specified, domain_initial_dot, path, path_specified, secure, expires, discard, comment, comment_url, rest
