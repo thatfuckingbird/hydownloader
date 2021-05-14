@@ -15,7 +15,62 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import re
+import urllib.parse
 from hydownloader import log, uri_normalizer
+
+known_url_replacements = (
+    ("pixiv.net(?:/(?:en|jp))?/artworks/([0-9]+)", "pixiv.net/member_illust.php?mode=medium&illust_id=\\1"),
+    ("pixiv.net/artworks/([0-9]+)", "pixiv.net/en/artworks/\\1"),
+    ("pixiv.net/en/artworks/([0-9]+)", "pixiv.net/artworks/\\1"),
+    ("i-f.pximg.net", "i.pximg.net"),
+    ("i.pximg.net", "i-f.pximg.net"),
+    ("gelbooru.com//", "gelbooru.com/"),
+    ("img2.gelbooru.com", "img1.gelbooru.com"),
+    ("img1.gelbooru.com", "img2.gelbooru.com"),
+    ("^(.*)(#.*)$", "\\1"),
+    ("https://", "http://"),
+    ("http://", "https://"),
+    ("www\\.", ""),
+    ("http://(?!www\\.)(.*)", "http://www.\\1"),
+    ("https://(?!www\\.)(.*)", "https://www.\\1")
+)
+
+def urls_for_known_url_lookup(url: str) -> set[str]:
+    """
+    Takes a raw URL and generates variants that are suitable for
+    lookup in the known_urls database table (to find equivalent versions of the input URL that were already downloaded).
+    """
+    result = {url, uri_normalizer.normalizes(url)}
+
+    # new URL variants are generated using the replacement patterns defined above
+    # repeat the process until there are no new URLs generated
+    while True:
+        new_urls = set()
+        for u in result:
+            for (repl_from, repl_to) in known_url_replacements:
+                replaced = re.sub(repl_from, repl_to, u)
+                if not replaced in result:
+                    new_urls.add(replaced)
+        result.update(new_urls)
+        if not new_urls: break
+
+    # alphabetize query params
+    new_urls = set()
+    for u in result:
+        spliturl = urllib.parse.urlsplit(u)
+        sortedquery = urllib.parse.urlencode(sorted(urllib.parse.parse_qsl(spliturl.query, keep_blank_values = True)))
+        finalurl = urllib.parse.urlunsplit((spliturl.scheme, spliturl.netloc, spliturl.path, sortedquery, spliturl.fragment))
+        new_urls.add(finalurl)
+        # variants with utm_* shit removed
+        sortedquery_no_utm = urllib.parse.urlencode(list(filter(lambda x: not x[0].startswith("utm_"), sorted(urllib.parse.parse_qsl(spliturl.query, keep_blank_values = True)))))
+        finalurl_no_utm_sorted = urllib.parse.urlunsplit((spliturl.scheme, spliturl.netloc, spliturl.path, sortedquery_no_utm, spliturl.fragment))
+        query_no_utm = urllib.parse.urlencode(list(filter(lambda x: not x[0].startswith("utm_"), urllib.parse.parse_qsl(spliturl.query, keep_blank_values = True))))
+        finalurl_no_utm = urllib.parse.urlunsplit((spliturl.scheme, spliturl.netloc, spliturl.path, query_no_utm, spliturl.fragment))
+        new_urls.add(finalurl_no_utm)
+        new_urls.add(finalurl_no_utm_sorted)
+    result.update(new_urls)
+
+    return result
 
 def subscription_data_to_url(downloader: str, keywords: str) -> str:
     """

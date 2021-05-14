@@ -245,29 +245,32 @@ def route_api_version() -> dict:
     check_access()
     return {'version': constants.API_VERSION}
 
-@route('/url_history_info', method='POST')
-def route_url_history_info() -> str:
+@route('/url_file_info', method='POST')
+def route_url_file_info() -> str:
     check_access()
     result = []
     for url in bottle.request.json['urls']:
-        url_info = {'url': url, 'normalized_url': uri_normalizer.normalizes(url)}
-        url_info['queue_info'] = db.check_single_queue_for_url(url)
-        url_info['anchor_info'] = gallery_dl_utils.check_anchor_for_url(url)
+        url_info = {
+            'queue_info': db.check_single_queue_for_url(url),
+            'anchor_info': gallery_dl_utils.check_anchor_for_url(url),
+            'known_url_info': db.get_known_urls(urls.urls_for_known_url_lookup(url))
+        }
         result.append(url_info)
     return json.dumps(result)
 
-@route('/check_urls', method='POST')
-def route_check_urls() -> str:
+@route('/url_info', method='POST')
+def route_url_info() -> str:
     check_access()
     result : list[dict] = []
     for url in bottle.request.json['urls']:
-        url_info = {'url': url, 'normalized_url': uri_normalizer.normalizes(url)}
-        url_info['downloader'] = gallery_dl_utils.downloader_for_url(url)
         sub_data = urls.subscription_data_from_url(url)
-        existing_subs = []
-        for sub in sub_data:
-            existing_subs += db.get_subscriptions_by_downloader_data(sub[0], sub[1])
-        url_info['existing_subscriptions'] = existing_subs
+        url_info = {
+            'gallerydl_downloader': gallery_dl_utils.downloader_for_url(url),
+            'sub_downloader': sub_data[0],
+            'sub_keywords': sub_data[1],
+            'existing_subscriptions': db.get_subscriptions_by_downloader_data(sub_data[0], sub_data[1])
+        }
+        result.append(url_info)
     return json.dumps(result)
 
 @route('/add_or_update_urls', method='POST')
