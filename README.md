@@ -59,6 +59,7 @@ Contents of a hydownloader database folder:
 * `logs/`: log files
 * `data/`: downloaded files and metadata
 * `hydownloader.db`: the main hydownloader database, mostly storing subscriptions and the URL queue (use the API, avoid direct editing)
+* `hydownloader.shared.db`: the parts of the hydownloader database that can be shared between multiple running instances (avoid direct editing)
 * `cookies.txt`: stores cookies used for downloads (use the API to add cookies, do not edit directly)
 * `anchor.db`: anchor database (DO NOT TOUCH)
 * `gallery-dl-cache.db`: gallery-dl cache to store session keys and similar (DO NOT TOUCH)
@@ -114,6 +115,8 @@ In order to avoid downloading the same data multiple times on different instance
 in `hydownloader-config.json`. In all the secondary instances, set this to the absolute filepath of the `anchor.db` of your primary instance.
 Similarly, in the secondary instances, set `gallery-dl.data-override` to the path of the `data` folder of your primary instance.
 With these option properly set, no duplicate files will be downloaded, no matter how many instances you run at the same time.
+If you also want to have a common database of known downloaded URLs (e.g. for querying whether you already downloaded some URL or not in any of your instances),
+then you can set the `shared-db-override` configuration key in all the secondary instances to the filepath of your main instance's `hydownloader.shared.db`.
 
 Note that the secondary instances will still have separate databases, logs, configuration files, cookies and session data.
 This means that for sites that need login, you will have to set it up for each instance separately (however, this also allows for downloading

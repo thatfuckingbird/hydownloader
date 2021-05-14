@@ -34,7 +34,8 @@ def cli() -> None:
 @click.option('--unrecognized-urls-file', type=str, required=False, default=None, help="Write URLs that are not recognized by the anchor generator but could be related to the listed sites into a separate file. You can check this file to see if there are any URLs that should have been used for generating anchors but weren't.")
 @click.option('--recognized-urls-file', type=str, required=False, default=None, help="Write URLs that were recognized by the anchor generator to this file.")
 @click.option('--fill-known-urls', type=bool, required=False, default=False, help="Transfer all Hydrus URLs into the hydownloader database as known URLs.")
-def update_anchor(path: str, hydrus_db_folder: str, sites: str, unrecognized_urls_file: Optional[str], recognized_urls_file: Optional[str], fill_known_urls: bool) -> None:
+@click.option('--keep-old-hydrus-url-data', type=bool, required=False, default=False, help="If this is true when --fill-known-urls is used, then old URL data exported from Hydrus in previous runs of this tool will be kept in the hydownloader known URL database. This is useful only if you want to export URLs from multiple Hydrus databases, in which case you should set this to true when calling this tool with the 2nd and later databases. In other cases enabling this will lead to outdated and/or duplicated data.")
+def update_anchor(path: str, hydrus_db_folder: str, sites: str, unrecognized_urls_file: Optional[str], recognized_urls_file: Optional[str], fill_known_urls: bool, keep_old_hydrus_url_data: bool) -> None:
     """
     This function goes through all URLs in a Hydrus database, and tries to match them to known site-specific URL patterns to
     generate anchor database entries that gallery-dl can recognize. For some sites, the anchor format differs
@@ -80,6 +81,11 @@ def update_anchor(path: str, hydrus_db_folder: str, sites: str, unrecognized_url
         for row in cc.fetchall():
             deleted_url_ids.add(row['url_id'])
         client_db.close()
+        if keep_old_hydrus_url_data:
+            log.info("hydownloader-anchor-exporter", "Old Hydrus URL data will NOT be deleted from the shared hydownloader database")
+        else:
+            log.info("hydownloader-anchor-exporter", "Deleting old Hydrus URL data from shared hydownloader database...")
+            db.delete_all_hydrus_known_urls()
 
     sites_to_keywords : dict[str, Tuple[list[str], list[str]]] = {
         'pixiv': (["pixi"],[]),

@@ -24,6 +24,7 @@ from typing import Optional, Union
 from hydownloader import log, uri_normalizer, __version__, constants as C
 
 _conn: sqlite3.Connection = None # type: ignore
+_shared_conn: sqlite3.Connection = None # type: ignore
 _path: str = None # type: ignore
 _config: dict = None # type: ignore
 _inited = False
@@ -56,7 +57,7 @@ def upsert_dict(table: str, d: dict) -> None:
     _conn.commit()
 
 def init(path : str) -> None:
-    global _conn, _inited, _path, _config
+    global _conn, _shared_conn, _inited, _path, _config
     _path = path
     if not os.path.isdir(path):
         log.info("hydownloader", f"Initializing new database folder at {path}")
@@ -87,8 +88,17 @@ def init(path : str) -> None:
     _conn = sqlite3.connect(path+"/hydownloader.db", check_same_thread=False, timeout=24*60*60)
     _conn.row_factory = lambda c, r: dict(zip([col[0] for col in c.description], r))
     if needs_db_init: create_db()
-    check_db_version()
     _config = json.load(open(path+"/hydownloader-config.json", "r"))
+
+    shared_db_path = path+"/hydownloader.shared.db"
+    if _config["shared-db-override"]:
+        shared_db_path = _config["shared-db-override"]
+    need_shared_db_init = not os.path.isfile(shared_db_path)
+    _shared_conn = sqlite3.connect(shared_db_path, check_same_thread=False, timeout=24*60*60)
+    _shared_conn.row_factory = lambda c, r: dict(zip([col[0] for col in c.description], r))
+    if need_shared_db_init: create_shared_db()
+
+    check_db_version()
 
     _inited = True
 
@@ -106,6 +116,12 @@ def create_db() -> None:
     c.execute(C.CREATE_KNOWN_URL_INDEX_STATEMENT)
     c.execute('insert into version(version) values (?)', (__version__,))
     _conn.commit()
+
+def create_shared_db() -> None:
+    c = _shared_conn.cursor()
+    c.execute(C.SHARED_CREATE_KNOWN_URLS_STATEMENT)
+    c.execute(C.SHARED_CREATE_KNOWN_URL_INDEX_STATEMENT)
+    _shared_conn.commit()
 
 def get_rootpath() -> str:
     check_init()
@@ -425,28 +441,44 @@ def get_queued_log_file() -> Optional[str]:
 
 def add_hydrus_known_url(url: str, status: int) -> None:
     check_init()
-    c = _conn.cursor()
-    c.execute('select * from known_urls where url = ? and status <> 0', (url,))
-    if c.fetchone():
-        c.execute('update known_urls set status = ? where url = ? and status <> 0', (status, url))
-    else:
-        c.execute('insert into known_urls(url,status,time_added) values (?,?,?)', (url, status, time.time()))
+    c = _shared_conn.cursor()
+    c.execute('insert into known_urls(url,status) values (?,?)', (url, status))
+
+def delete_all_hydrus_known_urls() -> None:
+    check_init()
+    c = _shared_conn.cursor()
+    c.execute('delete from known_urls where status <> 0')
 
 def shutdown() -> None:
     global _inited
     if not _inited: return
     _conn.commit()
+    _shared_conn.commit()
     _inited = False
     _conn.close()
+    _shared_conn.close()
 
-def add_known_urls(urls: list[str], subscription_id: Optional[int] = None, url_id: Optional[int] = None, status: int = 0) -> None:
+def add_known_urls(urls: list[str], subscription_id: Optional[int] = None, url_id: Optional[int] = None) -> None:
     check_init()
     c = _conn.cursor()
+    s_c = _shared_conn.cursor()
     for url in urls:
-        c.execute('select * from known_urls where url = ? and subscription_id is ? and url_id is ?', (url, subscription_id, url_id))
+        c.execute('select * from known_urls where url = ? and subscription_id is ? and url_id is ? limit 1', (url, subscription_id, url_id))
         if not c.fetchone():
-            c.execute('insert into known_urls(url,subscription_id,url_id,status,time_added) values (?,?,?,?,?)', (url,subscription_id,url_id,status,time.time()))
+            c.execute('insert into known_urls(url,subscription_id,url_id,status,time_added) values (?,?,?,?,?)', (url,subscription_id,url_id,0,time.time()))
+        s_c.execute('select * from known_urls where url = ? and status = 0', (url,))
+        if not s_c.fetchone():
+            s_c.execute('insert into known_urls(url,status) values (?,0)',(url,))
     _conn.commit()
+    _shared_conn.commit()
+
+def get_known_urls(patterns: set[str]) -> list[dict]:
+    check_init()
+    c = _shared_conn.cursor()
+    # where = " or ".join({("url like ?" if "%" in pattern else "url = ?") for pattern in patterns})
+    where = "url in (" + ",".join(["?"]*len(patterns)) + ")"
+    c.execute("select * from known_urls where "+where, tuple(patterns))
+    return c.fetchall()
 
 def get_conf(name : str) -> Union[str, int, bool]:
     check_init()

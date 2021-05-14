@@ -30,7 +30,8 @@ DEFAULT_CONFIG : dict[str, Union[str, int, bool]] = {
     "daemon.ssl": True,
     "daemon.access_key": "change me you retard or get hacked",
     "gallery-dl.archive-override": "",
-    "gallery-dl.data-override": ""
+    "gallery-dl.data-override": "",
+    "shared-db-override": ""
 }
 
 CREATE_SUBS_STATEMENT = """
@@ -137,6 +138,19 @@ CREATE TABLE "subscription_checks" (
 	"already_seen_files"	INTEGER,
 	"status"	TEXT,
 	"archived"	INTEGER NOT NULL DEFAULT 0
+)
+"""
+
+SHARED_CREATE_KNOWN_URLS_STATEMENT = """
+CREATE TABLE "known_urls" (
+	"url"	TEXT,
+	"status"	INTEGER NOT NULL
+)
+"""
+
+SHARED_CREATE_KNOWN_URL_INDEX_STATEMENT = """
+CREATE INDEX "known_url_index" ON "known_urls" (
+	"url"
 )
 """
 
