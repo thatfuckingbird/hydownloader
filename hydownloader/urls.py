@@ -127,7 +127,7 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
 
     if m := re.match(r"https?://gelbooru\.com/index.php\?page=post&s=list&tags=(?P<keywords>[^&]+)(&.*)?", u):
         return ('gelbooru', m.group('keywords'))
-    if m := re.match(r"https?://(www\.)?pixiv\.(net|com)/(en|ja|jp/)?users/(?P<userid>[0-9]+)(/|&.*)?", u):
+    if m := re.match(r"https?://(www\.)?pixiv\.(net|com)/((en|ja|jp)/)?users/(?P<userid>[0-9]+)(/|&.*)?", u):
         return ('pixivuser', m.group('userid'))
     if m := re.match(r"https?://(www\.)?pixiv.(net|com)/member(_illust)?\.php\?id=(?P<userid>[0-9]+)(&.*)?", u):
         return ('pixivuser', m.group('userid'))
@@ -155,15 +155,15 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
         return ('twitter', m.group('username'))
     if m := re.match(r"https?://(www\.)twitter\.com/(?P<username>[^/]+)(/status/[0-9]+(&.*)?)?", u):
         return ('twitter', m.group('username'))
-    if (m := re.match(r"https?://(?P<username>[^.]+)\.tumblr\.com.*", u)) and not m.group('username') in ['www', 'download']:
+    if (m := re.match(r"https?://(?P<username>[^.]+)\.tumblr\.com/?$", u)) and not m.group('username') in ['www', 'download']:
         return ('tumblr', m.group('username'))
-    if (m := re.match(r"https?://(?P<username>[^.]+)\.deviantart\.com.*", u)) and not m.group('username') in ['www', 'download']:
+    if (m := re.match(r"https?://(?P<username>[^.]+)\.deviantart\.com/?$", u)) and not m.group('username') in ['www', 'download']:
         return ('deviantartuser', m.group('username'))
     if m := re.match(r"https?://(www\.)?deviantart\.com/(?P<username>[^/&]+)((&|/).*)?", u):
         return ('deviantartuser', m.group('username'))
     if m := re.match(r"https?://(www\.)?fanbox\.cc/@(?P<username>[^/&]+)((&|/).*)?", u):
         return ('fanbox', m.group('username'))
-    if (m := re.match(r"https?://(?P<username>[^.]+)\.fanbox\.cc.*", u)) and not m.group('username') in ['www']:
+    if (m := re.match(r"https?://(?P<username>[^.]+)\.fanbox\.cc(/posts)?/?$", u)) and not m.group('username') in ['www']:
         return ('fanbox', m.group('username'))
     if m := re.match(r"https?://(www\.)?fantia\.jp/fanclubs/(?P<id>[0-9]+)((&|/).*)?", u):
         return ('fantia', m.group('id'))
