@@ -470,6 +470,8 @@ def main() -> None:
     signal.signal(signal.SIGINT, lambda signum, frame: shutdown())
     signal.signal(signal.SIGTERM, lambda signum, frame: shutdown())
 
+    bottle.BaseRequest.MEMFILE_MAX *= 1000
+
     cli()
     ctx = click.get_current_context()
     click.echo(ctx.get_help())
