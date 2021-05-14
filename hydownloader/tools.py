@@ -422,18 +422,22 @@ def mass_add_subscriptions(path: str, file_: str, downloader: str, additional_da
     for line in open(file_, 'r'):
         line = line.strip()
         if line:
-            db.add_or_update_subscriptions([{
+            new_sub = {
                 'keywords': line,
                 'downloader': downloader,
                 'time_created': time.time(),
                 'additional_data': additional_data,
                 'filter': filter_,
-                'max_files_initial': max_files_initial,
-                'max_files_regular': max_files_regular,
-                'abort_after': abort_after,
                 'paused': paused,
                 'check_interval': check_interval + random.randint(0, random_check_interval)
-                }])
+            }
+            if max_files_initial is not None:
+                new_sub['max_files_initial'] = max_files_initial
+            if max_files_regular is not None:
+                new_sub['max_files_regular'] = max_files_regular
+            if abort_after is not None:
+                new_sub['abort_after'] = abort_after
+            db.add_or_update_subscriptions([new_sub])
             log.info("hydownloader-tools", f"Added subscription {line} with downloader {downloader}")
 
 @cli.command(help='Force a reparsing of all logfiles.')
