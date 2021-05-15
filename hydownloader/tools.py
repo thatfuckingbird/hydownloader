@@ -355,7 +355,7 @@ def test_internal(sites: str) -> bool:
 
 @cli.command(help='Print a report about subscriptions and the URL queue, with a focus on finding dead, failing or erroneous subscriptions/URLs.')
 @click.option('--path', type=str, required=True, help='Database path.')
-@click.option('--verbose', type=bool, required=False, default=False, help='More details (listing individual subscriptions/URLs, not just aggregate numbers). Might produce a lot of output.')
+@click.option('--verbose', type=bool, is_flag=True, required=False, default=False, help='More details (listing individual subscriptions/URLs, not just aggregate numbers). Might produce a lot of output.')
 def report(path: str, verbose: bool) -> None:
     log.init(path, True)
     db.init(path)
@@ -381,10 +381,10 @@ def init_db(path: str) -> None:
 @click.option('--path', type=str, required=True, help='Database path.')
 @click.option('--file', 'file_', type=str, required=True, help='File with URLs, one URL in each line.')
 @click.option('--additional-data', type=str, default=None, help='Additional metadata to associate with the downloaded files.')
-@click.option('--metadata-only', type=bool, default=False, help='Only download metadata.')
-@click.option('--overwrite-existing', type=bool, default=False, help='Overwrite existing files instead of skipping.')
+@click.option('--metadata-only', type=bool, is_flag=True, default=False, help='Only download metadata.')
+@click.option('--overwrite-existing', type=bool, is_flag=True, default=False, help='Overwrite existing files instead of skipping.')
 @click.option('--filter', 'filter_', type=str, default=None, help='Filter.')
-@click.option('--ignore-anchor', type=bool, default=False, help='Do not check or update download anchor file.')
+@click.option('--ignore-anchor', type=bool, is_flag=True, default=False, help='Do not check or update download anchor file.')
 @click.option('--max-files', type=int, default=None, help='Maximum number of files to download.')
 def mass_add_urls(path: str, file_: str, additional_data: Optional[str], metadata_only: bool, overwrite_existing: bool, filter_: Optional[str], ignore_anchor: bool, max_files: Optional[int]) -> None:
     log.init(path, True)
@@ -409,7 +409,7 @@ def mass_add_urls(path: str, file_: str, additional_data: Optional[str], metadat
 @click.option('--file', 'file_', type=str, required=True, help='File with keywords, one query in each line.')
 @click.option('--downloader', type=str, required=True, help='The downloader to use.')
 @click.option('--additional-data', type=str, default=None, help='Additional metadata to associate with the downloaded files.')
-@click.option('--paused', type=bool, default=False, help='Set added subscriptions to paused.')
+@click.option('--paused', type=bool, is_flag=True, default=False, help='Set added subscriptions to paused.')
 @click.option('--filter', 'filter_', type=str, default=None, help='Filter.')
 @click.option('--abort-after', type=int, default=20, help='Abort after this many seen files.')
 @click.option('--max-files-initial', type=int, default=None, help='Maximum number of files to download on the first check.')
