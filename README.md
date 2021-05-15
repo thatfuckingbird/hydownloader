@@ -34,11 +34,12 @@ The main differences:
 
 0. Install Python 3.9 or newer. On Windows, make sure you install from the official Python site. If the installers asks you whether it should add the Python executable to PATH say yes.
 1. Open a command line. Type `python --version`. It should output the version number, which should be 3.9 or newer.
-2. Type `python -m pip install poetry --user`. This should install the poetry package manager. If you are on Linux, you can likely omit the `python -m` from this and all following commands.
-3. Clone this repo.
-4. Navigate into the cloned repo folder in the command line.
-5. Type `python -m poetry install`. This should install hydownloader.
-6. To run hydownloader components like `hydownloader-daemon`, prefix all commands with `python -m poetry run`. Example: `python -m poetry run hydownloader-daemon --path ...`.
+2. Install ffmpeg. On Linux, it should be easy through the package manager, for Windows the official ffmpeg site has binaries but make sure that they are added to the PATH (so that you can invoke `ffmpeg` in the command line).
+3. Type `python -m pip install poetry --user`. This should install the poetry package manager. If you are on Linux, you can likely omit the `python -m` from this and all following commands.
+4. Clone this repo.
+5. Navigate into the cloned repo folder in the command line.
+6. Type `python -m poetry install`. This should install hydownloader.
+7. To run hydownloader components like `hydownloader-daemon`, prefix all commands with `python -m poetry run`. Example: `python -m poetry run hydownloader-daemon start --path /path/to/data/folder`.
 Alternatively, you can type `python -m poetry shell` and then you can run subsequent commands without the `python -m poetry run` prefix.
 
 ## How to use (READ AND UNDERSTAND THIS BEFORE ASKING FOR SUPPORT)
