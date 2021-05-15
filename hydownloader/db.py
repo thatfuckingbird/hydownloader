@@ -29,7 +29,7 @@ _path: str = None # type: ignore
 _config: dict = None # type: ignore
 _inited = False
 
-def upsert_dict(table: str, d: dict) -> None:
+def upsert_dict(table: str, d: dict, no_commit: bool = False) -> None:
     keys = d.keys()
     column_names = ",".join(keys)
     placeholders = ",".join(["?"]*len(keys))
@@ -54,7 +54,7 @@ def upsert_dict(table: str, d: dict) -> None:
         query = f"insert into {table} ({column_names}) values ({placeholders})"
         values = [d[key] for key in keys]
     c.execute(query, values)
-    _conn.commit()
+    if not no_commit: _conn.commit()
 
 def init(path : str) -> None:
     global _conn, _shared_conn, _inited, _path, _config
@@ -127,7 +127,7 @@ def get_rootpath() -> str:
     check_init()
     return _path
 
-def associate_additional_data(filename: str, subscription_id: Optional[int] = None, url_id: Optional[int] = None) -> None:
+def associate_additional_data(filename: str, subscription_id: Optional[int] = None, url_id: Optional[int] = None, no_commit: bool = False) -> None:
     if subscription_id is None and url_id is None: raise ValueError("associate_additional_data: both IDs cannot be None")
     c = _conn.cursor()
     data = None
@@ -146,7 +146,12 @@ def associate_additional_data(filename: str, subscription_id: Optional[int] = No
         already_saved = len(c.fetchall())
     if already_saved == 0:
         c.execute('insert into additional_data(file, data, subscription_id, url_id, time_added) values (?,?,?,?,?)', (filename, data, subscription_id, url_id, time.time()))
+    if not no_commit: _conn.commit()
+
+def sync() -> None:
+    check_init()
     _conn.commit()
+    _shared_conn.commit()
 
 def check_init() -> None:
     if not _inited:
@@ -162,62 +167,72 @@ def check_db_version() -> None:
         log.fatal("hydownloader", "Unsupported hydownloader database version found")
 
 def get_due_subscriptions() -> list[dict]:
+    check_init()
     c = _conn.cursor()
     c.execute(f'select * from subscriptions where paused <> 1 and (last_successful_check + check_interval <= {time.time()} or last_successful_check is null) order by priority desc')
     return c.fetchall()
 
 def get_urls_to_download() -> list[dict]:
+    check_init()
     c = _conn.cursor()
     c.execute('select * from single_url_queue where status = -1 and paused <> 1 order by priority desc, time_added desc')
     return c.fetchall()
 
 def add_or_update_urls(url_data: list[dict]) -> bool:
+    check_init()
     for item in url_data:
         add = "id" not in item
         if add and not "url" in item: continue
         if add: item["time_added"] = time.time()
         if 'url' in item: item['url'] = uri_normalizer.normalizes(item['url'])
-        upsert_dict("single_url_queue", item)
+        upsert_dict("single_url_queue", item, no_commit = True)
         if add:
             log.info("hydownloader", f"Added URL: {item['url']}")
         else:
             log.info("hydownloader", f"Updated URL with ID {item['id']}")
+    _conn.commit()
     return True
 
 def check_single_queue_for_url(url: str) -> list[dict]:
+    check_init()
     c = _conn.cursor()
     url = uri_normalizer.normalizes(url)
     c.execute('select * from single_url_queue where url = ?', (url,))
     return c.fetchall()
 
 def get_subscriptions_by_downloader_data(downloader: str, keywords: str) -> list[dict]:
+    check_init()
     c = _conn.cursor()
     c.execute("select * from subscriptions where downloader = ? and keywords = ?", (downloader, keywords))
     return c.fetchall()
 
 def add_or_update_subscriptions(sub_data: list[dict]) -> bool:
+    check_init()
     for item in sub_data:
         add = "id" not in item
         if add and not "keywords" in item: continue
         if add and not "downloader" in item: continue
         if add and not "additional_data" in item: item["additional_data"] = ""
         if add: item["time_created"] = time.time()
-        upsert_dict("subscriptions", item)
+        upsert_dict("subscriptions", item, no_commit = True)
         if add:
             log.info("hydownloader", f"Added subscription: {item['keywords']} for downloader {item['downloader']}")
         else:
             log.info("hydownloader", f"Updated subscription with ID {item['id']}")
+    _conn.commit()
     return True
 
 def add_or_update_subscription_checks(sub_data: list[dict]) -> bool:
+    check_init()
     for item in sub_data:
         add = "rowid" not in item
         if add: item["time_created"] = time.time()
-        upsert_dict("subscription_checks", item)
+        upsert_dict("subscription_checks", item, no_commit = True)
         if add:
             log.info("hydownloader", f"Added subscription check entry: rowid {item['rowid']}")
         else:
             log.info("hydownloader", f"Updated subscription check entry with rowid {item['rowid']}")
+    _conn.commit()
     return True
 
 def add_subscription_check(subscription_id: int, new_files: int, already_seen_files: int, time_started: Union[float,int], time_finished: Union[float,int], status: str) -> None:

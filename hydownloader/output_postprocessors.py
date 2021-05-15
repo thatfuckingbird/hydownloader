@@ -57,7 +57,8 @@ def process_additional_data(subscription_id: Optional[int] = None, url_id: Optio
             else:
                 log.debug("hydownloader", f"Looks like a new filepath: {line}")
                 new_count += 1
-            db.associate_additional_data(filename=line, subscription_id=subscription_id)
+            db.associate_additional_data(filename=line, subscription_id=subscription_id, no_commit=True)
+        db.sync()
         f.close()
         os.remove(db.get_rootpath()+f"/temp/subscription-{subscription_id}-gallery-dl-output.txt")
     elif url_id is not None and os.path.isfile(db.get_rootpath()+f"/temp/single-url-{url_id}-gallery-dl-output.txt"):
@@ -75,7 +76,8 @@ def process_additional_data(subscription_id: Optional[int] = None, url_id: Optio
             else:
                 log.debug("hydownloader", f"Looks like a new filepath: {line}")
                 new_count += 1
-            db.associate_additional_data(filename=line, url_id=url_id)
+            db.associate_additional_data(filename=line, url_id=url_id, no_commit=True)
+        db.sync()
         f.close()
         os.remove(db.get_rootpath()+f"/temp/single-url-{url_id}-gallery-dl-output.txt")
     else:
