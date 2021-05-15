@@ -19,6 +19,7 @@ gallery-dl = "^1.17.4"
 youtube_dl = "^2021.4.26"
 
 [tool.poetry.dev-dependencies]
+Nuitka = "^0.6.14"
 
 [build-system]
 requires = ["poetry>=0.12"]
