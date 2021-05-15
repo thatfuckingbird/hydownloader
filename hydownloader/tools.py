@@ -74,7 +74,7 @@ def check_results_of_post_url(data: dict, sitename: str) -> bool:
         else:
             log.info("hydownloader-test", f"Found expected file: {fname}")
             for content in filenames[fname]:
-                with open(abs_fname) as f:
+                with open(abs_fname, encoding='utf-8-sig') as f:
                     if re.search(content, f.read()):
                         log.info("hydownloader-test", "Expected file content found")
                     else:
@@ -389,7 +389,7 @@ def init_db(path: str) -> None:
 def mass_add_urls(path: str, file_: str, additional_data: Optional[str], metadata_only: bool, overwrite_existing: bool, filter_: Optional[str], ignore_anchor: bool, max_files: Optional[int]) -> None:
     log.init(path, True)
     db.init(path)
-    for line in open(file_, 'r'):
+    for line in open(file_, 'r', encoding='utf-8-sig'):
         line = line.strip()
         if line:
             db.add_or_update_urls([{
@@ -419,7 +419,7 @@ def mass_add_urls(path: str, file_: str, additional_data: Optional[str], metadat
 def mass_add_subscriptions(path: str, file_: str, downloader: str, additional_data: Optional[str], paused: bool, filter_: Optional[str], abort_after: int, max_files_initial: Optional[int], max_files_regular: Optional[int], check_interval: int, random_check_interval: int) -> None:
     log.init(path, True)
     db.init(path)
-    for line in open(file_, 'r'):
+    for line in open(file_, 'r', encoding='utf-8-sig'):
         line = line.strip()
         if line:
             new_sub = {

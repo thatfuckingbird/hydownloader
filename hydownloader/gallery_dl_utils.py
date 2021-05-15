@@ -75,8 +75,8 @@ def append_file_contents(from_file: str, to_file: str) -> None:
     Does nothing if the source file doesn't exist.
     """
     if os.path.isfile(from_file):
-        to_f = open(to_file, 'a')
-        text = open(from_file, 'r').read()
+        to_f = open(to_file, 'a', encoding='utf-8-sig')
+        text = open(from_file, 'r', encoding='utf-8-sig').read()
         if text and not text.endswith('\n'): text += '\n'
         to_f.write(text)
         to_f.close()
@@ -147,7 +147,7 @@ def run_gallery_dl(url: str, subscription_mode: bool, ignore_anchor: bool, metad
     run_args += ['-o', 'cache.file='+db.get_rootpath()+'/gallery-dl-cache.db']
     run_args += [url]
 
-    console_out = open(console_output_file, 'a')
+    console_out = open(console_output_file, 'a', encoding='utf-8-sig')
     console_out.write('\n')
     result = subprocess.run(run_args, text = True, stdout = console_out, stderr = console_out, check = False)
     console_out.close()

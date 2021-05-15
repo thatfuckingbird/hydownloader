@@ -72,23 +72,23 @@ def init(path : str) -> None:
     if not os.path.isfile(path+"/hydownloader.db"):
         needs_db_init = True
     if not os.path.isfile(path+"/gallery-dl-config.json"):
-        gdl_cfg = open(path+"/gallery-dl-config.json", 'w')
+        gdl_cfg = open(path+"/gallery-dl-config.json", 'w', encoding='utf-8-sig')
         gdl_cfg.write(C.DEFAULT_GALLERY_DL_CONFIG)
         gdl_cfg.close()
     if not os.path.isfile(path+"/gallery-dl-user-config.json"):
-        gdl_cfg = open(path+"/gallery-dl-user-config.json", 'w')
+        gdl_cfg = open(path+"/gallery-dl-user-config.json", 'w', encoding='utf-8-sig')
         gdl_cfg.write(C.DEFAULT_GALLERY_DL_USER_CONFIG)
         gdl_cfg.close()
     if not os.path.isfile(path+"/hydownloader-config.json"):
-        hydl_cfg = open(path+"/hydownloader-config.json", 'w')
+        hydl_cfg = open(path+"/hydownloader-config.json", 'w', encoding='utf-8-sig')
         hydl_cfg.write(json.dumps(C.DEFAULT_CONFIG, indent=4))
         hydl_cfg.close()
     if not os.path.isfile(path+"/cookies.txt"):
-        open(path+"/cookies.txt", "w").close()
+        open(path+"/cookies.txt", "w", encoding="utf-8-sig").close()
     _conn = sqlite3.connect(path+"/hydownloader.db", check_same_thread=False, timeout=24*60*60)
     _conn.row_factory = lambda c, r: dict(zip([col[0] for col in c.description], r))
     if needs_db_init: create_db()
-    _config = json.load(open(path+"/hydownloader-config.json", "r"))
+    _config = json.load(open(path+"/hydownloader-config.json", "r", encoding="utf-8-sig"))
 
     shared_db_path = path+"/hydownloader.shared.db"
     if _config["shared-db-override"]:

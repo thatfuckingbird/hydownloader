@@ -43,7 +43,7 @@ def process_additional_data(subscription_id: Optional[int] = None, url_id: Optio
     skipped_count = 0
     new_count = 0
     if subscription_id is not None and os.path.isfile(db.get_rootpath()+f"/temp/subscription-{subscription_id}-gallery-dl-output.txt"):
-        f = open(db.get_rootpath()+f"/temp/subscription-{subscription_id}-gallery-dl-output.txt", 'r')
+        f = open(db.get_rootpath()+f"/temp/subscription-{subscription_id}-gallery-dl-output.txt", 'r', encoding='utf-8-sig')
         for line in f:
             line = line.strip()
             if not is_filepath(line):
@@ -62,7 +62,7 @@ def process_additional_data(subscription_id: Optional[int] = None, url_id: Optio
         f.close()
         os.remove(db.get_rootpath()+f"/temp/subscription-{subscription_id}-gallery-dl-output.txt")
     elif url_id is not None and os.path.isfile(db.get_rootpath()+f"/temp/single-url-{url_id}-gallery-dl-output.txt"):
-        f = open(db.get_rootpath()+f"/temp/single-url-{url_id}-gallery-dl-output.txt", 'r')
+        f = open(db.get_rootpath()+f"/temp/single-url-{url_id}-gallery-dl-output.txt", 'r', encoding='utf-8-sig')
         for line in f:
             line = line.strip()
             if not is_filepath(line):
@@ -104,7 +104,7 @@ def parse_log_files(all_files: bool = False):
             url_id = int(m.group(1))
         if m := re.match(r".*(?:\\|\/)subscription-([0-9]+)-gallery-dl-.*\.txt", logfname):
             subscription_id = int(m.group(1))
-        with open(db.get_rootpath()+"/"+logfname, 'r') as logf:
+        with open(db.get_rootpath()+"/"+logfname, 'r', encoding='utf-8-sig') as logf:
             log.info("hydownloader", f"Parsing log file: {logfname}")
             urls = []
             for line in logf:

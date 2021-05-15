@@ -151,13 +151,13 @@ def update_anchor(path: str, hydrus_db_folder: str, sites: str, unrecognized_url
 
     if unrecognized_urls_file:
         log.info("hydownloader-anchor-exporter", "Writing unrecognized URLs...")
-        with open(unrecognized_urls_file, 'w') as f:
+        with open(unrecognized_urls_file, 'w', encoding='utf-8-sig') as f:
             for url in sorted(suspicious_urls):
                 f.write(url.strip()+'\n')
         log.info("hydownloader-anchor-exporter", "Done writing unrecognized URLs")
     if recognized_urls_file:
         log.info("hydownloader-anchor-exporter", "Writing recognized URLs...")
-        with open(recognized_urls_file, 'w') as f:
+        with open(recognized_urls_file, 'w', encoding='utf-8-sig') as f:
             for url in sorted(recognized_urls):
                 f.write(url.strip()+'\n')
         log.info("hydownloader-anchor-exporter", "Done writing recognized URLs")
