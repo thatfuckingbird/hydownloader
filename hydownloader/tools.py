@@ -138,7 +138,7 @@ def test_internal(sites: str) -> bool:
                 "pixiv/3316400 rogia/88865254_p5.jpg.json": [],
                 "pixiv/3316400 rogia/88865254_p4.jpg.json": [],
                 "pixiv/3316400 rogia/88865254_p3.jpg.json": [],
-                "pixiv/3316400 rogia/88865254_p2.jpg.json": ["Fate/GrandOrder", '"title": "メイドロリンチちゃん"', '"tags":', '"untranslated_tags":'],
+                "pixiv/3316400 rogia/88865254_p2.jpg.json": ["Fate/GrandOrder", '"title": "メイドロリンチちゃん"', '"tags":', '"tags": ['],
                 "pixiv/3316400 rogia/88865254_p1.jpg.json": [],
                 "pixiv/3316400 rogia/88865254_p0.jpg.json": [],
                 "pixiv/3316400 rogia/88865254_p7.jpg": [],
