@@ -438,18 +438,22 @@ def cli() -> None:
 @cli.command(help='Start the hydownloader daemon with the given data path.')
 @click.option('--path', type=str, required=True, help='The folder where hydownloader should store its database and the downloaded files.')
 @click.option('--debug', type=bool, default=False, is_flag=True, help='Enable additional debug logging.')
-def start(path : str, debug : bool) -> None:
+@click.option('--no-sub-worker', type=bool, default=False, is_flag=True, help='Do not start subscription worker thread.')
+@click.option('--no-url-worker', type=bool, default=False, is_flag=True, help='Do not start single URL queue worker thread.')
+def start(path : str, debug : bool, no_sub_worker: bool, no_url_worker: bool) -> None:
     log.init(path, debug)
     db.init(path)
 
     output_postprocessors.process_additional_data()
     output_postprocessors.parse_log_files()
 
-    subs_thread = threading.Thread(target=subscription_worker, name='Subscription worker', daemon=True)
-    subs_thread.start()
+    if not no_sub_worker:
+        subs_thread = threading.Thread(target=subscription_worker, name='Subscription worker', daemon=True)
+        subs_thread.start()
 
-    url_thread = threading.Thread(target=url_queue_worker, name='Single URL queue worker', daemon=True)
-    url_thread.start()
+    if not no_url_worker:
+        url_thread = threading.Thread(target=url_queue_worker, name='Single URL queue worker', daemon=True)
+        url_thread.start()
 
     if db.get_conf('daemon.ssl') and os.path.isfile(path+"/server.pem"):
         log.info("hydownloader", "Starting daemon (with SSL)...")
