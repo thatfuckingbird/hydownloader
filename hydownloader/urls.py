@@ -126,7 +126,7 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
     u = uri_normalizer.normalizes(url)
 
     if m := re.match(r"https?://gelbooru\.com/index.php\?page=post&s=list&tags=(?P<keywords>[^&]+)(&.*)?", u):
-        return ('gelbooru', m.group('keywords'))
+        return ('gelbooru', m.group('keywords').lower())
     if m := re.match(r"https?://(www\.)?pixiv\.(net|com)/((en|ja|jp)/)?users/(?P<userid>[0-9]+)(/|&.*)?", u):
         return ('pixivuser', m.group('userid'))
     if m := re.match(r"https?://(www\.)?pixiv.(net|com)/member(_illust)?\.php\?id=(?P<userid>[0-9]+)(&.*)?", u):
@@ -137,20 +137,20 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
         return ('pixivtagsearch', m.group('query'))
     if m := re.match(r"https?://nijie\.info/members(_illust)?\.php\?id=(?P<userid>[0-9]+)(&.*)?", u):
         return ('nijieuser', m.group('userid'))
-    if m := re.match(r"https?://(www\.)?lolibooru\.moe/post\?tags=(?P<query>[^/]+)(&.*)?", u):
-        return ('lolibooru', m.group('query'))
+    if m := re.match(r"https?://(www\.)?lolibooru\.moe/post\?tags=(?P<query>[^/&]+)(&commit=Search)?(&.*)?", u):
+        return ('lolibooru', m.group('query').lower())
     if m := re.match(r"https?://(www\.)?patreon.com/(?P<username>[^/]+)(/(posts)?)?", u):
         return ('patreon', m.group('username'))
     if m := re.match(r"https?://danbooru\.donmai\.us/posts\?tags=(?P<keywords>[^&]+)(&.*)?", u):
-        return ('danbooru', m.group('keywords'))
+        return ('danbooru', m.group('keywords').lower())
     if m := re.match(r"https?://(www\.)?behoimi\.org/post/index\?tags=(?P<keywords>[^&]+)(&.*)?", u):
-        return ('3dbooru', m.group('keywords'))
-    if m := re.match(r"https?://chan\.sankakucomplex\.com/\?tags=(?P<keywords>[^&]+)(&.*)?", u):
-        return ('sankaku', m.group('keywords'))
+        return ('3dbooru', m.group('keywords').lower())
+    if m := re.match(r"https?://(chan|beta)\.sankakucomplex\.com/(post/index)?\?tags=(?P<keywords>[^&]+)(&.*)?", u):
+        return ('sankaku', m.group('keywords').lower())
     if (m := re.match(r"https?://(www\.)?artstation\.com/(?P<username>[^/&]+)(&.*)?/?", u)) and not m.group('username') in ['search', 'about', 'subscribe', 'learning', 'marketplace', 'prints', 'jobs', 'blogs', 'contests', 'podcast', 'guides']:
         return ('artstationuser', m.group('username'))
     if m := re.match(r"https?://idol\.sankakucomplex\.com/\?tags=(?P<keywords>[^&]+)(&.*)?", u):
-        return ('idolcomplex', m.group('keywords'))
+        return ('idolcomplex', m.group('keywords').lower())
     if m := re.match(r".*(twitter|nitter).*/(?P<username>[^/]+)/status/[0-9]+(&.*)?", u):
         return ('twitter', m.group('username'))
     if m := re.match(r"https?://(www\.)twitter\.com/(?P<username>[^/]+)(/status/[0-9]+(&.*)?)?", u):
