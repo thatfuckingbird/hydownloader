@@ -152,7 +152,7 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
         return ('artstationuser', m.group('username'))
     if m := re.match(r"https?://idol\.sankakucomplex\.com/\?tags=(?P<keywords>[^&]+)(&.*)?", u):
         return ('idolcomplex', m.group('keywords').lower())
-    if m := re.match(r".*(twitter|nitter).*/(?P<username>[^/]+)/status/[0-9]+(&.*)?", u):
+    if (m := re.match(r".*(twitter|nitter)\.\w+/(?P<username>[^/]+)((/|&).*)?", u)) and not re.match(r".*(twitter|nitter)\.\w+/[^/]+/status/[0-9]+(&.*)?", u):
         return ('twitter', m.group('username'))
     if m := re.match(r"https?://(www\.)twitter\.com/(?P<username>[^/]+)(/status/[0-9]+(&.*)?)?", u):
         return ('twitter', m.group('username'))
