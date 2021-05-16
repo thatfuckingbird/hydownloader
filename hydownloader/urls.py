@@ -27,6 +27,7 @@ known_url_replacements = (
     ("gelbooru.com//", "gelbooru.com/"),
     ("img2.gelbooru.com", "img1.gelbooru.com"),
     ("img1.gelbooru.com", "img2.gelbooru.com"),
+    ("i\.4cdn\.org/(\w+)/([0-9]+)s\.(\w+)", "i.4cdn.org/\\1/\\2.\\3"),
     ("^(.*)(#.*)$", "\\1"),
     ("https://", "http://"),
     ("http://", "https://"),
