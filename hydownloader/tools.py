@@ -24,6 +24,7 @@ import sqlite3
 import time
 import subprocess
 import re
+import urllib.parse
 from typing import Optional
 import click
 from hydownloader import db, log, gallery_dl_utils, output_postprocessors
@@ -416,11 +417,15 @@ def mass_add_urls(path: str, file_: str, additional_data: Optional[str], metadat
 @click.option('--max-files-regular', type=int, default=None, help='Maximum number of files to download on a regular check.')
 @click.option('--check-interval', type=int, required=True, help='Check interval in seconds.')
 @click.option('--random-check-interval', type=int, default=0, help='A random number of seconds between 0 and this value will be added to the base check interval.')
-def mass_add_subscriptions(path: str, file_: str, downloader: str, additional_data: Optional[str], paused: bool, filter_: Optional[str], abort_after: int, max_files_initial: Optional[int], max_files_regular: Optional[int], check_interval: int, random_check_interval: int) -> None:
+@click.option('--encode-keywords', type=bool, is_flag=True, default=False, help="Applies URL encoding to keywords. Spaces are replaced with unencoded '+' characters. Keywords are converted to lowercase.")
+def mass_add_subscriptions(path: str, file_: str, downloader: str, additional_data: Optional[str], paused: bool, filter_: Optional[str], abort_after: int, max_files_initial: Optional[int], max_files_regular: Optional[int], check_interval: int, random_check_interval: int, encode_keywords: bool) -> None:
     log.init(path, True)
     db.init(path)
     for line in open(file_, 'r', encoding='utf-8-sig'):
         line = line.strip()
+        if encode_keywords:
+            line = line.replace(' ', '+')
+            line = urllib.parse.quote(line, safe='/+').lower()
         if line:
             new_sub = {
                 'keywords': line,
