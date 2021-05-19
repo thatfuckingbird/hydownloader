@@ -136,12 +136,12 @@ def subscription_worker() -> None:
                 else:
                     sub['last_successful_check'] = check_started_time
                 sub['last_check'] = check_started_time
-                new_urls, skipped_files = output_postprocessors.process_additional_data(subscription_id = sub['id'])
+                new_files, skipped_files = output_postprocessors.process_additional_data(subscription_id = sub['id'])
                 output_postprocessors.parse_log_files()
                 check_ended_time = time.time()
-                db.add_subscription_check(sub['id'], new_urls=new_urls, already_seen_urls=skipped_files, time_started=check_started_time, time_finished=check_ended_time, status=result if result else 'ok')
+                db.add_subscription_check(sub['id'], new_files=new_files, already_seen_files=skipped_files, time_started=check_started_time, time_finished=check_ended_time, status=result if result else 'ok')
                 db.add_or_update_subscriptions([sub])
-                status_msg = f"finished checking subscription: {sub['id']} (downloader: {sub['downloader']}, keywords: {sub['keywords']}), new URLs: {new_urls}, skipped: {skipped_files}"
+                status_msg = f"finished checking subscription: {sub['id']} (downloader: {sub['downloader']}, keywords: {sub['keywords']}), new files: {new_files}, skipped: {skipped_files}"
                 set_subscription_worker_status(status_msg)
                 log.info(f"subscription-{sub['id']}", status_msg.capitalize())
                 subs_due = db.get_due_subscriptions()
@@ -212,12 +212,12 @@ def url_queue_worker() -> None:
                     urlinfo['status'] = 0
                     urlinfo['status_text'] = 'ok'
                 urlinfo['time_processed'] = check_time
-                new_urls, skipped_files = output_postprocessors.process_additional_data(url_id = urlinfo['id'])
+                new_files, skipped_files = output_postprocessors.process_additional_data(url_id = urlinfo['id'])
                 output_postprocessors.parse_log_files()
-                urlinfo['new_urls'] = new_urls
-                urlinfo['already_seen_urls'] = skipped_files
+                urlinfo['new_files'] = new_files
+                urlinfo['already_seen_files'] = skipped_files
                 db.add_or_update_urls([urlinfo])
-                status_msg = f"finished checking URL: {urlinfo['url']}, new URLs: {new_urls}, skipped: {skipped_files}"
+                status_msg = f"finished checking URL: {urlinfo['url']}, new files: {new_files}, skipped: {skipped_files}"
                 set_url_worker_status(status_msg)
                 log.info("single url downloader", status_msg.capitalize())
                 urls_to_dl = db.get_urls_to_download()

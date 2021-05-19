@@ -70,8 +70,8 @@ CREATE TABLE "single_url_queue" (
 	"overwrite_existing"	INTEGER NOT NULL DEFAULT 0,
 	"filter"	TEXT,
 	"max_files"	INTEGER,
-	"new_urls"	INTEGER,
-	"already_seen_urls"	INTEGER,
+	"new_files"	INTEGER,
+	"already_seen_files"	INTEGER,
 	"paused"	INTEGER NOT NULL DEFAULT 0,
 	"comment"	TEXT,
 	"archived"	INTEGER NOT NULL DEFAULT 0,
@@ -134,8 +134,8 @@ CREATE TABLE "subscription_checks" (
 	"subscription_id"	INTEGER,
 	"time_started"	INTEGER,
 	"time_finished"	INTEGER,
-	"new_urls"	INTEGER,
-	"already_seen_urls"	INTEGER,
+	"new_files"	INTEGER,
+	"already_seen_files"	INTEGER,
 	"status"	TEXT,
 	"archived"	INTEGER NOT NULL DEFAULT 0
 )
