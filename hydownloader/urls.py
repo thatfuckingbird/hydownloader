@@ -142,9 +142,9 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
         return ('lolibooru', m.group('query').lower())
     if m := re.match(r"https?://(www\.)?patreon.com/(?P<username>[^/]+)(/(posts)?)?", u):
         return ('patreon', m.group('username'))
-    if m := re.match(r"https?://danbooru\.donmai\.us/posts\?tags=(?P<keywords>[^&]+)(&.*)?", u):
+    if m := re.match(r"https?://danbooru\.donmai\.us/posts\?(page=[0-9]+&)?tags=(?P<keywords>[^&]+)(&.*)?", u):
         return ('danbooru', m.group('keywords').lower())
-    if m := re.match(r"https?://(www\.)?behoimi\.org/post/index\?tags=(?P<keywords>[^&]+)(&.*)?", u):
+    if m := re.match(r"https?://(www\.)?behoimi\.org/post(/index)?\?tags=(?P<keywords>[^&]+)(&.*)?", u):
         return ('3dbooru', m.group('keywords').lower())
     if m := re.match(r"https?://(chan|beta)\.sankakucomplex\.com/(post/index)?\?tags=(?P<keywords>[^&]+)(&.*)?", u):
         return ('sankaku', m.group('keywords').lower())
@@ -160,7 +160,7 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
         return ('tumblr', m.group('username'))
     if (m := re.match(r"https?://(?P<username>[^.]+)\.deviantart\.com/?$", u)) and not m.group('username') in ['www', 'download']:
         return ('deviantartuser', m.group('username'))
-    if m := re.match(r"https?://(www\.)?deviantart\.com/(?P<username>[^/&]+)((&|/).*)?", u):
+    if (m := re.match(r"https?://(www\.)?deviantart\.com/(?P<username>[^/&]+)((&|/).*)?", u)) and not re.match(r"https?://(www\.)?deviantart\.com/([^/&]+)/art/.*", u):
         return ('deviantartuser', m.group('username'))
     if m := re.match(r"https?://(www\.)?fanbox\.cc/@(?P<username>[^/&]+)((&|/).*)?", u):
         return ('fanbox', m.group('username'))
