@@ -19,6 +19,7 @@ import os
 import os.path
 import json
 import time
+import urllib.parse
 import datetime
 from typing import Optional, Union
 from hydownloader import log, uri_normalizer, __version__, constants as C
@@ -204,7 +205,11 @@ def get_subscriptions_by_downloader_data(downloader: str, keywords: str) -> list
     check_init()
     c = _conn.cursor()
     c.execute("select * from subscriptions where downloader = ? and keywords = ?", (downloader, keywords))
-    return c.fetchall()
+    results = c.fetchall()
+    if not results: # if nothing found, try the unquoted version too
+        c.execute("select * from subscriptions where downloader = ? and keywords = ?", (downloader, urllib.parse.unquote(keywords)))
+        results = c.fetchall()
+    return results
 
 def add_or_update_subscriptions(sub_data: list[dict]) -> bool:
     check_init()
