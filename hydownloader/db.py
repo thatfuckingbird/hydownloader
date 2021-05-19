@@ -235,10 +235,10 @@ def add_or_update_subscription_checks(sub_data: list[dict]) -> bool:
     _conn.commit()
     return True
 
-def add_subscription_check(subscription_id: int, new_files: int, already_seen_files: int, time_started: Union[float,int], time_finished: Union[float,int], status: str) -> None:
+def add_subscription_check(subscription_id: int, new_urls: int, already_seen_urls: int, time_started: Union[float,int], time_finished: Union[float,int], status: str) -> None:
     check_init()
     c = _conn.cursor()
-    c.execute('insert into subscription_checks(subscription_id, new_files, already_seen_files, time_started, time_finished, status) values (?,?,?,?,?,?)', (subscription_id,new_files,already_seen_files,time_started,time_finished,status))
+    c.execute('insert into subscription_checks(subscription_id, new_urls, already_seen_urls, time_started, time_finished, status) values (?,?,?,?,?,?)', (subscription_id,new_urls,already_seen_urls,time_started,time_finished,status))
     _conn.commit()
 
 def get_subscription_checks(subscription_id: Optional[int], archived: bool) -> list[dict]:
@@ -339,11 +339,11 @@ def report(verbose: bool) -> None:
     urls_errored = len(urls_errored_entries)
     subs_errored_entries = c.execute('select * from subscriptions where last_check is not null and last_successful_check <> last_check').fetchall()
     subs_errored = len(subs_errored_entries)
-    urls_no_files_entries = c.execute('select * from single_url_queue where status = 0 and (new_files is null or already_seen_files is null or new_files + already_seen_files = 0)').fetchall()
+    urls_no_files_entries = c.execute('select * from single_url_queue where status = 0 and (new_urls is null or already_seen_urls is null or new_urls + already_seen_urls = 0)').fetchall()
     urls_no_files = len(urls_no_files_entries)
     subs_no_files_entries = c.execute((
         'select * from subscriptions where last_check is not null and id in '
-        '(select subscription_id from subscription_checks group by subscription_id having sum(new_files) + sum(already_seen_files) <= 0)'
+        '(select subscription_id from subscription_checks group by subscription_id having sum(new_urls) + sum(already_seen_urls) <= 0)'
     )).fetchall()
     subs_no_files = len(subs_no_files_entries)
     urls_waiting_long_entries = c.execute(f'select * from single_url_queue where time_processed is null and time_added + 86400 <= {time.time()}').fetchall()
@@ -355,7 +355,7 @@ def report(verbose: bool) -> None:
     subs_waiting_long = len(subs_waiting_long_entries)
     subs_no_recent_files_entries = c.execute((
         'select * from subscriptions where last_check is not null and id in '
-        f'(select subscription_id from subscription_checks where time_started + 30 * 86400 >= {time.time()} group by subscription_id having sum(new_files) + sum(already_seen_files) <= 0)'
+        f'(select subscription_id from subscription_checks where time_started + 30 * 86400 >= {time.time()} group by subscription_id having sum(new_urls) + sum(already_seen_urls) <= 0)'
         f'or id not in (select subscription_id from subscription_checks group by subscription_id having max(time_started) + 30 * 86400 < {time.time()})'
     )).fetchall()
     subs_no_recent_files = len(subs_no_recent_files_entries)
