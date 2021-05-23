@@ -271,14 +271,14 @@ def get_subscription_checks(subscription_id: Optional[int], archived: bool) -> l
     c = _conn.cursor()
     if subscription_id:
         if archived:
-            c.execute('select rowid, * from subscription_checks where subscription_id = ?', (subscription_id,))
+            c.execute('select rowid, * from subscription_checks where subscription_id = ? order by rowid asc', (subscription_id,))
         else:
-            c.execute('select rowid, * from subscription_checks where subscription_id = ? and archived <> 1', (subscription_id,))
+            c.execute('select rowid, * from subscription_checks where subscription_id = ? and archived <> 1 order by rowid asc', (subscription_id,))
     else:
         if archived:
-            c.execute('select rowid, * from subscription_checks')
+            c.execute('select rowid, * from subscription_checks order by rowid asc')
         else:
-            c.execute('select rowid, * from subscription_checks where archived <> 1')
+            c.execute('select rowid, * from subscription_checks where archived <> 1 order by rowid asc')
     return list(c.fetchall())
 
 def delete_urls(url_ids: list[int]) -> bool:
@@ -303,9 +303,9 @@ def get_subs_by_range(range_: Optional[tuple[int, int]] = None) -> list[dict]:
     check_init()
     c = _conn.cursor()
     if range_ is None:
-        c.execute('select * from subscriptions')
+        c.execute('select * from subscriptions order by id asc')
     else:
-        c.execute('select * from subscriptions where id >= ? and id <= ?', range_)
+        c.execute('select * from subscriptions where id >= ? and id <= ? order by id asc', range_)
     return list(c.fetchall())
 
 def get_subs_by_id(sub_ids: list[int]) -> list[dict]:
@@ -323,14 +323,14 @@ def get_queued_urls_by_range(archived: bool, range_: Optional[tuple[int, int]] =
     c = _conn.cursor()
     if range_ is None:
         if archived:
-            c.execute('select * from single_url_queue')
+            c.execute('select * from single_url_queue order by id asc')
         else:
-            c.execute('select * from single_url_queue where archived <> 1')
+            c.execute('select * from single_url_queue where archived <> 1 order by id asc')
     else:
         if archived:
-            c.execute('select * from single_url_queue where id >= ? and id <= ?', range_)
+            c.execute('select * from single_url_queue where id >= ? and id <= ? order by id asc', range_)
         else:
-            c.execute('select * from single_url_queue where id >= ? and id <= ? and archived <> 1', range_)
+            c.execute('select * from single_url_queue where id >= ? and id <= ? and archived <> 1 order by id asc', range_)
     return list(c.fetchall())
 
 def get_queued_urls_by_id(url_ids: list[int], archived: bool) -> list[dict]:
