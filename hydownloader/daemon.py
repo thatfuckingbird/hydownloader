@@ -335,6 +335,26 @@ def route_delete_subscriptions() -> dict:
     check_access()
     return {'status': db.delete_subscriptions(bottle.request.json['ids'])}
 
+@route('/subscriptions_last_files', method='POST')
+def route_subscriptions_last_files() -> str:
+    check_access()
+    result = []
+    for i in bottle.request.json['ids']:
+        result.append({
+                'paths': db.get_last_files_for_sub(i)
+            })
+    return json.dumps(result)
+
+@route('/urls_last_files', method='POST')
+def route_urls_last_files() -> str:
+    check_access()
+    result = []
+    for i in bottle.request.json['ids']:
+        result.append({
+                'paths': db.get_last_files_for_url(i)
+            })
+    return json.dumps(result)
+
 @route('/get_status_info', method='POST')
 def route_get_status_info() -> dict:
     check_access()

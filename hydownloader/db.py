@@ -149,6 +149,24 @@ def associate_additional_data(filename: str, subscription_id: Optional[int] = No
         c.execute('insert into additional_data(file, data, subscription_id, url_id, time_added) values (?,?,?,?,?)', (filename, data, subscription_id, url_id, time.time()))
     if not no_commit: _conn.commit()
 
+def get_last_files_for_url(url_id: int) -> list[str]:
+    check_init()
+    result = []
+    c = _conn.cursor()
+    c.execute('select file from additional_data where url_id = ? order by time_added desc limit 5', (url_id,))
+    for item in c.fetchall():
+        result.append(get_rootpath()+"/"+item['file'])
+    return result
+
+def get_last_files_for_sub(sub_id: int) -> list[str]:
+    check_init()
+    result = []
+    c = _conn.cursor()
+    c.execute('select file from additional_data where subscription_id = ? order by time_added desc limit 5', (sub_id,))
+    for item in c.fetchall():
+        result.append(get_rootpath()+"/"+item['file'])
+    return result
+
 def sync() -> None:
     check_init()
     _conn.commit()
