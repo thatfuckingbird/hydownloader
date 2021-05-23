@@ -129,6 +129,7 @@ def get_rootpath() -> str:
     return _path
 
 def associate_additional_data(filename: str, subscription_id: Optional[int] = None, url_id: Optional[int] = None, no_commit: bool = False) -> None:
+    check_init()
     if subscription_id is None and url_id is None: raise ValueError("associate_additional_data: both IDs cannot be None")
     c = _conn.cursor()
     data = None
