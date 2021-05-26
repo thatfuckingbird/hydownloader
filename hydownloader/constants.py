@@ -254,7 +254,7 @@ DEFAULT_GALLERY_DL_USER_CONFIG = R"""{
         },
         "hentaifoundry":
         {
-            "include": "pictures"
+            "include": "all"
         },
         "hentainexus":
         {
@@ -523,6 +523,23 @@ DEFAULT_GALLERY_DL_CONFIG = R"""{
 
         "tumblr": {
             "archive-format": "{id}_{num}"
+        },
+
+        "webtoons": {
+            "archive-format": "{title_no}_{episode}_{num}"
+        },
+
+        "kemonoparty": {
+            "filename": "{id}_{title}_{filename}_{type[0]}_{num}.{extension}",
+            "archive-format": "{service}_{user}_{id}_{filename}_{type[0]}.{extension}"
+        },
+
+        "mastodon": {
+            "archive-format": "{media[id]}"
+        },
+
+        "hentaifoundry": {
+            "archive-format": "{index}"
         }
     }
 }

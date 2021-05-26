@@ -30,7 +30,7 @@ def cli() -> None:
 @cli.command(help='Add entries to an anchor database based on the URLs stored in a Hydrus database.')
 @click.option('--path', type=str, required=True, help='hydownloader database path.')
 @click.option('--hydrus-db-folder', type=str, required=True, help='Hydrus database directory (where the .db files are located).')
-@click.option('--sites', type=str, required=True, default='all', help='A comma-separated list of sites to add anchor entries for. Currently supported: pixiv, gelbooru, nijie, lolibooru, danbooru, 3dbooru, sankaku, idolcomplex, artstation, twitter, deviantart, tumblr. The special \'all\' value can be used to mean all supported sites (this is the default).')
+@click.option('--sites', type=str, required=True, default='all', help='A comma-separated list of sites to add anchor entries for. Currently supported: pixiv, gelbooru, nijie, lolibooru, danbooru, 3dbooru, sankaku, idolcomplex, artstation, twitter, deviantart, tumblr, hentaifoundry. The special \'all\' value can be used to mean all supported sites (this is the default).')
 @click.option('--unrecognized-urls-file', type=str, required=False, default=None, help="Write URLs that are not recognized by the anchor generator but could be related to the listed sites into a separate file. You can check this file to see if there are any URLs that should have been used for generating anchors but weren't.")
 @click.option('--recognized-urls-file', type=str, required=False, default=None, help="Write URLs that were recognized by the anchor generator to this file.")
 @click.option('--fill-known-urls', type=bool, is_flag=True, required=False, default=False, help="Transfer all Hydrus URLs into the hydownloader database as known URLs.")
@@ -99,7 +99,8 @@ def update_anchor(path: str, hydrus_db_folder: str, sites: str, unrecognized_url
         'artstation': (["artstation"],[]),
         'twitter': (["twitter", "nitter"],[]),
         'deviantart': (['deviantart'],[]),
-        'tumblr': (["tumblr"],[])
+        'tumblr': (["tumblr"],[]),
+        'hentaifoundry': (["hentai-foundry"],[])
     }
 
     siteset = {x.strip() for x in sites.split(',') if x.strip()}

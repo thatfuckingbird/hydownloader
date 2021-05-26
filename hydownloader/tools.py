@@ -99,7 +99,7 @@ def check_results_of_post_url(data: dict, sitename: str) -> bool:
 
 @cli.command(help='Test downloading from a list of sites.')
 @click.option('--path', type=str, required=True, help='Database path.')
-@click.option('--sites', type=str, required=True, help='A comma-separated list of sites to test downloading from. Currently supported: environment, gelbooru, pixiv, lolibooru, patreon, danbooru, 3dbooru, nijie, sankaku, idolcomplex, artstation, twitter, deviantart. WARNING: this will attempt to download "sensitive" content.')
+@click.option('--sites', type=str, required=True, help='A comma-separated list of sites to test downloading from. Currently supported: environment, gelbooru, pixiv, lolibooru, patreon, danbooru, 3dbooru, nijie, sankaku, idolcomplex, artstation, twitter, deviantart, webtoons, baraag, hentaifoundry. WARNING: this will attempt to download "sensitive" content.')
 def test(path: str, sites: str) -> None:
     log.init(path, True)
     db.init(path)
@@ -234,6 +234,30 @@ def test_internal(sites: str) -> bool:
                 "twitter/momosuzunene/1380033327680266244_1.jpg.json": ['"name": "momosuzunene",']
             },
             'anchors': ["twitter1380033327680266244_1"]
+        },
+        'webtoons': {
+            'url': "https://www.webtoons.com/en/challenge/crawling-dreams/ep-1-nyarla-ghast/viewer?title_no=141539&episode_no=81",
+            'anchors': ['webtoons141539_81_1','webtoons141539_81_2','webtoons141539_81_3','webtoons141539_81_4'],
+            'filenames': {
+                "webtoons/crawling-dreams/81-01.jpg": [],
+                "webtoons/crawling-dreams/81-01.jpg.json": ['"comic": "crawling-dreams"']
+            }
+        },
+        'baraag': {
+            'url': "https://baraag.net/@pumpkinnsfw/106191173043385531",
+            'anchors': ['baraag106191139078112401','baraag106191139927706653'],
+            'filenames': {
+                "mastodon/baraag.net/pumpkinnsfw/baraag_106191173043385531_106191139078112401.png": [],
+                "mastodon/baraag.net/pumpkinnsfw/baraag_106191173043385531_106191139078112401.png": ['"sensitive": true']
+            }
+        },
+        'hentaifoundry': {
+            'url': "https://www.hentai-foundry.com/pictures/user/PalomaP/907277/Rapunzel-loves-creampie",
+            'anchors': ["hentaifoundry907277"],
+            'filenames': {
+                "hentaifoundry/PalomaP/hentaifoundry_907277_Rapunzel loves creampie.jpg": [],
+                "hentaifoundry/PalomaP/hentaifoundry_907277_Rapunzel loves creampie.jpg.json": ['"tags": [','"creampie"']
+            }
         }
     }
 
@@ -269,7 +293,7 @@ def test_internal(sites: str) -> bool:
                 log.error('hydownloader-test', "Could not find youtube-dl", e)
                 should_break = True
         elif site == "gelbooru":
-            log.info("hydownloader-test", "Testing Gelbooru...")
+            log.info("hydownloader-test", "Testing gelbooru...")
 
             log.info("hydownloader-test", 'Testing search of "sensitive" content')
             sensitive_url = "https://gelbooru.com/index.php?page=post&s=list&tags=loli"
@@ -325,7 +349,7 @@ def test_internal(sites: str) -> bool:
             log.info("hydownloader-test", "Testing 3dbooru...")
             should_break = not check_results_of_post_url(post_url_data['3dbooru'], site) or should_break
         elif site == "patreon":
-            log.info("hydownloader-test", "Testing Patreon...")
+            log.info("hydownloader-test", "Testing patreon...")
             should_break = not check_results_of_post_url(post_url_data['patreon'], site) or should_break
         elif site == "nijie":
             log.info("hydownloader-test", "Testing nijie.info...")
@@ -345,6 +369,15 @@ def test_internal(sites: str) -> bool:
         elif site == "deviantart":
             log.info("hydownloader-test", "Testing deviantart...")
             should_break = not check_results_of_post_url(post_url_data['deviantart'], site) or should_break
+        elif site == "webtoons":
+            log.info("hydownloader-test", "Testing webtoons...")
+            should_break = not check_results_of_post_url(post_url_data['webtoons'], site) or should_break
+        elif site == "baraag":
+            log.info("hydownloader-test", "Testing baraag...")
+            should_break = not check_results_of_post_url(post_url_data['baraag'], site) or should_break
+        elif site == "hentaifoundry":
+            log.info("hydownloader-test", "Testing hentaifoundry...")
+            should_break = not check_results_of_post_url(post_url_data['hentaifoundry'], site) or should_break
         else:
             log.error("hydownloader-test", f"Site name not recognized: {site}, no testing done")
             return False

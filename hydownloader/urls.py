@@ -115,6 +115,14 @@ def subscription_data_to_url(downloader: str, keywords: str) -> str:
         return f"https://{keywords}.fanbox.cc"
     if downloader == "fantia":
         return f"https://fantia.jp/fanclubs/{keywords}"
+    if downloader == "webtoons":
+        return f"https://webtoons.com/{keywords}"
+    if downloader == "kemonoparty":
+        return f"https://kemono.party/{keywords}"
+    if downloader == "baraag":
+        return f"https://baraag.net/@{keywords}"
+    if downloader == "hentaifoundry":
+        return f"https://www.hentai-foundry.com/user/{keywords}/profile"
 
     log.fatal("hydownloader", f"Invalid downloader: {downloader}")
 
@@ -168,6 +176,14 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
         return ('fanbox', m.group('username'))
     if m := re.match(r"https?://(www\.)?fantia\.jp/fanclubs/(?P<id>[0-9]+)((&|/).*)?", u):
         return ('fantia', m.group('id'))
+    if m := re.match(r"(?:https?://)?(?:www\.)?webtoons\.com/(?P<path>(en|fr)/([^/?#]+)/([^/?#]+))", u):
+        return ('webtoons', m.group('path'))
+    if m := re.match(r"(?:https?://)?kemono\.party/(?P<service>[^/?#]+)/user/(?P<user>[^/?#]+)/?(?:$|[?#])", u):
+        return ('kemonoparty', m.group('service')+"/user/"+m.group('user'))
+    if m := re.match(r"https://baraag.net/@(?P<user>[^/?#]+)(?:/media)?/?$", u):
+        return ('baraag', m.group('user'))
+    if m := re.match(r"(https?://)?(?:www\.)?hentai-foundry\.com/user/(?P<user>[^/?#]+)/profile"):
+        return ('hentaifoundry', m.group('user'))
 
     return ('','')
 
@@ -197,6 +213,7 @@ def anchor_patterns_from_url(url: str) -> list[str]:
     tumblr: tumblr188243485974
     fantia: {post_id}_{file_id}
     fanbox: {id}_{num} (num starts at 1)
+    See also gallery-dl-config.json.
     """
     u = uri_normalizer.normalizes(url)
 
@@ -239,7 +256,11 @@ def anchor_patterns_from_url(url: str) -> list[str]:
         return [f"deviantart{m.group('id')}"]
     if m := re.match(r"https?://.+\.deviantart\.com/([^/]+/)?art/.+-(?P<id>[0-9]+)(&.*)?", u):
         return [f"deviantart{m.group('id')}"]
-    if m := re.match(r"https?://.+\.deviantart\.com/download/(P<id>[0-9]+)/.*", u):
+    if m := re.match(r"https?://.+\.deviantart\.com/download/(?P<id>[0-9]+)/.*", u):
         return [f"deviantart{m.group('id')}"]
+    if m := re.match(r"https?://(www\.)?hentai-foundry\.com/pictures/user/[^/]+/(?P<id>[0-9]+)", u):
+        return [f"hentaifoundry{m.group('id')}"]
+    if m := re.match(r"https?://pictures\.hentai-foundry\.com/./[^/]+/(?P<id>[0-9]+)/.*", u):
+        return [f"hentaifoundry{m.group('id')}"]
 
     return []
