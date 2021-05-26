@@ -216,9 +216,31 @@ def check_db_version() -> None:
 
 def get_due_subscriptions() -> list[dict]:
     check_init()
-    c = _conn.cursor()
-    c.execute(f'select * from subscriptions where paused <> 1 and (last_successful_check + check_interval <= {time.time()} or last_successful_check is null) order by priority desc')
-    return c.fetchall()
+    c = get_conn().cursor()
+    current_time = time.time()
+    result = []
+    # subs that had no errors (last check was successful or there was no check yet)
+    result.extend(c.execute(
+    """
+        select * from subscriptions where
+            paused <> 1 and
+            (last_check = last_successful_check or last_check is null) and
+            (last_check + check_interval <= ? or last_check is null) and
+            (last_check + 60 <= ? or last_check is null)
+        order by priority desc
+    """, (current_time, current_time)).fetchall())
+    # subs with errors (last check != last successful check)
+    result.extend(c.execute(
+    """
+        select * from subscriptions where
+            paused <> 1 and
+            last_check is not null and
+            (last_check <> last_successful_check or last_successful_check is null) and
+            last_check + check_interval <= ? and
+            last_check + 60 <= ?
+        order by priority desc
+    """, (current_time, current_time)).fetchall())
+    return result
 
 def get_urls_to_download() -> list[dict]:
     check_init()
