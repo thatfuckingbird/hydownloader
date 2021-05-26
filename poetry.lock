@@ -45,6 +45,17 @@ requests = ">=2.11.0"
 video = ["youtube-dl"]
 
 [[package]]
+name = "hydrus-api"
+version = "2.14.3"
+description = "Python module implementing the Hydrus API"
+category = "main"
+optional = false
+python-versions = ">=3.6,<4.0"
+
+[package.dependencies]
+requests = ">=2.22,<3.0"
+
+[[package]]
 name = "idna"
 version = "2.10"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -102,7 +113,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "e8c38f7292082748e8a89a824337b2f0ab6fff7d0bd198d83fa8196975037b7e"
+content-hash = "c32c3b51b563c206037e924d1bb0f3cd21732eae6af3e352c86bb7b4de4f8a11"
 
 [metadata.files]
 bottle = [
@@ -124,6 +135,10 @@ click = [
 gallery-dl = [
     {file = "gallery_dl-1.17.4-py3-none-any.whl", hash = "sha256:79aae08d0a80af61e8646714244a0bd80027bd211d50dd5b511d203c941c499a"},
     {file = "gallery_dl-1.17.4.tar.gz", hash = "sha256:4df80fd923b03b2413a3d1c50e32c3006d100ed5acc1400ace69d8dc2162d293"},
+]
+hydrus-api = [
+    {file = "hydrus-api-2.14.3.tar.gz", hash = "sha256:888a4af4a20e1fb786b862e28ae7e122bcf10aa9284d1f4087493bf1cfbfe2fd"},
+    {file = "hydrus_api-2.14.3-py3-none-any.whl", hash = "sha256:34e1f8a63bc121a6deab4c554eb378206cd9747728aa744074c30a98af692f6c"},
 ]
 idna = [
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},

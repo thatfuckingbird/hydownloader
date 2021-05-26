@@ -34,6 +34,13 @@ DEFAULT_CONFIG : dict[str, Union[str, int, bool]] = {
     "shared-db-override": ""
 }
 
+DEFAULT_IMPORT_JOBS : dict = {
+    "default": {
+        "apiURL": "http://127.0.0.1:45869",
+        "apiKey": ""
+    }
+}
+
 CREATE_SUBS_STATEMENT = """
 CREATE TABLE "subscriptions" (
 	"id"	INTEGER NOT NULL UNIQUE,

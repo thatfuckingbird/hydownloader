@@ -84,6 +84,10 @@ def init(path : str) -> None:
         hydl_cfg = open(path+"/hydownloader-config.json", 'w', encoding='utf-8-sig')
         hydl_cfg.write(json.dumps(C.DEFAULT_CONFIG, indent=4))
         hydl_cfg.close()
+    if not os.path.isfile(path+"/hydownloader-import-jobs.json"):
+        hydl_cfg = open(path+"/hydownloader-import-jobs.json", 'w', encoding='utf-8-sig')
+        hydl_cfg.write(json.dumps(C.DEFAULT_IMPORT_JOBS, indent=4))
+        hydl_cfg.close()
     if not os.path.isfile(path+"/cookies.txt"):
         open(path+"/cookies.txt", "w", encoding="utf-8-sig").close()
     _conn = sqlite3.connect(path+"/hydownloader.db", check_same_thread=False, timeout=24*60*60)
