@@ -21,11 +21,17 @@ This file contains the functions that directly call gallery-dl, and various rela
 import subprocess
 import os
 import sqlite3
+import json
+import threading
+import signal
 from typing import Optional
 from gallery_dl import extractor
 from hydownloader import db, uri_normalizer, urls
 
 _anchor_conn = None
+
+_process_map : dict[str, subprocess.Popen] = {}
+_process_map_lock = threading.Lock()
 
 def downloader_for_url(url: str) -> str:
     """
@@ -98,10 +104,11 @@ def run_gallery_dl_with_custom_args(args: list[str], capture_output: bool = Fals
     result = subprocess.run(run_args, capture_output = capture_output, text = capture_output, check = False)
     return result
 
-def run_gallery_dl(url: str, subscription_mode: bool, ignore_anchor: bool, metadata_only: bool, log_file: str, console_output_file: str, unsupported_urls_file: str, overwrite_existing: bool, filter_: Optional[str] = None, chapter_filter: Optional[str] = None, abort_after: Optional[int] = None, test_mode: bool = False, old_log_file: Optional[str] = None, old_unsupported_urls_file: Optional[str] = None, max_file_count: Optional[int] = None) -> str:
+def run_gallery_dl(url: str, subscription_mode: bool, ignore_anchor: bool, metadata_only: bool, log_file: str, console_output_file: str, unsupported_urls_file: str, overwrite_existing: bool, filter_: Optional[str] = None, chapter_filter: Optional[str] = None, abort_after: Optional[int] = None, test_mode: bool = False, old_log_file: Optional[str] = None, old_unsupported_urls_file: Optional[str] = None, max_file_count: Optional[int] = None, process_id: Optional[str] = None) -> str:
     """
     Downloads a URL with gallery-dl using the current hydownloader environment.
     """
+    global _process_map
     run_args = [str(db.get_conf('gallery-dl.executable'))]
     run_args += ['--ignore-config']
     run_args += ['--verbose']
@@ -150,10 +157,25 @@ def run_gallery_dl(url: str, subscription_mode: bool, ignore_anchor: bool, metad
 
     console_out = open(console_output_file, 'a', encoding='utf-8-sig')
     console_out.write('\n')
-    result = subprocess.run(run_args, text = True, stdout = console_out, stderr = console_out, check = False)
+
+    popen = subprocess.Popen(run_args, text = True, stdout = console_out, stderr = console_out)
+    if process_id:
+        with _process_map_lock:
+            _process_map[process_id] = popen
+    popen.wait()
+    result = popen
+    if process_id:
+        with _process_map_lock:
+            del _process_map[process_id]
+
     console_out.close()
 
     return check_return_code(result.returncode)
+
+def stop_process(process_id: str) -> None:
+    with _process_map_lock:
+        if process_id in _process_map:
+            _process_map[process_id].send_signal(signal.SIGINT)
 
 def check_return_code(code: int) -> str:
     """

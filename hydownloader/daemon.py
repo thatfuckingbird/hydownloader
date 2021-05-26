@@ -129,18 +129,22 @@ def subscription_worker() -> None:
                     chapter_filter=None,
                     subscription_mode=True,
                     abort_after=sub['abort_after'],
-                    max_file_count = sub['max_files_initial'] if initial_check else sub['max_files_regular']
+                    max_file_count = sub['max_files_initial'] if initial_check else sub['max_files_regular'],
+                    process_id = 'sub worker'
                     )
+                new_sub_data = {
+                    'id': sub['id']
+                }
                 if result:
                     log.warning(f"subscription-{sub['id']}", "Error: "+result)
                 else:
-                    sub['last_successful_check'] = check_started_time
-                sub['last_check'] = check_started_time
+                    new_sub_data['last_successful_check'] = check_started_time
+                new_sub_data['last_check'] = check_started_time
                 new_files, skipped_files = output_postprocessors.process_additional_data(subscription_id = sub['id'])
                 output_postprocessors.parse_log_files()
                 check_ended_time = time.time()
                 db.add_subscription_check(sub['id'], new_files=new_files, already_seen_files=skipped_files, time_started=check_started_time, time_finished=check_ended_time, status=result if result else 'ok')
-                db.add_or_update_subscriptions([sub])
+                db.add_or_update_subscriptions([new_sub_data])
                 status_msg = f"finished checking subscription: {sub['id']} (downloader: {sub['downloader']}, keywords: {sub['keywords']}), new files: {new_files}, skipped: {skipped_files}"
                 set_subscription_worker_status(status_msg)
                 log.info(f"subscription-{sub['id']}", status_msg.capitalize())
@@ -153,10 +157,12 @@ def subscription_worker() -> None:
             if _end_threads_flag:
                 log.info("hydownloader", "Stopping subscription worker thread")
                 _sub_worker_ended_flag = True
+                db.close_thread_connections()
     except Exception as e:
         log.error("hydownloader", "Uncaught exception in subscription worker thread", e)
         with _worker_lock:
             _sub_worker_ended_flag = True
+        db.close_thread_connections()
         shutdown()
 
 def url_queue_worker() -> None:
@@ -202,21 +208,25 @@ def url_queue_worker() -> None:
                     filter_=urlinfo['filter'],
                     chapter_filter=None,
                     subscription_mode=False,
-                    max_file_count = urlinfo['max_files']
+                    max_file_count = urlinfo['max_files'],
+                    process_id = 'url worker'
                     )
+                new_url_data = {
+                    'id': urlinfo['id']
+                }
                 if result:
                     log.warning("single url downloader", f"Error while downloading {urlinfo['url']}: {result}")
-                    urlinfo['status'] = 1
-                    urlinfo['status_text'] = result
+                    new_url_data['status'] = 1
+                    new_url_data['status_text'] = result
                 else:
-                    urlinfo['status'] = 0
-                    urlinfo['status_text'] = 'ok'
-                urlinfo['time_processed'] = check_time
+                    new_url_data['status'] = 0
+                    new_url_data['status_text'] = 'ok'
+                new_url_data['time_processed'] = check_time
                 new_files, skipped_files = output_postprocessors.process_additional_data(url_id = urlinfo['id'])
                 output_postprocessors.parse_log_files()
-                urlinfo['new_files'] = new_files
-                urlinfo['already_seen_files'] = skipped_files
-                db.add_or_update_urls([urlinfo])
+                new_url_data['new_files'] = new_files
+                new_url_data['already_seen_files'] = skipped_files
+                db.add_or_update_urls([new_url_data])
                 status_msg = f"finished checking URL: {urlinfo['url']}, new files: {new_files}, skipped: {skipped_files}"
                 set_url_worker_status(status_msg)
                 log.info("single url downloader", status_msg.capitalize())
@@ -229,10 +239,12 @@ def url_queue_worker() -> None:
             if _end_threads_flag:
                 log.info("hydownloader", "Stopping single URL queue worker thread")
                 _url_worker_ended_flag = True
+                db.close_thread_connections()
     except Exception as e:
         log.error("hydownloader", "Uncaught exception in URL worker thread", e)
         with _worker_lock:
             _url_worker_ended_flag = True
+        db.close_thread_connections()
         shutdown()
 
 def add_cors_headers() -> None:
@@ -430,6 +442,18 @@ def route_shutdown() -> None:
     check_access()
     shutdown()
 
+@route('/kill_current_sub', method='POST')
+def route_kill_current_sub() -> None:
+    check_access()
+    gallery_dl_utils.stop_process('sub worker')
+    return {'status': True}
+
+@route('/kill_current_url', method='POST')
+def route_kill_current_url() -> None:
+    check_access()
+    gallery_dl_utils.stop_process('url worker')
+    return {'status': True}
+
 @route('/')
 def route_index() -> str:
     return "hydownloader daemon"
@@ -488,6 +512,7 @@ def start(path : str, debug : bool, no_sub_worker: bool, no_url_worker: bool) ->
 
 def shutdown() -> None:
     global _shutdown_started
+    db.close_thread_connections()
     if _shutdown_started: return
     _shutdown_started = True
     end_threads()

@@ -21,14 +21,42 @@ import json
 import time
 import urllib.parse
 import datetime
+import threading
 from typing import Optional, Union
 from hydownloader import log, uri_normalizer, __version__, constants as C
 
-_conn: sqlite3.Connection = None # type: ignore
-_shared_conn: sqlite3.Connection = None # type: ignore
+_conn_lock = threading.Lock()
+_conn: dict[int, sqlite3.Connection] = {}
+_shared_conn_lock = threading.Lock()
+_shared_conn: dict[int, sqlite3.Connection] = {}
+_closed_threads_lock = threading.Lock()
+_closed_threads: set[int] = set()
 _path: str = None # type: ignore
 _config: dict = None # type: ignore
 _inited = False
+
+def _shared_db_path() -> str:
+    if _config["shared-db-override"]:
+        return _config["shared-db-override"]
+    return _path+"/hydownloader.shared.db"
+
+def get_conn() -> sqlite3.Connection:
+    global _conn
+    thread_id = threading.get_ident()
+    with _conn_lock:
+        if not thread_id in _conn:
+            _conn[thread_id] = sqlite3.connect(_path+"/hydownloader.db", timeout=24*60*60)
+            _conn[thread_id].row_factory = lambda c, r: dict(zip([col[0] for col in c.description], r))
+        return _conn[thread_id]
+
+def get_shared_conn() -> sqlite3.Connection:
+    global _shared_conn
+    thread_id = threading.get_ident()
+    with _shared_conn_lock:
+        if not thread_id in _shared_conn:
+            _shared_conn[thread_id] = sqlite3.connect(_shared_db_path(), timeout=24*60*60)
+            _shared_conn[thread_id].row_factory = lambda c, r: dict(zip([col[0] for col in c.description], r))
+        return _shared_conn[thread_id]
 
 def upsert_dict(table: str, d: dict, no_commit: bool = False) -> None:
     keys = d.keys()
@@ -36,7 +64,7 @@ def upsert_dict(table: str, d: dict, no_commit: bool = False) -> None:
     placeholders = ",".join(["?"]*len(keys))
     update_part = ",".join(f"{key}=?" for key in keys if key not in ("id", "rowid"))
     values = []
-    c = _conn.cursor()
+    c = get_conn().cursor()
     update = False
     update_with_rowid = False
     if "id" in d:
@@ -55,10 +83,10 @@ def upsert_dict(table: str, d: dict, no_commit: bool = False) -> None:
         query = f"insert into {table} ({column_names}) values ({placeholders})"
         values = [d[key] for key in keys]
     c.execute(query, values)
-    if not no_commit: _conn.commit()
+    if not no_commit: get_conn().commit()
 
 def init(path : str) -> None:
-    global _conn, _shared_conn, _inited, _path, _config
+    global _inited, _path, _config
     _path = path
     if not os.path.isdir(path):
         log.info("hydownloader", f"Initializing new database folder at {path}")
@@ -90,17 +118,12 @@ def init(path : str) -> None:
         hydl_cfg.close()
     if not os.path.isfile(path+"/cookies.txt"):
         open(path+"/cookies.txt", "w", encoding="utf-8-sig").close()
-    _conn = sqlite3.connect(path+"/hydownloader.db", check_same_thread=False, timeout=24*60*60)
-    _conn.row_factory = lambda c, r: dict(zip([col[0] for col in c.description], r))
+    get_conn()
     if needs_db_init: create_db()
     _config = json.load(open(path+"/hydownloader-config.json", "r", encoding="utf-8-sig"))
 
-    shared_db_path = path+"/hydownloader.shared.db"
-    if _config["shared-db-override"]:
-        shared_db_path = _config["shared-db-override"]
-    need_shared_db_init = not os.path.isfile(shared_db_path)
-    _shared_conn = sqlite3.connect(shared_db_path, check_same_thread=False, timeout=24*60*60)
-    _shared_conn.row_factory = lambda c, r: dict(zip([col[0] for col in c.description], r))
+    need_shared_db_init = not os.path.isfile(_shared_db_path())
+    get_shared_conn()
     if need_shared_db_init: create_shared_db()
 
     check_db_version()
@@ -108,7 +131,7 @@ def init(path : str) -> None:
     _inited = True
 
 def create_db() -> None:
-    c = _conn.cursor()
+    c = get_conn().cursor()
     c.execute(C.CREATE_SUBS_STATEMENT)
     c.execute(C.CREATE_URL_QUEUE_STATEMENT)
     c.execute(C.CREATE_ADDITIONAL_DATA_STATEMENT)
@@ -120,13 +143,13 @@ def create_db() -> None:
     c.execute(C.CREATE_SUBSCRIPTION_CHECKS_STATEMENT)
     c.execute(C.CREATE_KNOWN_URL_INDEX_STATEMENT)
     c.execute('insert into version(version) values (?)', (__version__,))
-    _conn.commit()
+    get_conn().commit()
 
 def create_shared_db() -> None:
-    c = _shared_conn.cursor()
+    c = get_shared_conn().cursor()
     c.execute(C.SHARED_CREATE_KNOWN_URLS_STATEMENT)
     c.execute(C.SHARED_CREATE_KNOWN_URL_INDEX_STATEMENT)
-    _shared_conn.commit()
+    get_shared_conn().commit()
 
 def get_rootpath() -> str:
     check_init()
@@ -136,7 +159,7 @@ def associate_additional_data(filename: str, subscription_id: Optional[int] = No
     check_init()
     if subscription_id is None and url_id is None: raise ValueError("associate_additional_data: both IDs cannot be None")
     filename = os.path.relpath(filename, get_rootpath())
-    c = _conn.cursor()
+    c = get_conn().cursor()
     data = None
     already_saved = 0
     if subscription_id is not None:
@@ -153,12 +176,12 @@ def associate_additional_data(filename: str, subscription_id: Optional[int] = No
         already_saved = len(c.fetchall())
     if already_saved == 0:
         c.execute('insert into additional_data(file, data, subscription_id, url_id, time_added) values (?,?,?,?,?)', (filename, data, subscription_id, url_id, time.time()))
-    if not no_commit: _conn.commit()
+    if not no_commit: get_conn().commit()
 
 def get_last_files_for_url(url_id: int) -> list[str]:
     check_init()
     result = []
-    c = _conn.cursor()
+    c = get_conn().cursor()
     c.execute('select file from additional_data where url_id = ? order by time_added desc limit 5', (url_id,))
     for item in c.fetchall():
         result.append(get_rootpath()+"/"+item['file'])
@@ -167,7 +190,7 @@ def get_last_files_for_url(url_id: int) -> list[str]:
 def get_last_files_for_sub(sub_id: int) -> list[str]:
     check_init()
     result = []
-    c = _conn.cursor()
+    c = get_conn().cursor()
     c.execute('select file from additional_data where subscription_id = ? order by time_added desc limit 5', (sub_id,))
     for item in c.fetchall():
         result.append(get_rootpath()+"/"+item['file'])
@@ -175,15 +198,15 @@ def get_last_files_for_sub(sub_id: int) -> list[str]:
 
 def sync() -> None:
     check_init()
-    _conn.commit()
-    _shared_conn.commit()
+    get_conn().commit()
+    get_shared_conn().commit()
 
 def check_init() -> None:
     if not _inited:
         log.fatal("hydownloader", "Database used but not initalized")
 
 def check_db_version() -> None:
-    c = _conn.cursor()
+    c = get_conn().cursor()
     c.execute('select version from version')
     v = c.fetchall()
     if len(v) != 1:
@@ -199,7 +222,7 @@ def get_due_subscriptions() -> list[dict]:
 
 def get_urls_to_download() -> list[dict]:
     check_init()
-    c = _conn.cursor()
+    c = get_conn().cursor()
     c.execute('select * from single_url_queue where status = -1 and paused <> 1 order by priority desc, time_added desc')
     return c.fetchall()
 
@@ -215,19 +238,19 @@ def add_or_update_urls(url_data: list[dict]) -> bool:
             log.info("hydownloader", f"Added URL: {item['url']}")
         else:
             log.info("hydownloader", f"Updated URL with ID {item['id']}")
-    _conn.commit()
+    get_conn().commit()
     return True
 
 def check_single_queue_for_url(url: str) -> list[dict]:
     check_init()
-    c = _conn.cursor()
+    c = get_conn().cursor()
     url = uri_normalizer.normalizes(url)
     c.execute('select * from single_url_queue where url = ?', (url,))
     return c.fetchall()
 
 def get_subscriptions_by_downloader_data(downloader: str, keywords: str) -> list[dict]:
     check_init()
-    c = _conn.cursor()
+    c = get_conn().cursor()
     c.execute("select * from subscriptions where downloader = ? and keywords = ?", (downloader, keywords))
     results = c.fetchall()
     if not results: # if nothing found, try the unquoted version too
@@ -248,7 +271,7 @@ def add_or_update_subscriptions(sub_data: list[dict]) -> bool:
             log.info("hydownloader", f"Added subscription: {item['keywords']} for downloader {item['downloader']}")
         else:
             log.info("hydownloader", f"Updated subscription with ID {item['id']}")
-    _conn.commit()
+    get_conn().commit()
     return True
 
 def add_or_update_subscription_checks(sub_data: list[dict]) -> bool:
@@ -261,18 +284,19 @@ def add_or_update_subscription_checks(sub_data: list[dict]) -> bool:
             log.info("hydownloader", f"Added subscription check entry: rowid {item['rowid']}")
         else:
             log.info("hydownloader", f"Updated subscription check entry with rowid {item['rowid']}")
-    _conn.commit()
+    get_conn().commit()
     return True
 
 def add_subscription_check(subscription_id: int, new_files: int, already_seen_files: int, time_started: Union[float,int], time_finished: Union[float,int], status: str) -> None:
     check_init()
-    c = _conn.cursor()
+    c = get_conn().cursor()
     c.execute('insert into subscription_checks(subscription_id, new_files, already_seen_files, time_started, time_finished, status) values (?,?,?,?,?,?)', (subscription_id,new_files,already_seen_files,time_started,time_finished,status))
-    _conn.commit()
+    get_conn().commit()
 
 def get_subscription_checks(subscription_id: Optional[int], archived: bool) -> list[dict]:
     check_init()
-    c = _conn.cursor()
+    c = get_conn().cursor()
+    c.arraysize = 1000
     if subscription_id:
         if archived:
             c.execute('select rowid, * from subscription_checks where subscription_id = ? order by rowid asc', (subscription_id,))
@@ -287,25 +311,26 @@ def get_subscription_checks(subscription_id: Optional[int], archived: bool) -> l
 
 def delete_urls(url_ids: list[int]) -> bool:
     check_init()
-    c = _conn.cursor()
+    c = get_conn().cursor()
     for i in url_ids:
         c.execute('delete from single_url_queue where id = ?', (i,))
-    _conn.commit()
+    get_conn().commit()
     log.info("hydownloader", f"Deleted URLs with IDs: {', '.join(map(str, url_ids))}")
     return True
 
 def delete_subscriptions(sub_ids: list[int]) -> bool:
     check_init()
-    c = _conn.cursor()
+    c = get_conn().cursor()
     for i in sub_ids:
         c.execute('delete from subscriptions where id = ?', (i,))
-    _conn.commit()
+    get_conn().commit()
     log.info("hydownloader", f"Deleted subscriptions with IDs: {', '.join(map(str, sub_ids))}")
     return True
 
 def get_subs_by_range(range_: Optional[tuple[int, int]] = None) -> list[dict]:
     check_init()
-    c = _conn.cursor()
+    c = get_conn().cursor()
+    c.arraysize = 1000
     if range_ is None:
         c.execute('select * from subscriptions order by id asc')
     else:
@@ -314,7 +339,7 @@ def get_subs_by_range(range_: Optional[tuple[int, int]] = None) -> list[dict]:
 
 def get_subs_by_id(sub_ids: list[int]) -> list[dict]:
     check_init()
-    c = _conn.cursor()
+    c = get_conn().cursor()
     result = []
     for i in sub_ids:
         c.execute('select * from subscriptions where id = ?', (i,))
@@ -324,7 +349,8 @@ def get_subs_by_id(sub_ids: list[int]) -> list[dict]:
 
 def get_queued_urls_by_range(archived: bool, range_: Optional[tuple[int, int]] = None) -> list[dict]:
     check_init()
-    c = _conn.cursor()
+    c = get_conn().cursor()
+    c.arraysize = 1000
     if range_ is None:
         if archived:
             c.execute('select * from single_url_queue order by id asc')
@@ -339,7 +365,7 @@ def get_queued_urls_by_range(archived: bool, range_: Optional[tuple[int, int]] =
 
 def get_queued_urls_by_id(url_ids: list[int], archived: bool) -> list[dict]:
     check_init()
-    c = _conn.cursor()
+    c = get_conn().cursor()
     result = []
     for i in url_ids:
         if archived:
@@ -352,7 +378,7 @@ def get_queued_urls_by_id(url_ids: list[int], archived: bool) -> list[dict]:
 
 def report(verbose: bool) -> None:
     check_init()
-    c = _conn.cursor()
+    c = get_conn().cursor()
 
     def format_date(timestamp: Optional[Union[float, int, str]]) -> str:
         if isinstance(timestamp, str):
@@ -463,21 +489,21 @@ def report(verbose: bool) -> None:
 
 def add_log_file_to_parse_queue(log_file: str) -> None:
     check_init()
-    c = _conn.cursor()
+    c = get_conn().cursor()
     log_file = os.path.relpath(log_file, start = get_rootpath())
     c.execute('insert into log_files_to_parse(file) values (?)', (log_file,))
-    _conn.commit()
+    get_conn().commit()
 
 def remove_log_file_from_parse_queue(log_file: str) -> None:
     check_init()
-    c = _conn.cursor()
+    c = get_conn().cursor()
     log_file = os.path.relpath(log_file, start = get_rootpath())
     c.execute('delete from log_files_to_parse where file = ?', (log_file,))
-    _conn.commit()
+    get_conn().commit()
 
 def get_queued_log_file() -> Optional[str]:
     check_init()
-    c = _conn.cursor()
+    c = get_conn().cursor()
     c.execute('select * from log_files_to_parse limit 1')
     if obj := c.fetchone():
         return obj['file']
@@ -485,27 +511,37 @@ def get_queued_log_file() -> Optional[str]:
 
 def add_hydrus_known_url(url: str, status: int) -> None:
     check_init()
-    c = _shared_conn.cursor()
+    c = get_shared_conn().cursor()
     c.execute('insert into known_urls(url,status) values (?,?)', (url, status))
 
 def delete_all_hydrus_known_urls() -> None:
     check_init()
-    c = _shared_conn.cursor()
+    c = get_shared_conn().cursor()
     c.execute('delete from known_urls where status <> 0')
+
+def close_thread_connections() -> None:
+    global _closed_threads
+    thread_id = threading.get_ident()
+    with _closed_threads_lock:
+        if thread_id in _closed_threads:
+            return
+    get_conn().commit()
+    get_shared_conn().commit()
+    get_conn().close()
+    get_shared_conn().close()
+    with _closed_threads_lock:
+        _closed_threads.add(threading.get_ident())
 
 def shutdown() -> None:
     global _inited
     if not _inited: return
-    _conn.commit()
-    _shared_conn.commit()
     _inited = False
-    _conn.close()
-    _shared_conn.close()
+    close_thread_connections()
 
 def add_known_urls(urls: list[str], subscription_id: Optional[int] = None, url_id: Optional[int] = None) -> None:
     check_init()
-    c = _conn.cursor()
-    s_c = _shared_conn.cursor()
+    c = get_conn().cursor()
+    s_c = get_shared_conn().cursor()
     for url in urls:
         c.execute('select * from known_urls where url = ? and subscription_id is ? and url_id is ? limit 1', (url, subscription_id, url_id))
         if not c.fetchone():
@@ -513,12 +549,12 @@ def add_known_urls(urls: list[str], subscription_id: Optional[int] = None, url_i
         s_c.execute('select * from known_urls where url = ? and status = 0', (url,))
         if not s_c.fetchone():
             s_c.execute('insert into known_urls(url,status) values (?,0)',(url,))
-    _conn.commit()
-    _shared_conn.commit()
+    get_conn().commit()
+    get_shared_conn().commit()
 
 def get_known_urls(patterns: set[str]) -> list[dict]:
     check_init()
-    c = _shared_conn.cursor()
+    c = get_shared_conn().cursor()
     # where = " or ".join({("url like ?" if "%" in pattern else "url = ?") for pattern in patterns})
     where = "url in (" + ",".join(["?"]*len(patterns)) + ")"
     c.execute("select * from known_urls where "+where, tuple(patterns))
