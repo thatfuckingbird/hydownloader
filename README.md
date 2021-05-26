@@ -181,6 +181,7 @@ Here is a quick table of contents for the source code:
 * Mass reverse lookup (SauceNAO + local db)
 * When using the API, "run_tests" and other long lasting actions should run in a separate worker thread
 * Statistics: time spent downloading (in a given time interval)
+* Downloader for pixiv sketch (in gallery-dl)
 
 Maybe:
 
