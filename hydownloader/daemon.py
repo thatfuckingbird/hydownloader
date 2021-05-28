@@ -443,13 +443,13 @@ def route_shutdown() -> None:
     shutdown()
 
 @route('/kill_current_sub', method='POST')
-def route_kill_current_sub() -> None:
+def route_kill_current_sub() -> dict:
     check_access()
     gallery_dl_utils.stop_process('sub worker')
     return {'status': True}
 
 @route('/kill_current_url', method='POST')
-def route_kill_current_url() -> None:
+def route_kill_current_url() -> dict:
     check_access()
     gallery_dl_utils.stop_process('url worker')
     return {'status': True}
