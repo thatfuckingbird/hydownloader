@@ -158,7 +158,7 @@ def get_rootpath() -> str:
 def associate_additional_data(filename: str, subscription_id: Optional[int] = None, url_id: Optional[int] = None, no_commit: bool = False) -> None:
     check_init()
     if subscription_id is None and url_id is None: raise ValueError("associate_additional_data: both IDs cannot be None")
-    filename = os.path.relpath(filename, get_rootpath())
+    filename = os.path.relpath(filename, get_datapath())
     c = get_conn().cursor()
     data = None
     already_saved = 0
