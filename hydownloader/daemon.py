@@ -158,6 +158,7 @@ def subscription_worker() -> None:
                 log.info("hydownloader", "Stopping subscription worker thread")
                 _sub_worker_ended_flag = True
                 db.close_thread_connections()
+        set_subscription_worker_status('shut down')
     except Exception as e:
         log.error("hydownloader", "Uncaught exception in subscription worker thread", e)
         with _worker_lock:
@@ -240,6 +241,7 @@ def url_queue_worker() -> None:
                 log.info("hydownloader", "Stopping single URL queue worker thread")
                 _url_worker_ended_flag = True
                 db.close_thread_connections()
+        set_url_worker_status('shut down')
     except Exception as e:
         log.error("hydownloader", "Uncaught exception in URL worker thread", e)
         with _worker_lock:
