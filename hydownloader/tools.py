@@ -248,7 +248,7 @@ def test_internal(sites: str) -> bool:
             'anchors': ['baraag106191139078112401','baraag106191139927706653'],
             'filenames': {
                 "mastodon/baraag.net/pumpkinnsfw/baraag_106191173043385531_106191139078112401.png": [],
-                "mastodon/baraag.net/pumpkinnsfw/baraag_106191173043385531_106191139078112401.png": ['"sensitive": true']
+                "mastodon/baraag.net/pumpkinnsfw/baraag_106191173043385531_106191139078112401.png.json": ['"sensitive": true']
             }
         },
         'hentaifoundry': {
