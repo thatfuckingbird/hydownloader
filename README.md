@@ -189,6 +189,7 @@ Here is a quick table of contents for the source code:
 * When using the API, "run_tests" and other long lasting actions should run in a separate worker thread
 * Statistics: time spent downloading (in a given time interval)
 * Downloader for pixiv sketch (in gallery-dl)
+* Check for and handle files already deleted from Hydrus in the importer (will need Hydrus API extension for force importing, and also for the forced re-import of existing non-deleted files)
 
 Maybe:
 
