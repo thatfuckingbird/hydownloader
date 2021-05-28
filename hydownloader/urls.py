@@ -27,7 +27,7 @@ known_url_replacements = (
     ("gelbooru.com//", "gelbooru.com/"),
     ("img2.gelbooru.com", "img1.gelbooru.com"),
     ("img1.gelbooru.com", "img2.gelbooru.com"),
-    ("i\.4cdn\.org/(\w+)/([0-9]+)s\.(\w+)", "i.4cdn.org/\\1/\\2.\\3"),
+    (r"i\.4cdn\.org/(\w+)/([0-9]+)s\.(\w+)", "i.4cdn.org/\\1/\\2.\\3"),
     ("^(.*)(#.*)$", "\\1"),
     ("https://", "http://"),
     ("http://", "https://"),
@@ -182,7 +182,7 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
         return ('kemonoparty', m.group('service')+"/user/"+m.group('user'))
     if m := re.match(r"https://baraag.net/@(?P<user>[^/?#]+)(?:/media)?/?$", u):
         return ('baraag', m.group('user'))
-    if m := re.match(r"(https?://)?(?:www\.)?hentai-foundry\.com/user/(?P<user>[^/?#]+)/profile"):
+    if m := re.match(r"(https?://)?(?:www\.)?hentai-foundry\.com/user/(?P<user>[^/?#]+)/profile", u):
         return ('hentaifoundry', m.group('user'))
 
     return ('','')
