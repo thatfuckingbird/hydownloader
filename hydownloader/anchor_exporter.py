@@ -18,6 +18,7 @@
 
 import sqlite3
 import os
+import sys
 import collections
 from typing import Optional, Counter, Tuple
 import click
@@ -124,7 +125,7 @@ def update_anchor(path: str, hydrus_db_folder: str, sites: str, unrecognized_url
     for row in rows:
         processed += 1
         if processed % 1000 == 0:
-            print(f"Processed {processed}/{all_rows} URLs")
+            print(f"Processed {processed}/{all_rows} URLs", file=sys.stderr)
         if fill_known_urls:
             known_url_status = 1
             is_current = row['url_id'] in current_url_ids
@@ -170,7 +171,7 @@ def update_anchor(path: str, hydrus_db_folder: str, sites: str, unrecognized_url
     for anchor in anchors:
         processed += 1
         if processed % 50 == 0:
-            print(f"Inserting new anchors {processed}/{anchor_count}")
+            print(f"Inserting new anchors {processed}/{anchor_count}", file=sys.stderr)
         final_anchors = [anchor]
         if anchor.startswith("nijie"):
             for i in range(anchors[anchor]):
