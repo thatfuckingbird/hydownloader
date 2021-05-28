@@ -47,7 +47,7 @@ def update_anchor(path: str, hydrus_db_folder: str, sites: str, unrecognized_url
     db.init(path)
     if not os.path.isfile(hydrus_db_folder+"/client.master.db"):
         log.fatal("hydownloader-anchor-exporter", "The client.master.db database was not found at the given location!")
-    hydrus_db = sqlite3.connect(hydrus_db_folder+"/client.master.db")
+    hydrus_db = sqlite3.connect("file:"+hydrus_db_folder+"/client.master.db?mode=ro", uri=True)
     hydrus_db.row_factory = sqlite3.Row
     anchor_init_needed = not os.path.isfile(path+"/anchor.db")
     anchor_db = sqlite3.connect(path+"/anchor.db")
@@ -70,7 +70,7 @@ def update_anchor(path: str, hydrus_db_folder: str, sites: str, unrecognized_url
     if fill_known_urls:
         if not os.path.isfile(hydrus_db_folder+"/client.db"):
             log.fatal("hydownloader-anchor-exporter", "The client.db database was not found at the given location!")
-        client_db = sqlite3.connect(hydrus_db_folder+"/client.db")
+        client_db = sqlite3.connect("file:"+hydrus_db_folder+"/client.db?mode=ro", uri=True)
         client_db.row_factory = sqlite3.Row
         cc = client_db.cursor()
         log.info("hydownloader-anchor-exporter", "Querying Hydrus database for current URL IDs...")
