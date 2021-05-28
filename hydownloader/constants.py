@@ -37,7 +37,33 @@ DEFAULT_CONFIG : dict[str, Union[str, int, bool]] = {
 DEFAULT_IMPORT_JOBS : dict = {
     "default": {
         "apiURL": "http://127.0.0.1:45869",
-        "apiKey": ""
+        "apiKey": "",
+        "forceAddMetadata": True,
+        "forceAddFiles": False,
+        "groups": [
+            {"filter": "path.startswith('gallery-dl/pixiv/')",
+             "tags": [
+                 {
+                     "name": "hydl ids",
+                     "skipOnError": False,
+                     "allowEmpty": False,
+                     "tagRepos": ["my tags"],
+                     "values": [
+                         "['hydl-sub-id:'+s_id for s_id in sub_ids]",
+                         "['hydl-url-id:'+u_id for u_id in url_ids]"
+                     ]
+                 }
+             ],
+             "urls": [
+                 {
+                     "name": "artwork url",
+                     "skipOnError": False,
+                     "allowEmpty": False,
+                     "values": "'https://www.pixiv.net/en/artworks/'+str(json_data['id'])"
+                 }
+             ]
+            }
+        ]
     }
 }
 

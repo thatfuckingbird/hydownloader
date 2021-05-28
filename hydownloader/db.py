@@ -286,6 +286,12 @@ def get_subscriptions_by_downloader_data(downloader: str, keywords: str) -> list
         results = c.fetchall()
     return results
 
+def get_additional_data_for_file(filepath: str) -> list[dict]:
+    check_init()
+    c = get_conn().cursor()
+    c.execute("select * from additional_data where file = ?", (filepath,))
+    return c.fetchall()
+
 def add_or_update_subscriptions(sub_data: list[dict]) -> bool:
     check_init()
     for item in sub_data:
