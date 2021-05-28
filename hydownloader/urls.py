@@ -123,6 +123,8 @@ def subscription_data_to_url(downloader: str, keywords: str) -> str:
         return f"https://baraag.net/@{keywords}"
     if downloader == "hentaifoundry":
         return f"https://www.hentai-foundry.com/user/{keywords}/profile"
+    if downloader == "yandere":
+        return f"https://yande.re/post?tags={keywords}"
 
     log.fatal("hydownloader", f"Invalid downloader: {downloader}")
 
@@ -184,6 +186,8 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
         return ('baraag', m.group('user'))
     if m := re.match(r"(https?://)?(?:www\.)?hentai-foundry\.com/user/(?P<user>[^/?#]+)/profile", u):
         return ('hentaifoundry', m.group('user'))
+    if m := re.match(r"https?://(www\.)?yande\.re/post\?tags=(?P<query>[^/&]+)(&commit=Search)?(&.*)?", u):
+        return ('yandere', m.group('query').lower())
 
     return ('','')
 
@@ -262,5 +266,7 @@ def anchor_patterns_from_url(url: str) -> list[str]:
         return [f"hentaifoundry{m.group('id')}"]
     if m := re.match(r"https?://pictures\.hentai-foundry\.com/./[^/]+/(?P<id>[0-9]+)/.*", u):
         return [f"hentaifoundry{m.group('id')}"]
+    if m := re.match(r"https?://(www\.)?yande.re/post/show/(?P<id>[0-9]+)", u):
+        return [f"yandere{m.group('id')}"]
 
     return []

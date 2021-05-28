@@ -566,6 +566,10 @@ DEFAULT_GALLERY_DL_CONFIG = R"""{
 
         "hentaifoundry": {
             "archive-format": "{index}"
+        },
+
+        "moebooru": {
+            "archive-format": "{id}"
         }
     }
 }
