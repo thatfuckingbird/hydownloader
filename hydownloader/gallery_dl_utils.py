@@ -118,10 +118,7 @@ def run_gallery_dl(url: str, subscription_mode: bool, ignore_anchor: bool, metad
         run_args += ["-c", db.get_rootpath() + "/gallery-dl-user-config.json"]
     run_args += ['--cookies', db.get_rootpath()+'/cookies.txt']
     if not test_mode:
-        if override := str(db.get_conf("gallery-dl.data-override")):
-            run_args += ['--dest', override+'/gallery-dl']
-        else:
-            run_args += ['--dest', db.get_rootpath()+'/data/gallery-dl']
+        run_args += ['--dest', db.get_datapath()+'/gallery-dl']
     else:
         run_args += ['--dest', db.get_rootpath()+'/test/data/gallery-dl']
     run_args += ['--write-metadata']
