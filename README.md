@@ -16,6 +16,8 @@ are stored in a database and are known as "anchors" in hydownloader.
 
 The daemon provides a JSON-based API, which is the primary means of controlling it and querying information from it.
 
+**Important: there is also a GUI application to manage hydownloader, called hydownloader-systray. It has its own separate repository.**
+
 ## How does it compare to the Hydrus downloader system?
 
 The main differences:
@@ -189,7 +191,6 @@ Here is a quick table of contents for the source code:
 
 Maybe:
 
-* Multiple download workers in parallel
 * youtube-dl support
 * Save metadata files into an exportable database
 
