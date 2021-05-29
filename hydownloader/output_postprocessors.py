@@ -104,14 +104,18 @@ def parse_log_files(all_files: bool = False):
             url_id = int(m.group(1))
         if m := re.match(r".*(?:\\|\/)subscription-([0-9]+)-gallery-dl-.*\.txt", logfname):
             subscription_id = int(m.group(1))
-        with open(db.get_rootpath()+"/"+logfname, 'r', encoding='utf-8-sig') as logf:
-            log.info("hydownloader", f"Parsing log file: {logfname}")
-            urls = []
-            for line in logf:
-                if m := re.match(r'\[urllib3\.connectionpool\]\[debug\] (http.*?)(?::[0-9]+)? "[A-Z]+ (\/.*?) HTTP.*', line.strip()):
-                    urls.append(m.group(1)+m.group(2))
-                if m := re.match(r".*Starting DownloadJob for '(.*)'$", line.strip()):
-                    urls.append(m.group(1))
-            db.add_known_urls(urls, subscription_id = subscription_id, url_id = url_id)
+        try:
+            with open(db.get_rootpath()+"/"+logfname, 'r', encoding='utf-8-sig') as logf:
+                log.info("hydownloader", f"Parsing log file: {logfname}")
+                urls = []
+                for line in logf:
+                    if m := re.match(r'(?:\[.+\])* (http.*?)(?::[0-9]+)? "[A-Z]+ (\/.*?) HTTP.*', line.strip()):
+                        urls.append(m.group(1)+m.group(2))
+                    if m := re.match(r".*Starting DownloadJob for '(.*)'$", line.strip()):
+                        urls.append(m.group(1))
+                db.add_known_urls(urls, subscription_id = subscription_id, url_id = url_id)
+                db.remove_log_file_from_parse_queue(db.get_rootpath()+"/"+logfname)
+                log.info("hydownloader", f"Finished parsing log file {logfname}, found {len(urls)} URLs")
+        except FileNotFoundError as e:
+            log.error("hydownloader", f"Log file was in the parse queue, but was not found on the filesystem: {db.get_rootpath()+'/'+logfname}")
             db.remove_log_file_from_parse_queue(db.get_rootpath()+"/"+logfname)
-            log.info("hydownloader", f"Finished parsing log file {logfname}, found {len(urls)} URLs")
