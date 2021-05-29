@@ -49,6 +49,9 @@ class SSLWSGIRefServer(bottle.ServerAdapter):
             self.srv.socket = context.wrap_socket(self.srv.socket, server_side=True)
         self.srv.serve_forever()
 
+    def stop(self):
+        self.srv.shutdown()
+
 _worker_lock = threading.Lock()
 _status_lock = threading.Lock()
 _end_threads_flag = False
@@ -57,10 +60,12 @@ _url_worker_ended_flag = True
 _sub_worker_paused_flag = False
 _url_worker_paused_flag = False
 _shutdown_started = False
+_shutdown_requested_by_api_thread = False
 _url_worker_last_status = "no information"
 _sub_worker_last_status = "no information"
 _url_worker_last_update_time : float = 0
 _sub_worker_last_update_time : float = 0
+_srv = None
 
 def set_url_worker_status(text: str) -> None:
     global _url_worker_last_status, _url_worker_last_update_time
@@ -74,7 +79,7 @@ def set_subscription_worker_status(text: str) -> None:
         _sub_worker_last_status = text
         _sub_worker_last_update_time = time.time()
 
-def end_threads() -> None:
+def end_downloader_threads() -> None:
     global _end_threads_flag
     with _worker_lock:
         _end_threads_flag = True
@@ -441,8 +446,9 @@ def route_run_report() -> dict:
 
 @route('/shutdown', method='POST')
 def route_shutdown() -> None:
+    global _shutdown_requested_by_api_thread
     check_access()
-    shutdown()
+    _shutdown_requested_by_api_thread = True
 
 @route('/kill_current_sub', method='POST')
 def route_kill_current_sub() -> dict:
@@ -481,6 +487,19 @@ def enable_cors_after_request_hook() -> None:
 def cli() -> None:
     pass
 
+def api_worker(path: str, debug: bool) -> None:
+    global _srv
+    if db.get_conf('daemon.ssl') and os.path.isfile(path+"/server.pem"):
+        log.info("hydownloader", "Starting daemon (with SSL)...")
+        _srv = SSLWSGIRefServer(path+"/server.pem", host=db.get_conf('daemon.host'), port=db.get_conf('daemon.port'))
+        bottle.run(server=_srv, debug=debug)
+    else:
+        if db.get_conf('daemon.ssl'):
+            log.warning("hydownloader", "SSL enabled in config, but no server.pem file found in the db folder, continuing without SSL...")
+        log.info("hydownloader", "Starting daemon...")
+        _srv = SSLWSGIRefServer("", host=db.get_conf('daemon.host'), port=db.get_conf('daemon.port'))
+        bottle.run(server=_srv, debug=debug)
+
 @cli.command(help='Start the hydownloader daemon with the given data path.')
 @click.option('--path', type=str, required=True, help='The folder where hydownloader should store its database and the downloaded files.')
 @click.option('--debug', type=bool, default=False, is_flag=True, help='Enable additional debug logging.')
@@ -501,23 +520,21 @@ def start(path : str, debug : bool, no_sub_worker: bool, no_url_worker: bool) ->
         url_thread = threading.Thread(target=url_queue_worker, name='Single URL queue worker', daemon=True)
         url_thread.start()
 
-    if db.get_conf('daemon.ssl') and os.path.isfile(path+"/server.pem"):
-        log.info("hydownloader", "Starting daemon (with SSL)...")
-        srv = SSLWSGIRefServer(path+"/server.pem", host=db.get_conf('daemon.host'), port=db.get_conf('daemon.port'))
-        bottle.run(server=srv, debug=debug)
-    else:
-        if db.get_conf('daemon.ssl'):
-            log.warning("hydownloader", "SSL enabled in config, but no server.pem file found in the db folder, continuing without SSL...")
-        log.info("hydownloader", "Starting daemon...")
-        srv = SSLWSGIRefServer("", host=db.get_conf('daemon.host'), port=db.get_conf('daemon.port'))
-        bottle.run(server=srv, debug=debug)
+    api_thread = threading.Thread(target=api_worker, args=(path, debug))
+    api_thread.start()
+
+    while not _shutdown_started and not _shutdown_requested_by_api_thread:
+        time.sleep(1)
+    shutdown()
 
 def shutdown() -> None:
     global _shutdown_started
     db.close_thread_connections()
     if _shutdown_started: return
     _shutdown_started = True
-    end_threads()
+    end_downloader_threads()
+    if _srv:
+        _srv.stop()
     db.shutdown()
     try:
         log.info("hydownloader", "hydownloader shut down")
