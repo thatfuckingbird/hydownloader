@@ -190,7 +190,7 @@ def get_last_files_for_url(url_id: int) -> list[str]:
     c = get_conn().cursor()
     c.execute('select file from additional_data where url_id = ? order by time_added desc limit 5', (url_id,))
     for item in c.fetchall():
-        result.append(get_rootpath()+"/"+item['file'])
+        result.append(get_datapath()+"/"+item['file'])
     return result
 
 def get_last_files_for_sub(sub_id: int) -> list[str]:
@@ -199,7 +199,7 @@ def get_last_files_for_sub(sub_id: int) -> list[str]:
     c = get_conn().cursor()
     c.execute('select file from additional_data where subscription_id = ? order by time_added desc limit 5', (sub_id,))
     for item in c.fetchall():
-        result.append(get_rootpath()+"/"+item['file'])
+        result.append(get_datapath()+"/"+item['file'])
     return result
 
 def sync() -> None:
