@@ -365,7 +365,11 @@ DEFAULT_GALLERY_DL_USER_CONFIG = R"""{
         {
             "avatar": false,
             "tags": "original",
-            "ugoira": true
+            "ugoira": true,
+            "metadata": true,
+            "ranking": {
+                "max-posts": 100
+            }
         },
         "reactor":
         {
@@ -463,6 +467,10 @@ DEFAULT_GALLERY_DL_USER_CONFIG = R"""{
         {
             "tags": true,
             "notes": true
+        },
+        "kemonoparty":
+        {
+            "metadata": true
         }
     },
 
