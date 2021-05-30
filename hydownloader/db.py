@@ -521,11 +521,11 @@ def report(verbose: bool) -> None:
 
     log.info('hydownloader-report', 'Report finished')
 
-def add_log_file_to_parse_queue(log_file: str) -> None:
+def add_log_file_to_parse_queue(log_file: str, worker: str) -> None:
     check_init()
     c = get_conn().cursor()
     log_file = os.path.relpath(log_file, start = get_rootpath())
-    c.execute('insert into log_files_to_parse(file) values (?)', (log_file,))
+    c.execute('insert into log_files_to_parse(file, worker) values (?, ?)', (log_file,worker))
     get_conn().commit()
 
 def remove_log_file_from_parse_queue(log_file: str) -> None:
@@ -535,10 +535,13 @@ def remove_log_file_from_parse_queue(log_file: str) -> None:
     c.execute('delete from log_files_to_parse where file = ?', (log_file,))
     get_conn().commit()
 
-def get_queued_log_file() -> Optional[str]:
+def get_queued_log_file(worker: Optional[str] = None) -> Optional[str]:
     check_init()
     c = get_conn().cursor()
-    c.execute('select * from log_files_to_parse limit 1')
+    if not worker:
+        c.execute('select * from log_files_to_parse limit 1')
+    else:
+        c.execute('select * from log_files_to_parse where worker = ? limit 1', (worker,))
     if obj := c.fetchone():
         return obj['file']
     return None

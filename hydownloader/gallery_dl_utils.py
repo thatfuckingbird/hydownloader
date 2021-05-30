@@ -127,7 +127,7 @@ def run_gallery_dl(url: str, subscription_mode: bool, ignore_anchor: bool, metad
     if old_log_file: append_file_contents(log_file, old_log_file)
     run_args += ['-o', f'output.logfile.path={json.dumps(log_file)}']
     run_args += ['-o', 'output.logfile.format="[{name}][{levelname}][{asctime}] {message}"']
-    db.add_log_file_to_parse_queue(log_file)
+    db.add_log_file_to_parse_queue(log_file, process_id if process_id else 'unknown')
     if old_unsupported_urls_file: append_file_contents(unsupported_urls_file, old_unsupported_urls_file)
     run_args += ['--write-unsupported', unsupported_urls_file]
     if overwrite_existing:

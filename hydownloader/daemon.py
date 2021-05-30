@@ -88,6 +88,7 @@ def end_downloader_threads() -> None:
 
 def subscription_worker() -> None:
     global _sub_worker_ended_flag
+    proc_id = 'sub worker'
     try:
         log.info("hydownloader", "Starting subscription worker thread...")
         with _worker_lock:
@@ -135,7 +136,7 @@ def subscription_worker() -> None:
                     subscription_mode=True,
                     abort_after=sub['abort_after'],
                     max_file_count = sub['max_files_initial'] if initial_check else sub['max_files_regular'],
-                    process_id = 'sub worker'
+                    process_id = proc_id
                     )
                 new_sub_data = {
                     'id': sub['id']
@@ -146,7 +147,7 @@ def subscription_worker() -> None:
                     new_sub_data['last_successful_check'] = check_started_time
                 new_sub_data['last_check'] = check_started_time
                 new_files, skipped_files = output_postprocessors.process_additional_data(subscription_id = sub['id'])
-                output_postprocessors.parse_log_files()
+                output_postprocessors.parse_log_files(False, proc_id)
                 check_ended_time = time.time()
                 db.add_subscription_check(sub['id'], new_files=new_files, already_seen_files=skipped_files, time_started=check_started_time, time_finished=check_ended_time, status=result if result else 'ok')
                 db.add_or_update_subscriptions([new_sub_data])
@@ -173,6 +174,7 @@ def subscription_worker() -> None:
 
 def url_queue_worker() -> None:
     global _url_worker_ended_flag
+    proc_id = 'url worker'
     try:
         log.info("hydownloader", "Starting single URL queue worker thread...")
         with _worker_lock:
@@ -215,7 +217,7 @@ def url_queue_worker() -> None:
                     chapter_filter=None,
                     subscription_mode=False,
                     max_file_count = urlinfo['max_files'],
-                    process_id = 'url worker'
+                    process_id = proc_id
                     )
                 new_url_data = {
                     'id': urlinfo['id']
@@ -229,7 +231,7 @@ def url_queue_worker() -> None:
                     new_url_data['status_text'] = 'ok'
                 new_url_data['time_processed'] = check_time
                 new_files, skipped_files = output_postprocessors.process_additional_data(url_id = urlinfo['id'])
-                output_postprocessors.parse_log_files()
+                output_postprocessors.parse_log_files(False, proc_id)
                 new_url_data['new_files'] = new_files
                 new_url_data['already_seen_files'] = skipped_files
                 db.add_or_update_urls([new_url_data])

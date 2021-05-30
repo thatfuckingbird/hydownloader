@@ -92,12 +92,12 @@ def process_additional_data(subscription_id: Optional[int] = None, url_id: Optio
                 process_additional_data(subscription_id = int(match.group(1)))
     return new_count, skipped_count
 
-def parse_log_files(all_files: bool = False):
+def parse_log_files(all_files: bool = False, worker: Optional[str] = None):
     if all_files:
         logs = glob.glob(db.get_rootpath()+"/logs/single-urls-*-gallery-dl-*.txt") + glob.glob(db.get_rootpath()+"/logs/subscription-*-gallery-dl-*.txt")
         for l in logs:
-            db.add_log_file_to_parse_queue(l)
-    while logfname := db.get_queued_log_file():
+            db.add_log_file_to_parse_queue(l, 'reparse')
+    while logfname := db.get_queued_log_file(worker):
         subscription_id = None
         url_id = None
         if m := re.match(r".*(?:\\|\/)single-urls-([0-9]+)-gallery-dl-.*\.txt", logfname):

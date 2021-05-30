@@ -140,7 +140,8 @@ CREATE TABLE "known_urls" (
 
 CREATE_LOG_FILES_TO_PARSE_STATEMENT = """
 CREATE TABLE "log_files_to_parse" (
-	"file"	TEXT
+	"file"	TEXT,
+	"worker"	TEXT NOT NULL
 )
 """
 
