@@ -447,10 +447,11 @@ def route_run_report() -> dict:
     return {'status': True}
 
 @route('/shutdown', method='POST')
-def route_shutdown() -> None:
+def route_shutdown() -> dict:
     global _shutdown_requested_by_api_thread
     check_access()
     _shutdown_requested_by_api_thread = True
+    return {'status': True}
 
 @route('/kill_current_sub', method='POST')
 def route_kill_current_sub() -> dict:
