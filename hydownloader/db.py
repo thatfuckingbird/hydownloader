@@ -101,23 +101,23 @@ def init(path : str) -> None:
     if not os.path.isfile(path+"/hydownloader.db"):
         needs_db_init = True
     if not os.path.isfile(path+"/gallery-dl-config.json"):
-        gdl_cfg = open(path+"/gallery-dl-config.json", 'w', encoding='utf-8-sig')
+        gdl_cfg = open(path+"/gallery-dl-config.json", 'w', encoding='utf-8')
         gdl_cfg.write(C.DEFAULT_GALLERY_DL_CONFIG)
         gdl_cfg.close()
     if not os.path.isfile(path+"/gallery-dl-user-config.json"):
-        gdl_cfg = open(path+"/gallery-dl-user-config.json", 'w', encoding='utf-8-sig')
+        gdl_cfg = open(path+"/gallery-dl-user-config.json", 'w', encoding='utf-8')
         gdl_cfg.write(C.DEFAULT_GALLERY_DL_USER_CONFIG)
         gdl_cfg.close()
     if not os.path.isfile(path+"/hydownloader-config.json"):
-        hydl_cfg = open(path+"/hydownloader-config.json", 'w', encoding='utf-8-sig')
+        hydl_cfg = open(path+"/hydownloader-config.json", 'w', encoding='utf-8')
         hydl_cfg.write(json.dumps(C.DEFAULT_CONFIG, indent=4))
         hydl_cfg.close()
     if not os.path.isfile(path+"/hydownloader-import-jobs.json"):
-        hydl_cfg = open(path+"/hydownloader-import-jobs.json", 'w', encoding='utf-8-sig')
+        hydl_cfg = open(path+"/hydownloader-import-jobs.json", 'w', encoding='utf-8')
         hydl_cfg.write(json.dumps(C.DEFAULT_IMPORT_JOBS, indent=4))
         hydl_cfg.close()
     if not os.path.isfile(path+"/cookies.txt"):
-        open(path+"/cookies.txt", "w", encoding="utf-8-sig").close()
+        open(path+"/cookies.txt", "w", encoding="utf-8").close()
     get_conn()
     if needs_db_init: create_db()
     _config = json.load(open(path+"/hydownloader-config.json", "r", encoding="utf-8-sig"))
