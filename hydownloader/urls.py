@@ -180,7 +180,7 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
         return ('fanbox', m.group('username'))
     if m := re.match(r"https?://(www\.)?fantia\.jp/fanclubs/(?P<id>[0-9]+)((&|/).*)?", u):
         return ('fantia', m.group('id'))
-    if m := re.match(r"(?:https?://)?(?:www\.)?webtoons\.com/(?P<path>(en|fr)/([^/?#]+)/([^/?#]+))", u):
+    if m := re.match(r"(?:https?://)?(?:www\.)?webtoons\.com/(?P<path>(en|fr)/([^/?#]+)/([^/?#]+)/list\?title_no=[0-9]+)", u):
         return ('webtoons', m.group('path'))
     if m := re.match(r"(?:https?://)?kemono\.party/(?P<service>[^/?#]+)/user/(?P<user>[^/?#]+)/?(?:$|[?#])", u):
         return ('kemonoparty', m.group('service')+"/user/"+m.group('user'))
