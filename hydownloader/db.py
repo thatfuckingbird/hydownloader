@@ -231,8 +231,8 @@ def get_due_subscriptions() -> list[dict]:
         select * from subscriptions where
             paused <> 1 and
             (last_check = last_successful_check or last_check is null) and
-            (last_check + check_interval <= ? or last_check is null) and
-            (last_check + 60 <= ? or last_check is null)
+            (max(last_check,ifnull(last_successful_check, 0)) + check_interval <= ? or last_check is null) and
+            (max(last_check,ifnull(last_successful_check, 0)) + 60 <= ? or last_check is null)
         order by ifnull(last_check, 0) asc, priority desc
     """, (current_time, current_time)).fetchall())
     # subs with errors (last check != last successful check)
@@ -242,10 +242,9 @@ def get_due_subscriptions() -> list[dict]:
             paused <> 1 and
             last_check is not null and
             (last_check <> last_successful_check or last_successful_check is null) and
-            last_check + check_interval <= ? and
-            last_check + 60 <= ?
-        order by ifnull(last_check, 0) asc, priority desc
-    """, (current_time, current_time)).fetchall())
+            max(last_check,ifnull(last_successful_check, 0)) + 60 <= ?
+        order by max(last_check,ifnull(last_successful_check, 0)) asc, priority desc
+    """, (current_time,)).fetchall())
     return result
 
 def get_urls_to_download() -> list[dict]:
