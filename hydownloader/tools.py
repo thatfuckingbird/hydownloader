@@ -417,6 +417,16 @@ def pixiv_login(path: str) -> None:
     args += ['oauth:pixiv']
     gallery_dl_utils.run_gallery_dl_with_custom_args(args)
 
+@cli.command(help='Acquire OAuth token needed for deviantart.')
+@click.option('--path', type=str, required=True, help='Database path.')
+def deviantart_login(path: str) -> None:
+    log.init(path, True)
+    db.init(path)
+    args = ['--cookies', db.get_rootpath()+'/cookies.txt']
+    args += ['-o', 'cache.file='+db.get_rootpath()+'/gallery-dl-cache.db']
+    args += ['oauth:deviantart']
+    gallery_dl_utils.run_gallery_dl_with_custom_args(args)
+
 @cli.command(help='Initialize hydownloader database folder.')
 @click.option('--path', type=str, required=True, help='Database path.')
 def init_db(path: str) -> None:
