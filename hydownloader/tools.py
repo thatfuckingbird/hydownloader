@@ -401,10 +401,11 @@ def test_internal(sites: str) -> bool:
 @cli.command(help='Print a report about subscriptions and the URL queue, with a focus on finding dead, failing or erroneous subscriptions/URLs.')
 @click.option('--path', type=str, required=True, help='Database path.')
 @click.option('--verbose', type=bool, is_flag=True, required=False, default=False, help='More details (listing individual subscriptions/URLs, not just aggregate numbers). Might produce a lot of output.')
-def report(path: str, verbose: bool) -> None:
+@click.option('--no-urls', type=bool, is_flag=True, required=False, default=False, help='Only report about subscriptions, not single URL downloads.')
+def report(path: str, verbose: bool, no_urls: bool) -> None:
     log.init(path, True)
     db.init(path)
-    db.report(verbose)
+    db.report(verbose, not no_urls)
 
 @cli.command(help='Acquire OAuth token needed for Pixiv.')
 @click.option('--path', type=str, required=True, help='Database path.')

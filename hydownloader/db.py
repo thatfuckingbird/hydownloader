@@ -410,7 +410,7 @@ def get_queued_urls_by_id(url_ids: list[int], archived: bool) -> list[dict]:
             result.append(row)
     return result
 
-def report(verbose: bool) -> None:
+def report(verbose: bool, urls: bool = True) -> None:
     check_init()
     c = get_conn().cursor()
 
@@ -481,33 +481,33 @@ def report(verbose: bool) -> None:
             ))
 
     log.info('hydownloader-report', f'Subscriptions: {all_subs}')
-    log.info('hydownloader-report', f'Single URLs: {all_urls}')
+    if urls: log.info('hydownloader-report', f'Single URLs: {all_urls}')
     log.info('hydownloader-report', f'Subscription checks: {all_sub_checks}')
     log.info('hydownloader-report', f'All file results (including duplicates and skipped): {all_file_results}')
     log.info('hydownloader-report', f'Last time a subscription was checked: {last_time_sub_checked}')
-    log.info('hydownloader-report', f'Last time a URL was downloaded: {last_time_url_processed}')
+    if urls: log.info('hydownloader-report', f'Last time a URL was downloaded: {last_time_url_processed}')
     log.info('hydownloader-report', f'Subscriptions due for a check: {subs_queued}')
-    log.info('hydownloader-report', f'URLs waiting to be downloaded: {urls_queued}')
+    if urls: log.info('hydownloader-report', f'URLs waiting to be downloaded: {urls_queued}')
     log.info('hydownloader-report', f'Paused subscriptions: {subs_paused}')
-    log.info('hydownloader-report', f'Paused URLs: {urls_paused}')
-    log.info('hydownloader-report', f'Errored URLs: {urls_errored}')
-    if verbose and urls_errored:
+    if urls: log.info('hydownloader-report', f'Paused URLs: {urls_paused}')
+    if urls: log.info('hydownloader-report', f'Errored URLs: {urls_errored}')
+    if verbose and urls_errored and urls:
         log.info('hydownloader-report', 'These are the following:')
         print_url_entries(urls_errored_entries)
     log.info('hydownloader-report', f'Errored subscriptions: {subs_errored}')
     if verbose and subs_errored:
         log.info('hydownloader-report', 'These are the following:')
         print_sub_entries(subs_errored_entries)
-    log.info('hydownloader-report', f'URLs that did not error but produced no files: {urls_no_files}')
-    if verbose and urls_no_files:
+    if urls: log.info('hydownloader-report', f'URLs that did not error but produced no files: {urls_no_files}')
+    if verbose and urls_no_files and urls:
         log.info('hydownloader-report', 'These are the following:')
         print_url_entries(urls_no_files_entries)
     log.info('hydownloader-report', f'Subscriptions that did not error but produced no files: {subs_no_files}')
     if verbose and subs_no_files:
         log.info('hydownloader-report', 'These are the following:')
         print_sub_entries(subs_no_files_entries)
-    log.info('hydownloader-report', f'URLs waiting to be downloaded for more than a day: {urls_waiting_long}')
-    if verbose and urls_waiting_long:
+    if urls: log.info('hydownloader-report', f'URLs waiting to be downloaded for more than a day: {urls_waiting_long}')
+    if verbose and urls_waiting_long and urls:
         log.info('hydownloader-report', 'These are the following:')
         print_url_entries(urls_waiting_long_entries)
     log.info('hydownloader-report', f'Subscriptions due for a check longer than their check interval: {subs_waiting_long}')
