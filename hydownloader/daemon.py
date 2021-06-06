@@ -457,12 +457,14 @@ def route_shutdown() -> dict:
 def route_kill_current_sub() -> dict:
     check_access()
     gallery_dl_utils.stop_process('sub worker')
+    log.warning("hydownloader", "Current subscription check force-stopped via API")
     return {'status': True}
 
 @route('/kill_current_url', method='POST')
 def route_kill_current_url() -> dict:
     check_access()
     gallery_dl_utils.stop_process('url worker')
+    log.warning("hydownloader", "Current URL download force-stopped via API")
     return {'status': True}
 
 @route('/')
