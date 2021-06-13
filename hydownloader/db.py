@@ -556,7 +556,8 @@ def delete_all_hydrus_known_urls() -> None:
     c.execute('delete from known_urls where status <> 0')
 
 def close_thread_connections() -> None:
-    global _closed_threads
+    global _closed_threads, _inited
+    if not _inited: return
     thread_id = threading.get_ident()
     with _closed_threads_lock:
         if thread_id in _closed_threads:
