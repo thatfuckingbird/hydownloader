@@ -259,7 +259,7 @@ def url_queue_worker() -> None:
 def add_cors_headers() -> None:
     bottle.response.headers['Access-Control-Allow-Origin'] = '*'
     bottle.response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, OPTIONS'
-    bottle.response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
+    bottle.response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token, HyDownloader-Access-Key'
 
 def check_access() -> None:
     if not db.get_conf("daemon.access_key") == bottle.request.headers.get("HyDownloader-Access-Key"):
