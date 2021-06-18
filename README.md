@@ -44,7 +44,10 @@ The main differences:
 7. To run hydownloader components like `hydownloader-daemon`, prefix all commands with `python -m poetry run`. Example: `python -m poetry run hydownloader-daemon start --path /path/to/data/folder`.
 Alternatively, you can type `python -m poetry shell` and then you can run subsequent commands without the `python -m poetry run` prefix.
 
-## How to use (READ AND UNDERSTAND THIS BEFORE ASKING FOR SUPPORT)
+## How to use - overview (READ AND UNDERSTAND THIS BEFORE ASKING FOR SUPPORT)
+
+This section will give you a basic overview of hydownloader. After reading this, you might want to check out
+the [Tutorial](docs/Tutorial.md). There is also a [FAQ](docs/FAQ.md) and [API docs](docs/API.md).
 
 The main components:
 
