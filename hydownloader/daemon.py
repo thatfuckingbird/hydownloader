@@ -270,19 +270,6 @@ def route_api_version() -> dict:
     check_access()
     return {'version': constants.API_VERSION}
 
-@route('/url_file_info', method='POST')
-def route_url_file_info() -> str:
-    check_access()
-    result = []
-    for url in bottle.request.json['urls']:
-        url_info = {
-            'queue_info': db.check_single_queue_for_url(url),
-            'anchor_info': gallery_dl_utils.check_anchor_for_url(url),
-            'known_url_info': db.get_known_urls(urls.urls_for_known_url_lookup(url))
-        }
-        result.append(url_info)
-    return json.dumps(result)
-
 @route('/url_info', method='POST')
 def route_url_info() -> str:
     check_access()
@@ -290,6 +277,9 @@ def route_url_info() -> str:
     for url in bottle.request.json['urls']:
         sub_data = urls.subscription_data_from_url(url)
         url_info = {
+            'queue_info': db.check_single_queue_for_url(url),
+            'anchor_info': gallery_dl_utils.check_anchor_for_url(url),
+            'known_url_info': db.get_known_urls(urls.urls_for_known_url_lookup(url)),
             'gallerydl_downloader': gallery_dl_utils.downloader_for_url(url),
             'sub_downloader': sub_data[0],
             'sub_keywords': sub_data[1],
