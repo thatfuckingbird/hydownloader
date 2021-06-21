@@ -20,6 +20,8 @@ import json
 import os
 import os.path
 import sys
+import re
+import time
 import hashlib
 from collections import defaultdict
 from typing import Optional, Union
@@ -61,14 +63,82 @@ def parse_additional_data(result: defaultdict[str, list[str]], data_str: str) ->
     if simple_string:
         result[""].extend(x.strip() for x in data_str.split(',') if x.strip())
 
+@cli.command(help='List, rename or delete already imported files')
+@click.option('--path', type=str, required=True, help='hydownloader database path.')
+@click.option('--action', type=str, required=True, help='The action to perform. One of list, rename, delete.')
+@click.option('--do-it', type=bool, is_flag=True, default=False, show_default=True, help='Actually do the renaming or deleting. Off by default.')
+@click.option('--no-skip-on-differing-times', type=bool, is_flag=True, default=False, show_default=True, help='Do not skip files that have different creation or modification date than what is in the database of already imported files.')
+@click.option('--no-include-metadata', type=bool, is_flag=True, default=False, show_default=True, help='Do not include metadata files in the action.')
+def clear_imported(path: str, action: str, do_it: bool, no_skip_on_differing_times: bool, no_include_metadata: bool):
+    if action not in ["list", "rename", "delete"]:
+        log.fatal("hydownloader-importer", f"Invalid action: {action}")
+
+    log.init(path, True)
+    db.init(path)
+
+    log.info("hydownloader-importer", f"Collecting files for action: {action}")
+
+    collected_files : list[tuple[str, str]] = []
+
+    data_path = db.get_datapath()
+    for root, _, files in os.walk(data_path):
+        for fname in files:
+            # json files hold metadata, don't import them to Hydrus
+            if fname.endswith('.json'):
+                continue
+
+            # already imported file
+            if fname.endswith('.HYDL-IMPORTED'):
+                continue
+
+            abspath = root + "/" + fname
+            path = os.path.relpath(abspath, start = data_path)
+            ctime = os.stat(abspath).st_ctime
+            mtime = os.stat(abspath).st_mtime
+
+            is_file_in_import_db, db_mtime, db_ctime = db.check_import_db(path)
+            if not is_file_in_import_db: continue
+
+            if ctime != db_ctime or mtime != db_mtime:
+                if not no_skip_on_differing_times:
+                    continue
+
+            # find the path of the associated json metadata file, check if it exists
+            # for pixiv ugoira, the same metadata file belongs both to the .webm and the .zip,
+            # so this needs special handling
+            json_path = abspath+'.json'
+            if not os.path.isfile(json_path) and abspath.endswith('.webm'):
+                json_path = abspath[:-4]+"zip.json"
+            json_exists = os.path.isfile(json_path)
+            json_relpath = os.path.relpath(json_path, start = data_path)
+
+            collected_files.append((path,abspath))
+            if json_exists and not no_include_metadata:
+                collected_files.append((json_relpath,json_path))
+
+    log.info("hydownloader-importer", f"Executing action: {action}")
+    for relpath, abspath in collected_files:
+        if action == "list":
+            print(relpath)
+        elif action == "delete":
+            print(f"Deleting {abspath}")
+            if do_it: os.remove(abspath)
+        elif action == "rename":
+            print(f"Renaming {abspath}")
+            if do_it: os.rename(abspath, abspath+".HYDL-IMPORTED")
+
 @cli.command(help='Run an import job to transfer files and metadata into Hydrus.')
 @click.option('--path', type=str, required=True, help='hydownloader database path.')
-@click.option('--job', type=str, required=True, help='Hydrus database directory (where the .db files are located).')
-@click.option('--config', type=str, required=False, default=None, help='Import job configuration filepath override.')
-@click.option('--verbose', type=bool, is_flag=True, default=False, help='Print generated metadata and other information.')
-@click.option('--do-it', type=bool, is_flag=True, default=False, help='Actually do the importing. Off by default.')
-@click.option('--no-stop-on-missing-metadata', type=bool, is_flag=False, default=True, help='Do not stop importing when a metadata find is not found.')
-def run_job(path: str, job: str, config: Optional[str], verbose: bool, do_it: bool, no_stop_on_missing_metadata: bool) -> None:
+@click.option('--job', type=str, required=True, help='Name of the import job to run.')
+@click.option('--skip-already-imported', type=bool, required=False, default=False, is_flag=True, show_default=True, help='Skip files that were already imported in the past (based on the database of imported files).')
+@click.option('--no-skip-on-differing-times', type=bool, required=False, default=False, is_flag=True, show_default=True, help='Do not skip files that have different creation or modification date than what is in the database of already imported files. This flag only has effect when --skip-already-imported is used.')
+@click.option('--config', type=str, required=False, default=None, show_default=True, help='Import job configuration filepath override.')
+@click.option('--verbose', type=bool, is_flag=True, default=False, show_default=True, help='Print generated metadata and other information.')
+@click.option('--do-it', type=bool, is_flag=True, default=False, show_default=True, help='Actually do the importing. Off by default.')
+@click.option('--no-abort-on-missing-metadata', type=bool, is_flag=True, show_default=True, default=False, help='Do not stop importing when a metadata file is not found.')
+@click.option('--filename-regex', type=str, default=None, show_default=True, help='Only run the importer on files whose filepath matches the regex given here. This is an additional restriction on top of the filters defined in the import job.')
+@click.option('--no-abort-on-error', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort on errors. Useful to check for any potential errors before actually importing files.')
+def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differing_times: bool, config: Optional[str], verbose: bool, do_it: bool, no_abort_on_missing_metadata: bool, filename_regex: Optional[str], no_abort_on_errors: bool) -> None:
     log.init(path, True)
     db.init(path)
 
@@ -86,22 +156,43 @@ def run_job(path: str, job: str, config: Optional[str], verbose: bool, do_it: bo
 
     force_add_metadata = jd.get('forceAddMetadata', True)
     force_add_files = jd.get('forceAddFiles', False)
+    order_folder_contents = jd.get('orderFolderContents', 'default')
 
     client = hydrus.Client(jd['apiKey'], jd['apiURL'])
 
     log.info("hydownloader-importer", f"Starting import job: {job}")
 
     # iterate over all files in the data directory
-    for root, dirs, files in os.walk(data_path):
+    for root, _, files in os.walk(data_path):
+        # sort files before iterating over them
+        if order_folder_contents == "name":
+            files = sorted(files)
+        elif order_folder_contents == "mtime":
+            files = sorted(files, key=lambda t: os.stat(t).st_mtime)
+        elif order_folder_contents == "ctime":
+            files = sorted(files, key=lambda t: os.stat(t).st_ctime)
+        elif order_folder_contents != "default":
+            printerr("The value of the orderFolderContents option is invalid")
+            sys.exit(1)
+
         for fname in files:
             # json files hold metadata, don't import them to Hydrus
             if fname.endswith('.json'):
                 continue
 
-            # set up some variables
-            # some will be used later in the code, some are meant to be used in user-defined expressions
+            # already imported file
+            if fname.endswith('.HYDL-IMPORTED'):
+                continue
+
             abspath = root + "/" + fname
             path = os.path.relpath(abspath, start = data_path)
+            if filename_regex and not re.match(filename_regex, path):
+                continue
+
+            # set up some variables
+            # some will be used later in the code, some are meant to be used in user-defined expressions
+            ctime = os.stat(abspath).st_ctime
+            mtime = os.stat(abspath).st_mtime
             split_path = os.path.split(path)
             fname_noext, fname_ext = os.path.splitext(fname)
             if fname_ext.startswith('.'): fname_ext = fname_ext[1:]
@@ -113,11 +204,14 @@ def run_job(path: str, job: str, config: Optional[str], verbose: bool, do_it: bo
             if not os.path.isfile(json_path) and abspath.endswith('.webm'):
                 json_path = abspath[:-4]+"zip.json"
             json_exists = True
+            raw_metadata = None
             if not os.path.isfile(json_path):
                 json_exists = False
                 printerr(f"Warning: no metadata file found for {path}")
-                if not no_stop_on_missing_metadata:
+                if not no_abort_on_missing_metadata or not no_abort_on_errors:
                     sys.exit(1)
+            else:
+                raw_metadata = open(json_path, "rb").read()
 
             generated_urls = set()
             generated_tags : set[tuple[str, str]] = set()
@@ -130,20 +224,22 @@ def run_job(path: str, job: str, config: Optional[str], verbose: bool, do_it: bo
             for group in jd['groups']:
                 # evaluate filter, load json metadata if the filter matches and we haven't loaded it yet
                 should_process = False
+                metadata_only = group.get("metadataOnly", False)
                 try:
                     should_process = eval(group['filter'])
                 except:
                     printerr(f"Failed to evaluate filter: {group['filter']}")
-                    sys.exit(1)
+                    if not no_abort_on_errors: sys.exit(1)
                 if not json_data and json_exists:
                     try:
                         json_data = json.load(open(json_path,encoding='utf-8-sig'))
                     except json.decoder.JSONDecodeError:
                         printerr(f"Failed to parse JSON: {json_path}")
-                        sys.exit(1)
+                        if not no_abort_on_errors: sys.exit(1)
                 if not should_process:
                     continue
-                matched = True
+                if not metadata_only:
+                    matched = True
 
                 # get the data for this file from the additional_data db table and process it
                 # set up some variables that user-defined expressions will be able to use
@@ -185,7 +281,7 @@ def run_job(path: str, job: str, config: Optional[str], verbose: bool, do_it: bo
                                 for eval_res_str in eval_res:
                                     if not isinstance(eval_res_str, str):
                                         printerr(f"Invalid result type ({str(type(eval_res_str))}) while evaluating expression: {d['values']}")
-                                        sys.exit(1)
+                                        if not no_abort_on_errors: sys.exit(1)
                                     else:
                                         generated_results.append(eval_res_str)
                         except Exception as e:
@@ -204,7 +300,7 @@ def run_job(path: str, job: str, config: Optional[str], verbose: bool, do_it: bo
                                     for eval_res_str in eval_res:
                                         if not isinstance(eval_res_str, str):
                                             printerr(f"Invalid result type ({str(type(eval_res_str))}) while evaluating expression: {eval_expr}")
-                                            sys.exit(1)
+                                            if not no_abort_on_errors: sys.exit(1)
                                         else:
                                             generated_results.append(eval_res_str)
                             except Exception as e:
@@ -216,24 +312,37 @@ def run_job(path: str, job: str, config: Optional[str], verbose: bool, do_it: bo
                     # check for empty results or failed evaluation, as necessary
                     if not generated_results and not allow_empty:
                         printerr(f"Error: the rule named {rule_name} yielded no results but this is not allowed")
-                        sys.exit(1)
+                        if not no_abort_on_errors: sys.exit(1)
                     if has_error:
                         printerr(f"Warning: an expression failed to evaluate in the rule named {rule_name}")
                         if not skip_on_error:
-                            sys.exit(1)
+                            if not no_abort_on_errors: sys.exit(1)
 
                     # save results of the currently evaluated expressions
                     if dtype == 'url':
                         generated_urls.update(generated_results)
                     else:
-                        for repo in d["tagRepos"]:
-                            generated_tags.update((repo,tag) for tag in generated_results)
+                        if "tagRepos" in d: # predefined tag repos
+                            for repo in d["tagRepos"]:
+                                generated_tags.update((repo,tag) for tag in generated_results)
+                        else: # tag repos should be extracted from the tags
+                            for tag in generated_results:
+                                if not ":" in tag:
+                                    printerr(f"The generated tag '{tag}' must start with a tag repo name. In rule: {rule_name}.")
+                                    if not no_abort_on_errors: sys.exit(1)
+                                else:
+                                    repo = tag.split(":")[0]
+                                    actual_tag = ":".join(tag.split(":")[1:])
+                                    generated_tags.add((repo,actual_tag))
             if matched:
                 printerr(f"File matched: {path}...")
 
                 if not os.path.getsize(abspath):
-                    print(f"Found truncated file: {abspath}")
-                    sys.exit(1)
+                    print(f"Found truncated file, won't be imported: {abspath}")
+                    if not no_abort_on_errors:
+                        sys.exit(1)
+                    else:
+                        continue
 
                 if verbose:
                     printerr("Generated URLs:")
@@ -244,8 +353,14 @@ def run_job(path: str, job: str, config: Optional[str], verbose: bool, do_it: bo
                         printerr(f"{repo} <- {tag}")
                 if verbose: printerr('Hashing...')
 
+                is_file_in_import_db, db_mtime, db_ctime = db.check_import_db(path)
+                if skip_already_imported and is_file_in_import_db:
+                    if not (no_skip_on_differing_times and (db_mtime != mtime or db_ctime != ctime)):
+                        continue
+
                 # calculate hash, check if Hydrus already knows the file
                 already_added = False
+                hexdigest = str()
                 if do_it:
                     hasher = hashlib.sha256()
                     with open(abspath, 'rb') as hashedfile:
@@ -257,7 +372,6 @@ def run_job(path: str, job: str, config: Optional[str], verbose: bool, do_it: bo
                     if client.file_metadata(hashes=[hexdigest], only_identifiers=True):
                         printerr("File is already in Hydrus")
                         already_added = True
-
                 # send file, tags, metadata to Hydrus as needed
                 if not already_added or force_add_files:
                     if verbose: printerr("Sending file to Hydrus...")
@@ -271,6 +385,10 @@ def run_job(path: str, job: str, config: Optional[str], verbose: bool, do_it: bo
                         tag_dict[repo].append(tag)
                     if do_it:
                         client.add_tags(hashes=[hexdigest],service_to_tags=tag_dict)
+                if do_it:
+                    if verbose: printerr("Writing entry to import database...")
+                    db.add_or_update_import_entry(path, import_time=time.time(), creation_time=ctime, modification_time=mtime, metadata=raw_metadata, hexdigest=hexdigest)
+
             else:
                 if verbose: printerr(f"Skipping due to no matching filter: {path}")
 

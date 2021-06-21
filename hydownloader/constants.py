@@ -188,6 +188,23 @@ CREATE INDEX "known_url_index" ON "known_urls" (
 )
 """
 
+SHARED_CREATE_IMPORTED_FILES_STATEMENT = """
+CREATE TABLE "imported_files" (
+	"filename"	TEXT NOT NULL,
+	"import_time"	INTEGER NOT NULL,
+	"creation_time"	INTEGER NOT NULL,
+	"modification_time"	INTEGER NOT NULL,
+	"metadata"	BLOB,
+	"hash"	TEXT NOT NULL
+)
+"""
+
+SHARED_CREATE_IMPORTED_FILE_INDEX_STATEMENT = """
+CREATE INDEX "imported_file_index" ON "imported_files" (
+	"filename"
+)
+"""
+
 DEFAULT_GALLERY_DL_USER_CONFIG = R"""{
     "extractor":
     {

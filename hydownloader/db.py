@@ -149,6 +149,8 @@ def create_shared_db() -> None:
     c = get_shared_conn().cursor()
     c.execute(C.SHARED_CREATE_KNOWN_URLS_STATEMENT)
     c.execute(C.SHARED_CREATE_KNOWN_URL_INDEX_STATEMENT)
+    c.execute(C.SHARED_CREATE_IMPORTED_FILES_STATEMENT)
+    c.execute(C.SHARED_CREATE_IMPORTED_FILE_INDEX_STATEMENT)
     get_shared_conn().commit()
 
 def get_rootpath() -> str:
@@ -605,3 +607,20 @@ def get_conf(name : str) -> Union[str, int, bool]:
         log.warning("hydownloader", f'Configuration key not found in user config, default value was used: {name}')
         return C.DEFAULT_CONFIG[name]
     log.fatal("hydownloader", f'Invalid configuration key: {name}')
+
+def check_import_db(path: str) -> tuple[bool, Optional[float], Optional[float]]:
+    check_init()
+    c = get_shared_conn().cursor()
+    c.execute("select * from imported_files where path = ? limit 1",(path,))
+    if row := c.fetchone():
+        return True, row['modification_time'], row['creation_time']
+    return False, None, None
+
+def add_or_update_import_entry(path: str, import_time: float, creation_time: float, modification_time: float, metadata: Optional[bytes], hexdigest: str) -> None:
+    check_init()
+    c = get_shared_conn().cursor()
+    c.execute("select * from imported_files where path = ? limit 1",(path,))
+    if c.fetchone():
+        c.execute("update imported_files set import_time = ?, creation_time = ?, modification_time = ?, metadata = ?, hash = ? where path = ?", (import_time, creation_time, modification_time, metadata, hexdigest, path))
+    else:
+        c.execute("insert into imported_files(path,import_time,creation_time,modification_time,metadata,hash) values (?,?,?,?,?,?)", (path,import_time,creation_time,modification_time,metadata,hexdigest))
