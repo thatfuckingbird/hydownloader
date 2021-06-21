@@ -497,9 +497,9 @@ def api_worker(path: str, debug: bool) -> None:
 
 @cli.command(help='Start the hydownloader daemon with the given data path.')
 @click.option('--path', type=str, required=True, help='The folder where hydownloader should store its database and the downloaded files.')
-@click.option('--debug', type=bool, default=False, is_flag=True, help='Enable additional debug logging.')
-@click.option('--no-sub-worker', type=bool, default=False, is_flag=True, help='Do not start subscription worker thread.')
-@click.option('--no-url-worker', type=bool, default=False, is_flag=True, help='Do not start single URL queue worker thread.')
+@click.option('--debug', type=bool, default=False, show_default=True, is_flag=True, help='Enable additional debug logging.')
+@click.option('--no-sub-worker', type=bool, default=False, show_default=True, is_flag=True, help='Do not start subscription worker thread.')
+@click.option('--no-url-worker', type=bool, default=False, show_default=True, is_flag=True, help='Do not start single URL queue worker thread.')
 def start(path : str, debug : bool, no_sub_worker: bool, no_url_worker: bool) -> None:
     log.init(path, debug)
     db.init(path)
