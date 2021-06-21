@@ -117,5 +117,5 @@ def parse_log_files(all_files: bool = False, worker: Optional[str] = None):
                 db.remove_log_file_from_parse_queue(db.get_rootpath()+"/"+logfname)
                 log.info("hydownloader", f"Finished parsing log file {logfname}, found {len(urls)} URLs")
         except FileNotFoundError as e:
-            log.error("hydownloader", f"Log file was in the parse queue, but was not found on the filesystem: {db.get_rootpath()+'/'+logfname}")
+            log.error("hydownloader", f"Log file was in the parse queue, but was not found on the filesystem: {db.get_rootpath()+'/'+logfname}", e)
             db.remove_log_file_from_parse_queue(db.get_rootpath()+"/"+logfname)
