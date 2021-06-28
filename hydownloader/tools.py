@@ -99,7 +99,7 @@ def check_results_of_post_url(data: dict, sitename: str) -> bool:
 
 @cli.command(help='Test downloading from a list of sites.')
 @click.option('--path', type=str, required=True, help='Database path.')
-@click.option('--sites', type=str, required=True, help='A comma-separated list of sites to test downloading from. Currently supported: environment, gelbooru, pixiv, lolibooru, patreon, danbooru, 3dbooru, nijie, sankaku, idolcomplex, artstation, twitter, deviantart, webtoons, baraag, yandere, hentaifoundry. WARNING: this will attempt to download "sensitive" content.')
+@click.option('--sites', type=str, required=True, help='A comma-separated list of sites to test downloading from. Currently supported: environment, gelbooru, pixiv, lolibooru, patreon, danbooru, 3dbooru, nijie, sankaku, idolcomplex, artstation, twitter, deviantart, webtoons, baraag, pawoo, yandere, hentaifoundry. WARNING: this will attempt to download "sensitive" content.')
 def test(path: str, sites: str) -> None:
     log.init(path, True)
     db.init(path)
@@ -251,6 +251,16 @@ def test_internal(sites: str) -> bool:
                 "mastodon/baraag.net/pumpkinnsfw/baraag_106191173043385531_106191139078112401.png.json": ['"sensitive": true']
             }
         },
+        'pawoo': {
+            'url': "https://pawoo.net/@e050f256/101408660499763258",
+            'anchors': ['pawoo11289545','pawoo11289548'],
+            'filenames': {
+                "mastodon/pawoo.net/e050f256/pawoo_101408660499763258_11289548.png": [],
+                "mastodon/pawoo.net/e050f256/pawoo_101408660499763258_11289545.png": [],
+                "mastodon/pawoo.net/e050f256/pawoo_101408660499763258_11289548.png.json": ['"sensitive": false,'],
+                "mastodon/pawoo.net/e050f256/pawoo_101408660499763258_11289545.png.json": []
+            }
+        },
         'hentaifoundry': {
             'url': "https://www.hentai-foundry.com/pictures/user/PalomaP/907277/Rapunzel-loves-creampie",
             'anchors': ["hentaifoundry907277"],
@@ -383,6 +393,9 @@ def test_internal(sites: str) -> bool:
         elif site == "baraag":
             log.info("hydownloader-test", "Testing baraag...")
             should_break = not check_results_of_post_url(post_url_data['baraag'], site) or should_break
+        elif site == "pawoo":
+            log.info("hydownloader-test", "Testing pawoo...")
+            should_break = not check_results_of_post_url(post_url_data['pawoo'], site) or should_break
         elif site == "hentaifoundry":
             log.info("hydownloader-test", "Testing hentaifoundry...")
             should_break = not check_results_of_post_url(post_url_data['hentaifoundry'], site) or should_break

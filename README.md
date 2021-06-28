@@ -111,6 +111,7 @@ leave the test environment untouched so you can investigate the error.
 | webtoons | no | yes | yes |
 | kemono.party | no | yes | no |
 | baraag | no | yes | yes |
+| pawoo | no | yes | yes |
 | hentaifoundry | yes | yes | yes |
 | yande.re | yes | yes | yes |
 | any other site that gallery-dl supports | no | mostly* | no |
