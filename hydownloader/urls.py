@@ -25,6 +25,7 @@ known_url_replacements = (
     ("i-f.pximg.net", "i.pximg.net"),
     ("i.pximg.net", "i-f.pximg.net"),
     ("gelbooru.com//", "gelbooru.com/"),
+    (r"behoimi.org/post/show/([0-9]+)/.+", "behoimi.org/post/show/\\1"),
     (r"img[0-9].gelbooru.com", "img1.gelbooru.com"),
     (r"img[0-9].gelbooru.com", "img2.gelbooru.com"),
     (r"img[0-9].gelbooru.com", "img3.gelbooru.com"),
@@ -240,6 +241,8 @@ def anchor_patterns_from_url(url: str) -> list[str]:
     if m := re.match(r"https?://danbooru\.donmai\.us/(posts|post/show|post/view)/(?P<id>[0-9]+)(&.*)?", u):
         return [f"danbooru{m.group('id')}"]
     if m := re.match(r"https?://(www\.)?behoimi\.org/post/show/(?P<id>[0-9]+)(&.*)?", u):
+        return [f"3dbooru{m.group('id')}"]
+    if m := re.match(r"https?://(www\.)?behoimi\.org/post/show/(?P<id>[0-9]+)/.+", u):
         return [f"3dbooru{m.group('id')}"]
     if m := re.match(r"https?://(beta|chan)\.sankakucomplex\.com/post/show/(?P<id>[0-9]+)(&.*)?", u):
         return [f"sankaku{m.group('id')}"]
