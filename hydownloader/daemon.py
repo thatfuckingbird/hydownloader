@@ -50,7 +50,7 @@ class SSLWSGIRefServer(bottle.ServerAdapter):
         self.srv.serve_forever()
 
     def stop(self):
-        self.srv.shutdown()
+        if self.srv: self.srv.shutdown()
 
 _worker_lock = threading.Lock()
 _status_lock = threading.Lock()
@@ -484,16 +484,20 @@ def cli() -> None:
 
 def api_worker(path: str, debug: bool) -> None:
     global _srv
-    if db.get_conf('daemon.ssl') and os.path.isfile(path+"/server.pem"):
-        log.info("hydownloader", "Starting daemon (with SSL)...")
-        _srv = SSLWSGIRefServer(path+"/server.pem", host=db.get_conf('daemon.host'), port=db.get_conf('daemon.port'))
-        bottle.run(server=_srv, debug=debug)
-    else:
-        if db.get_conf('daemon.ssl'):
-            log.warning("hydownloader", "SSL enabled in config, but no server.pem file found in the db folder, continuing without SSL...")
-        log.info("hydownloader", "Starting daemon...")
-        _srv = SSLWSGIRefServer("", host=db.get_conf('daemon.host'), port=db.get_conf('daemon.port'))
-        bottle.run(server=_srv, debug=debug)
+    try:
+        if db.get_conf('daemon.ssl') and os.path.isfile(path+"/server.pem"):
+            log.info("hydownloader", "Starting daemon (with SSL)...")
+            _srv = SSLWSGIRefServer(path+"/server.pem", host=db.get_conf('daemon.host'), port=db.get_conf('daemon.port'))
+            bottle.run(server=_srv, debug=debug)
+        else:
+            if db.get_conf('daemon.ssl'):
+                log.warning("hydownloader", "SSL enabled in config, but no server.pem file found in the db folder, continuing without SSL...")
+            log.info("hydownloader", "Starting daemon...")
+            _srv = SSLWSGIRefServer("", host=db.get_conf('daemon.host'), port=db.get_conf('daemon.port'))
+            bottle.run(server=_srv, debug=debug)
+    except OSError as e:
+        log.error("hydownloader", "Error while trying to run API server. Maybe the port is already in use?", e)
+        shutdown()
 
 @cli.command(help='Start the hydownloader daemon with the given data path.')
 @click.option('--path', type=str, required=True, help='The folder where hydownloader should store its database and the downloaded files.')
