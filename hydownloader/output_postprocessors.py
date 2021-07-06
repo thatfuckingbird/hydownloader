@@ -46,7 +46,7 @@ def process_additional_data(subscription_id: Optional[int] = None, url_id: Optio
         f = open(db.get_rootpath()+f"/temp/subscription-{subscription_id}-gallery-dl-output.txt", 'r', encoding='utf-8-sig')
         for line in f:
             line = line.strip()
-            if not is_filepath(line):
+            if not is_filepath(line) and not line.startswith("# "):
                 log.debug("hydownloader", f"Does not look like a filepath: {line}")
                 continue
             if line.startswith("# "):
@@ -65,7 +65,7 @@ def process_additional_data(subscription_id: Optional[int] = None, url_id: Optio
         f = open(db.get_rootpath()+f"/temp/single-url-{url_id}-gallery-dl-output.txt", 'r', encoding='utf-8-sig')
         for line in f:
             line = line.strip()
-            if not is_filepath(line):
+            if not is_filepath(line) and not line.startswith("# "):
                 log.debug("hydownloader", f"Does not look like a filepath: {line}")
                 continue
             if line.startswith("# "):
