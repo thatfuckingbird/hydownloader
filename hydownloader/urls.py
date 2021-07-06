@@ -275,7 +275,11 @@ def anchor_patterns_from_url(url: str) -> list[str]:
         return [f"hentaifoundry{m.group('id')}"]
     if m := re.match(r"https?://pictures\.hentai-foundry\.com/./[^/]+/(?P<id>[0-9]+)/.*", u):
         return [f"hentaifoundry{m.group('id')}"]
-    if m := re.match(r"https?://(www\.)?yande.re/post/show/(?P<id>[0-9]+)", u):
+    if m := re.match(r"https?://(www\.)?yande\.re/post/show/(?P<id>[0-9]+)", u):
         return [f"yandere{m.group('id')}"]
+    if m := re.match(r"https?://baraag\.net/@[^/]+/(?P<id>[0-9]+)", u):
+        return [f"baraag{m.group('id')}"]
+    if m := re.match(r"https?://pawoo\.net/@[^/]+/(?P<id>[0-9]+)", u):
+        return [f"pawoo{m.group('id')}"]
 
     return []
