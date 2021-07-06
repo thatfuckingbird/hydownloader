@@ -587,7 +587,7 @@ DEFAULT_GALLERY_DL_CONFIG = R"""{
         },
 
         "mastodon": {
-            "archive-format": "{media[id]}"
+            "archive-format": "{id}_{media[id]}"
         },
 
         "hentaifoundry": {
