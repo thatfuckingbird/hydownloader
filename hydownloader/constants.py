@@ -34,38 +34,898 @@ DEFAULT_CONFIG : dict[str, Union[str, int, bool]] = {
     "shared-db-override": ""
 }
 
-DEFAULT_IMPORT_JOBS : dict = {
-    "default": {
-        "apiURL": "http://127.0.0.1:45869",
-        "apiKey": "",
-        "forceAddMetadata": True,
-        "forceAddFiles": False,
-        "groups": [
-            {"filter": "path.startswith('gallery-dl/pixiv/')",
-             "tags": [
-                 {
-                     "name": "hydl ids",
-                     "skipOnError": False,
-                     "allowEmpty": False,
-                     "tagRepos": ["my tags"],
-                     "values": [
-                         "['hydl-sub-id:'+s_id for s_id in sub_ids]",
-                         "['hydl-url-id:'+u_id for u_id in url_ids]"
-                     ]
-                 }
-             ],
-             "urls": [
-                 {
-                     "name": "artwork url",
-                     "skipOnError": False,
-                     "allowEmpty": False,
-                     "values": "'https://www.pixiv.net/en/artworks/'+str(json_data['id'])"
-                 }
-             ]
-            }
+DEFAULT_IMPORT_JOBS = """
+{
+  "default": {
+    "apiURL": "http://127.0.0.1:45869",
+    "apiKey": "",
+    "forceAddMetadata": true,
+    "forceAddFiles": false,
+    "usePathBasedImport": false,
+    "orderFolderContents": "name",
+    "groups": [
+      {
+        "filter": "True",
+        "metadataOnly": true,
+        "tags": [
+          {
+            "name": "additional tags (with tag repo specified)",
+            "allowNoResult": true,
+            "values": "[repo+':'+tag for (repo,tag) in get_namespaces_tags(extra_tags, '', None) if repo != '' and repo != 'urls']"
+          },
+          {
+            "name": "additional tags (without tag repo specified)",
+            "allowNoResult": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": "extra_tags[''] if '' in extra_tags else []"
+          },
+          {
+            "name": "hydownloader IDs",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "['hydl-sub-id:'+s_id for s_id in sub_ids]",
+              "['hydl-url-id:'+u_id for u_id in url_ids]"
+            ]
+          },
+          {
+            "name": "hydownloader source site",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": "'hydl-src-site:'+json_data['category']"
+          }
+        ],
+        "urls": [
+          {
+            "name": "additional URLs",
+            "skipOnError": true,
+            "allowNoResult": true,
+            "values": "extra_tags['urls']"
+          },
+          {
+            "name": "source URLs from single URL queue",
+            "allowNoResult": true,
+            "values": "single_urls"
+          }
         ]
-    }
+      },
+      {
+        "filter": "path.startswith('gallery-dl/pixiv/')",
+        "tags": [
+          {
+            "name": "pixiv tags (original), new json format",
+            "allowNoResult": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "allowTagsEndingWithColon": true,
+            "values": "[tag['name'] for tag in json_data['tags']] if not 'untranslated_tags' in json_data else []"
+          },
+          {
+            "name": "pixiv tags (translated), new json format",
+            "allowNoResult": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "allowTagsEndingWithColon": true,
+            "values": "[tag['translated_name'] for tag in json_data['tags'] if tag['translated_name'] is not None] if not 'untranslated_tags' in json_data else []"
+          },
+          {
+            "name": "pixiv tags (original), old json format",
+            "allowNoResult": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "allowTagsEndingWithColon": true,
+            "values": "json_data['untranslated_tags'] if 'untranslated_tags' in json_data else []"
+          },
+          {
+            "name": "pixiv tags (translated), old json format",
+            "allowNoResult": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "allowTagsEndingWithColon": true,
+            "values": "json_data['tags'] if 'untranslated_tags' in json_data else []"
+          },
+          {
+            "name": "pixiv generated tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'page:'+str(int(json_data['suffix'][2:])+1) if json_data['suffix'] else 'page:1'",
+              "'pixiv id:'+str(json_data['id'])",
+              "'creator:'+json_data['user']['account']",
+              "'creator:'+json_data['user']['name']",
+              "'rating:'+json_data['rating']",
+              "'pixiv artist id:'+str(json_data['user']['id'])"
+            ]
+          },
+          {
+            "name": "pixiv generated tags (title)",
+            "allowEmpty": true,
+            "allowTagsEndingWithColon": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "('title:'+json_data['title']) if json_data['title'] and json_data['title'].strip() else ''"
+            ]
+          }
+        ],
+        "urls": [
+          {
+            "name": "pixiv artwork url",
+            "values": "'https://www.pixiv.net/en/artworks/'+str(json_data['id'])"
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/nijie/')",
+        "tags": [
+          {
+            "name": "nijie tags",
+            "allowNoResult": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": "json_data['tags']"
+          },
+          {
+            "name": "nijie generated tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'title:'+json_data['title']",
+              "'page:'+str(json_data['num'])",
+              "'nijie id:'+str(json_data['image_id'])",
+              "'creator:'+json_data['artist_name']",
+              "'nijie artist id:'+str(json_data['artist_id'])"
+            ]
+          }
+        ],
+        "urls": [
+          {
+            "name": "nijie urls",
+            "values": [
+              "'https://nijie.info/view.php?id='+str(json_data['image_id'])",
+              "json_data['url']"
+            ]
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/patreon/')",
+        "tags": [
+          {
+            "name": "patreon generated tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'page:'+str(json_data['num'])",
+              "'patreon id:'+str(json_data['id'])",
+              "'creator:'+json_data['creator']['full_name']",
+              "'creator:'+json_data['creator']['vanity']",
+              "'patreon artist id:'+str(json_data['creator']['id'])"
+            ]
+          },
+          {
+            "name": "patreon generated tags　(title)",
+            "allowTagsEndingWithColon": true,
+            "allowEmpty": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "('title:'+json_data['title']) if json_data['title'] and json_data['title'].strip() else ''"
+            ]
+          }
+        ],
+        "urls": [
+          {
+            "name": "patreon urls",
+            "values": "json_data['url']"
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/newgrounds/')",
+        "tags": [
+          {
+            "name": "newgrounds tags",
+            "allowNoResult": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": "json_data['tags']"
+          },
+          {
+            "name": "newgrounds generated tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'title:'+json_data['title']",
+              "'creator:'+json_data['user']",
+              "'rating:'+json_data['rating']",
+              "('creator:'+artist for artist in json_data['artist'])"
+            ]
+          }
+        ],
+        "urls": [
+          {
+            "name": "newgrounds urls",
+            "values": [
+              "json_data['url']",
+              "'https://www.newgrounds.com/portal/view/'+str(json_data['index'])"
+            ]
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/mastodon/')",
+        "tags": [
+          {
+            "name": "mastodon tags",
+            "allowNoResult": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": "json_data['tags']"
+          },
+          {
+            "name": "mastodon generated tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'mastodon instance:'+json_data['instance']",
+              "'mastodon id:'+str(json_data['id'])",
+              "'creator:'+json_data['account']['username']",
+              "'creator:'+json_data['account']['acct']",
+              "'creator:'+json_data['account']['display_name']"
+            ]
+          }
+        ],
+        "urls": [
+          {
+            "name": "mastodon urls",
+            "values": [
+              "json_data['url']",
+              "json_data['uri']"
+            ]
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/webtoons/')",
+        "tags": [
+          {
+            "name": "webtoons generated tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'webtoons comic:'+json_data['comic']",
+              "'chapter number:'+json_data['episode']",
+              "'chapter:'+json_data['title']",
+              "'page:'+str(json_data['num'])"
+            ]
+          }
+        ],
+        "urls": [
+          {
+            "name": "webtoons urls",
+            "values": "'https://www.webtoons.com/'+json_data['lang']+'/'+json_data['genre']+'/'+json_data['comic']+'/list?title_no='+json_data['title_no']"
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/reddit/')",
+        "tags": [
+          {
+            "name": "reddit generated tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'site:reddit'"
+            ]
+          }
+        ],
+        "urls": [
+          {
+            "name": "reddit urls",
+            "values": "'https://i.redd.it/'+json_data['filename']+'.'+json_data['extension']"
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/danbooru/')",
+        "tags": [
+          {
+            "name": "danbooru generated tags",
+            "allowEmpty": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'danbooru id:'+str(json_data['id'])",
+              "'booru:danbooru'",
+              "('pixiv id:'+str(json_data['pixiv_id'])) if json_data['pixiv_id'] else ''"
+            ]
+          },
+          {
+            "name": "danbooru tags",
+            "allowTagsEndingWithColon": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": "[(key+':'+tag if key != 'general' else tag) for (key, tag) in get_namespaces_tags(json_data, 'tag_string_')]"
+          }
+        ],
+        "urls": [
+          {
+            "name": "danbooru urls",
+            "allowEmpty": true,
+            "values": [
+              "json_data['file_url']",
+              "json_data['large_file_url']",
+              "json_data['source']"
+            ]
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/gelbooru/')",
+        "tags": [
+          {
+            "name": "gelbooru generated tags",
+            "allowEmpty": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'gelbooru id:'+json_data['id']",
+              "'booru:gelbooru'",
+              "'rating:'+json_data['rating']",
+              "('title:'+json_data['title']) if json_data['title'] and json_data['title'].strip() else ''"
+            ]
+          },
+          {
+            "name": "gelbooru tags",
+            "allowTagsEndingWithColon": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": "[(key+':'+tag if key != 'general' else tag) for (key, tag) in get_namespaces_tags(json_data, 'tags_')]"
+          }
+        ],
+        "urls": [
+          {
+            "name": "gelbooru urls",
+            "allowEmpty": true,
+            "values": [
+              "json_data['file_url']",
+              "'https://gelbooru.com/index.php?page=post&s=view&id='+json_data['id']",
+              "json_data['source']"
+            ]
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/sankaku/')",
+        "tags": [
+          {
+            "name": "sankaku generated tags",
+            "allowEmpty": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'sankaku id:'+str(json_data['id'])",
+              "'booru:sankaku'",
+              "'rating:'+json_data['rating']"
+            ]
+          },
+          {
+            "name": "sankaku tags",
+            "allowTagsEndingWithColon": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "[(key+':'+tag if key != 'general' else tag) for (key, tag) in get_namespaces_tags(json_data, 'tags_', None)]",
+              "[(key+':'+tag if key != 'general' else tag) for (key, tag) in get_namespaces_tags(json_data, 'tag_string_')]"
+            ]
+          }
+        ],
+        "urls": [
+          {
+            "name": "sankaku urls",
+            "allowEmpty": true,
+            "values": [
+              "json_data['file_url']",
+              "'https://chan.sankakucomplex.com/post/show/'+str(json_data['id'])",
+              "json_data['source'] if json_data['source'] else ''"
+            ]
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/idolcomplex/')",
+        "tags": [
+          {
+            "name": "idolcomplex generated tags",
+            "allowEmpty": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'idolcomplex id:'+str(json_data['id'])",
+              "'booru:idolcomplex'",
+              "'rating:'+json_data['rating']"
+            ]
+          },
+          {
+            "name": "idolcomplex tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": "[(key+':'+tag if key != 'general' else tag) for (key, tag) in get_namespaces_tags(json_data, 'tags_')]"
+          }
+        ],
+        "urls": [
+          {
+            "name": "idolcomplex urls",
+            "allowEmpty": true,
+            "values": [
+              "json_data['file_url']",
+              "'https://idol.sankakucomplex.com/post/show/'+str(json_data['id'])"
+            ]
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/hentaifoundry/')",
+        "tags": [
+          {
+            "name": "hentaifoundry generated tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'title:'+json_data['title']",
+              "'medium:'+json_data['media']"
+            ]
+          },
+          {
+            "name": "hentaifoundry tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "[tag.replace('_',' ') for tag in json_data['tags']]",
+              "json_data['ratings']"
+            ]
+          }
+        ],
+        "urls": [
+          {
+            "name": "hentaifoundry urls",
+            "values": [
+              "json_data['src']",
+              "'https://www.hentai-foundry.com/pictures/user/'+json_data['user']+'/'+str(json_data['index'])"
+            ]
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/deviantart/')",
+        "tags": [
+          {
+            "name": "deviantart generated tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'title:'+json_data['title']",
+              "'creator:'+json_data['username']"
+            ]
+          },
+          {
+            "name": "deviantart tags",
+            "allowNoResult": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": "json_data['tags']"
+          }
+        ],
+        "urls": [
+          {
+            "name": "deviantart urls",
+            "allowEmpty": true,
+            "values": [
+              "json_data['content']['src'] if 'content' in json_data else ''",
+              "json_data['target']['src'] if 'target' in json_data else ''",
+              "json_data['url']"
+            ]
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/twitter/')",
+        "tags": [
+          {
+            "name": "twitter generated tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'creator:'+json_data['author']['name']",
+              "'creator:'+json_data['author']['nick']",
+              "'tweet id:'+str(json_data['tweet_id'])"
+            ]
+          }
+        ],
+        "urls": [
+          {
+            "name": "twitter urls",
+            "values": [
+              "'https://twitter.com/i/status/'+str(json_data['tweet_id'])",
+              "'https://twitter.com/'+json_data['author']['name']+'/status/'+str(json_data['tweet_id'])"
+            ]
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/kemonoparty/')",
+        "tags": [
+          {
+            "name": "kemonoparty generated tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'title:'+json_data['title']",
+              "'creator:'+json_data['username']",
+              "'kemono.party service:'+json_data['service']",
+              "'kemono.party id:'+json_data['id']",
+              "'kemono.party user id:'+json_data['user']"
+            ]
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/directlink/')",
+        "urls": [
+          {
+            "name": "directlink url",
+            "values": "clean_url('https://'+json_data['domain']+'/'+json_data['path']+'/'+json_data['filename']+'.'+json_data['extension'])"
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/3dbooru/')",
+        "tags": [
+          {
+            "name": "3dbooru generated tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'creator:'+json_data['author']",
+              "'booru:3dbooru'",
+              "'3dbooru id:'+str(json_data['id'])",
+              "'rating:'+json_data['rating']"
+            ]
+          },
+          {
+            "name": "3dbooru tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": "[(key+':'+tag if key != 'general' else tag) for (key, tag) in get_namespaces_tags(json_data)]"
+          }
+        ],
+        "urls": [
+          {
+            "name": "3dbooru URLs",
+            "values": [
+              "json_data['file_url']",
+              "'http://behoimi.org/post/show/'+str(json_data['id'])"
+            ]
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/safebooru/')",
+        "tags": [
+          {
+            "name": "safebooru generated tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'safebooru id:'+json_data['id']",
+              "'booru:safebooru'",
+              "'rating:'+json_data['rating']"
+            ]
+          },
+          {
+            "name": "safebooru tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": "map(lambda x: x.strip().replace('_', ' '),json_data['tags'].strip().split(' '))"
+          }
+        ],
+        "urls": [
+          {
+            "name": "safebooru URLs",
+            "values": [
+              "json_data['file_url']",
+              "'https://safebooru.org/index.php?page=post&s=view&id='+json_data['id']",
+              "json_data['source']"
+            ]
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/tumblr/')",
+        "tags": [
+          {
+            "name": "tumblr generated tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": "'tumblr blog:'+json_data['blog_name']"
+          },
+          {
+            "name": "tumblr tags",
+            "allowNoResult": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": "json_data['tags']"
+          }
+        ],
+        "urls": [
+          {
+            "name": "tumblr URLs",
+            "allowEmpty": true,
+            "values": [
+              "json_data['short_url']",
+              "json_data['post_url']",
+              "json_data['photo']['url'] if 'photo' in json_data else ''",
+              "json_data['image_permalink'] if 'image_permalink' in json_data else ''"
+            ]
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/fantia/')",
+        "tags": [
+          {
+            "name": "fantia generated tags",
+            "allowEmpty": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "('title:'+json_data['content_title'] if 'content_tile' in json_data and json_data['content_title'] else '')",
+              "'title:'+json_data['post_title']",
+              "'rating:'+json_data['rating']",
+              "'fantia user id:'+str(json_data['fanclub_user_id'])",
+              "'creator:'+json_data['fanclub_user_name']",
+              "'fantia id:'+str(json_data['post_id'])"
+            ]
+          }
+        ],
+        "urls": [
+          {
+            "name": "fantia URLs",
+            "values": [
+              "json_data['post_url']",
+              "json_data['file_url']"
+            ]
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/fanbox/')",
+        "tags": [
+          {
+            "name": "fanbox generated tags",
+            "allowEmpty": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'creator:'+json_data['creatorId']",
+              "'fanbox id:'+json_data['id']",
+              "'title:'+json_data['title']",
+              "'creator:'+json_data['user']['name']",
+              "'fanbox user id:'+json_data['user']['userId']"
+            ]
+          },
+          {
+            "name": "fanbox tags",
+            "allowNoResult": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": "json_data['tags']"
+          }
+        ],
+        "urls": [
+          {
+            "name": "fanbox URLs",
+            "allowEmpty": true,
+            "values": [
+              "json_data['coverImageUrl'] if json_data['isCoverImage'] else ''",
+              "json_data['fileUrl']",
+              "'https://'+json_data['creatorId']+'.fanbox.cc/posts/'+json_data['id']"
+            ]
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/lolibooru/')",
+        "tags": [
+          {
+            "name": "lolibooru generated tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'lolibooru id:'+str(json_data['id'])",
+              "'booru:lolibooru'",
+              "'rating:'+json_data['rating']"
+            ]
+          },
+          {
+            "name": "lolibooru tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": "map(lambda x: x.strip().replace('_', ' '),json_data['tags'].strip().split(' '))"
+          }
+        ],
+        "urls": [
+          {
+            "name": "lolibooru URLs",
+            "allowEmpty": true,
+            "values": [
+              "json_data['file_url']",
+              "'https://lolibooru.moe/post/show/'+str(json_data['id'])",
+              "json_data['source']"
+            ]
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/yandere/')",
+        "tags": [
+          {
+            "name": "yandere generated tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'yandere id:'+str(json_data['id'])",
+              "'booru:yande.re'",
+              "'rating:'+json_data['rating']"
+            ]
+          },
+          {
+            "name": "yandere tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": "map(lambda x: x.strip().replace('_', ' '),json_data['tags'].strip().split(' '))"
+          }
+        ],
+        "urls": [
+          {
+            "name": "yandere URLs",
+            "allowEmpty": true,
+            "values": [
+              "json_data['file_url']",
+              "'https://yande.re/post/show/'+str(json_data['id'])",
+              "json_data['source']"
+            ]
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/artstation/')",
+        "tags": [
+          {
+            "name": "artstation generated tags",
+            "allowEmpty": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'medium:'+json_data['medium']['name'] if json_data['medium'] else ''",
+              "['medium:'+med['name'] for med in json_data['mediums']]",
+              "['software:'+soft['name'] for soft in json_data['software_items']]",
+              "['artstation category:'+cat['name'] for cat in json_data['categories']]",
+              "('creator:'+json_data['user']['full_name']) if json_data['user']['full_name'] else ''",
+              "'creator:'+json_data['user']['username']",
+              "'title:'+json_data['title']"
+            ]
+          },
+          {
+            "name": "artstation tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "allowNoResult": true,
+            "values": "json_data['tags']"
+          }
+        ],
+        "urls": [
+          {
+            "name": "artstation asset image URL",
+            "skipOnError": true,
+            "allowEmpty": true,
+            "values": "json_data['asset']['image_url']"
+          },
+          {
+            "name": "artstation permalink",
+            "skipOnError": true,
+            "allowEmpty": true,
+            "values": "json_data['permalink']"
+          }
+        ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/imgur/')",
+        "tags": [
+          {
+            "name": "imgur album title",
+            "tagRepos": [
+              "my tags"
+            ],
+            "skipOnError": true,
+            "allowEmpty": true,
+            "values": "('title:'+json_data['album']['title']) if json_data['album']['title'] else ''"
+          },
+          {
+            "name": "imgur title",
+            "tagRepos": [
+              "my tags"
+            ],
+            "allowEmpty": true,
+            "values": "('title:'+json_data['title']) if json_data['title'] and json_data['title'].strip() else ''"
+          }
+        ],
+        "urls": [
+          {
+            "name": "imgur image URL",
+            "values": "json_data['url']"
+          },
+          {
+            "name": "imgur album URL",
+            "skipOnError": true,
+            "values": "json_data['album']['url']"
+          }
+        ]
+      }
+    ]
+  }
 }
+"""
 
 CREATE_SUBS_STATEMENT = """
 CREATE TABLE "subscriptions" (
