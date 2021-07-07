@@ -619,8 +619,8 @@ def check_import_db(path: str) -> tuple[bool, Optional[float], Optional[float]]:
 def add_or_update_import_entry(path: str, import_time: float, creation_time: float, modification_time: float, metadata: Optional[bytes], hexdigest: str) -> None:
     check_init()
     c = get_shared_conn().cursor()
-    c.execute("select * from imported_files where path = ? limit 1",(path,))
+    c.execute("select * from imported_files where filename = ? limit 1",(path,))
     if c.fetchone():
-        c.execute("update imported_files set import_time = ?, creation_time = ?, modification_time = ?, metadata = ?, hash = ? where path = ?", (import_time, creation_time, modification_time, metadata, hexdigest, path))
+        c.execute("update imported_files set import_time = ?, creation_time = ?, modification_time = ?, metadata = ?, hash = ? where filename = ?", (import_time, creation_time, modification_time, metadata, hexdigest, path))
     else:
-        c.execute("insert into imported_files(path,import_time,creation_time,modification_time,metadata,hash) values (?,?,?,?,?,?)", (path,import_time,creation_time,modification_time,metadata,hexdigest))
+        c.execute("insert into imported_files(filename,import_time,creation_time,modification_time,metadata,hash) values (?,?,?,?,?,?)", (path,import_time,creation_time,modification_time,metadata,hexdigest))
