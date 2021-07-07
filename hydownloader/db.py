@@ -114,7 +114,7 @@ def init(path : str) -> None:
         hydl_cfg.close()
     if not os.path.isfile(path+"/hydownloader-import-jobs.json"):
         hydl_cfg = open(path+"/hydownloader-import-jobs.json", 'w', encoding='utf-8')
-        hydl_cfg.write(json.dumps(C.DEFAULT_IMPORT_JOBS, indent=4))
+        hydl_cfg.write(C.DEFAULT_IMPORT_JOBS)
         hydl_cfg.close()
     if not os.path.isfile(path+"/cookies.txt"):
         open(path+"/cookies.txt", "w", encoding="utf-8").close()
