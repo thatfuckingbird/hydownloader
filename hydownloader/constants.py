@@ -921,6 +921,24 @@ DEFAULT_IMPORT_JOBS = """
             "values": "json_data['album']['url']"
           }
         ]
+      },
+      {
+        "filter": "path.startswith('gallery-dl/seisoparty/')",
+        "tags": [
+          {
+            "name": "seisoparty generated tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'title:'+json_data['title']",
+              "'creator:'+json_data['username']",
+              "'seiso.party service:'+json_data['service']",
+              "'seiso.party id:'+json_data['id']",
+              "'seiso.party user id:'+json_data['user']"
+            ]
+          }
+        ]
       }
     ]
   }
