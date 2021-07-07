@@ -20,14 +20,40 @@ import json
 import os
 import os.path
 import sys
+import io
 import re
 import time
+import itertools
 import hashlib
 from collections import defaultdict
-from typing import Optional, Union
+from typing import Optional, Union, Any
 import click
 import hydrus
 from hydownloader import db, log
+
+# Helper function to use in user-defined importer expressions
+def get_namespaces_tags(data: dict[str, Any], key_prefix : str = 'tags_', separator : Optional[str] =' ') -> list[tuple[str,str]]:
+    prefix_length = len(key_prefix)
+    def split_val(val):
+        if separator:
+            return map(lambda x: x.replace('_', ' '), val.split(separator))
+        else:
+            return map(lambda x: x.replace('_', ' '), val)
+    pairs = list(itertools.chain.from_iterable(map(lambda x: itertools.product((x[0][prefix_length:],),split_val(x[1])), filter(lambda x: x[0].startswith(key_prefix), data.items()))))
+    final_result = []
+    for pair in pairs:
+        if not pair[1]: continue
+        if pair[0] == 'artist':
+            final_result.append(('creator',pair[1]))
+        elif pair[0] == 'copyright':
+            final_result.append(('series',pair[1]))
+        else:
+            final_result.append(pair)
+    return final_result
+
+# Helper function to use in user-defined importer expressions
+def clean_url(url: str) -> str:
+    return re.sub(r'(?<!:)//', '/', url)
 
 @click.group()
 def cli() -> None:
@@ -138,7 +164,7 @@ def clear_imported(path: str, action: str, do_it: bool, no_skip_on_differing_tim
 @click.option('--no-abort-on-missing-metadata', type=bool, is_flag=True, show_default=True, default=False, help='Do not stop importing when a metadata file is not found.')
 @click.option('--filename-regex', type=str, default=None, show_default=True, help='Only run the importer on files whose filepath matches the regex given here. This is an additional restriction on top of the filters defined in the import job.')
 @click.option('--no-abort-on-error', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort on errors. Useful to check for any potential errors before actually importing files.')
-def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differing_times: bool, config: Optional[str], verbose: bool, do_it: bool, no_abort_on_missing_metadata: bool, filename_regex: Optional[str], no_abort_on_errors: bool) -> None:
+def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differing_times: bool, config: Optional[str], verbose: bool, do_it: bool, no_abort_on_missing_metadata: bool, filename_regex: Optional[str], no_abort_on_error: bool) -> None:
     log.init(path, True)
     db.init(path)
 
@@ -156,6 +182,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
 
     force_add_metadata = jd.get('forceAddMetadata', True)
     force_add_files = jd.get('forceAddFiles', False)
+    path_based_import = jd.get('usePathBasedImport', False)
     order_folder_contents = jd.get('orderFolderContents', 'default')
 
     client = hydrus.Client(jd['apiKey'], jd['apiURL'])
@@ -208,7 +235,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
             if not os.path.isfile(json_path):
                 json_exists = False
                 printerr(f"Warning: no metadata file found for {path}")
-                if not no_abort_on_missing_metadata or not no_abort_on_errors:
+                if not no_abort_on_missing_metadata or not no_abort_on_error:
                     sys.exit(1)
             else:
                 raw_metadata = open(json_path, "rb").read()
@@ -229,13 +256,13 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                     should_process = eval(group['filter'])
                 except:
                     printerr(f"Failed to evaluate filter: {group['filter']}")
-                    if not no_abort_on_errors: sys.exit(1)
+                    if not no_abort_on_error: sys.exit(1)
                 if not json_data and json_exists:
                     try:
                         json_data = json.load(open(json_path,encoding='utf-8-sig'))
                     except json.decoder.JSONDecodeError:
                         printerr(f"Failed to parse JSON: {json_path}")
-                        if not no_abort_on_errors: sys.exit(1)
+                        if not no_abort_on_error: sys.exit(1)
                 if not should_process:
                     continue
                 if not metadata_only:
@@ -257,17 +284,24 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                         max_time_added = d['time_added']
                 sub_ids = []
                 url_ids = []
+                url_ids_int = []
                 for d in additional_data_dicts:
                     if d['subscription_id']:
                         sub_ids.append(str(d['subscription_id']))
                     if d['url_id']:
+                        url_ids_int.append(d['url_id'])
                         url_ids.append(str(d['url_id']))
+                single_urls = []
+                for item in db.get_queued_urls_by_id(url_ids_int, True):
+                    single_urls.append(item['url'])
 
                 # execute user-defined tag and url generator expressions
-                has_error = False
                 for dtype, d in [('tag',x) for x in group.get('tags', [])]+[('url',x) for x in group.get('urls', [])]:
+                    has_error = False
                     skip_on_error = d.get("skipOnError", False)
                     allow_empty = d.get("allowEmpty", False)
+                    allow_no_result = d.get("allowNoResult", False)
+                    allow_tags_ending_with_colon = d.get("allowTagsEndingWithColon", False)
                     rule_name = d.get("name")
                     generated_results = []
                     # if the expression is a single string
@@ -281,11 +315,11 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                                 for eval_res_str in eval_res:
                                     if not isinstance(eval_res_str, str):
                                         printerr(f"Invalid result type ({str(type(eval_res_str))}) while evaluating expression: {d['values']}")
-                                        if not no_abort_on_errors: sys.exit(1)
+                                        if not no_abort_on_error: sys.exit(1)
                                     else:
                                         generated_results.append(eval_res_str)
                         except Exception as e:
-                            if verbose:
+                            if verbose and not skip_on_error:
                                 printerr(f"Failed to evaluate expression: {d['values']}")
                                 print(e)
                             has_error = True
@@ -295,51 +329,59 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                                 eval_res = eval(eval_expr)
                                 # check result type: must be string or iterable of strings
                                 if isinstance(eval_res, str):
-                                    generated_results = [eval_res]
+                                    generated_results.append(eval_res)
                                 else:
                                     for eval_res_str in eval_res:
                                         if not isinstance(eval_res_str, str):
                                             printerr(f"Invalid result type ({str(type(eval_res_str))}) while evaluating expression: {eval_expr}")
-                                            if not no_abort_on_errors: sys.exit(1)
+                                            if not no_abort_on_error: sys.exit(1)
                                         else:
                                             generated_results.append(eval_res_str)
                             except Exception as e:
-                                if verbose:
+                                if verbose and not skip_on_error:
                                     printerr(f"Failed to evaluate expression: {eval_expr}")
                                     printerr(e)
                                 has_error = True
 
                     # check for empty results or failed evaluation, as necessary
-                    if not generated_results and not allow_empty:
+                    if not generated_results and not allow_no_result and not has_error:
                         printerr(f"Error: the rule named {rule_name} yielded no results but this is not allowed")
-                        if not no_abort_on_errors: sys.exit(1)
+                        if not no_abort_on_error: sys.exit(1)
+                    if '' in generated_results and not allow_empty and not has_error:
+                        printerr(f"Error: the rule named {rule_name} yielded an empty result but this is not allowed")
+                        if not no_abort_on_error: sys.exit(1)
+                    if dtype == 'tag' and not allow_tags_ending_with_colon:
+                        for gentag in generated_results:
+                            if gentag.strip().endswith(':'):
+                                printerr(f"Error: the rule named {rule_name} yielded a tag ending with ':' ({gentag})")
+                                if not no_abort_on_error: sys.exit(1)
                     if has_error:
-                        printerr(f"Warning: an expression failed to evaluate in the rule named {rule_name}")
                         if not skip_on_error:
-                            if not no_abort_on_errors: sys.exit(1)
+                            printerr(f"Error: an expression failed to evaluate in the rule named {rule_name}")
+                            if not no_abort_on_error: sys.exit(1)
 
                     # save results of the currently evaluated expressions
                     if dtype == 'url':
-                        generated_urls.update(generated_results)
+                        generated_urls.update(filter(lambda x: x, generated_results))
                     else:
                         if "tagRepos" in d: # predefined tag repos
                             for repo in d["tagRepos"]:
-                                generated_tags.update((repo,tag) for tag in generated_results)
+                                generated_tags.update((repo,tag) for tag in generated_results if tag)
                         else: # tag repos should be extracted from the tags
                             for tag in generated_results:
                                 if not ":" in tag:
                                     printerr(f"The generated tag '{tag}' must start with a tag repo name. In rule: {rule_name}.")
-                                    if not no_abort_on_errors: sys.exit(1)
+                                    if not no_abort_on_error: sys.exit(1)
                                 else:
                                     repo = tag.split(":")[0]
                                     actual_tag = ":".join(tag.split(":")[1:])
-                                    generated_tags.add((repo,actual_tag))
+                                    if actual_tag: generated_tags.add((repo,actual_tag))
             if matched:
                 printerr(f"File matched: {path}...")
 
                 if not os.path.getsize(abspath):
-                    print(f"Found truncated file, won't be imported: {abspath}")
-                    if not no_abort_on_errors:
+                    printerr(f"Found truncated file, won't be imported: {abspath}")
+                    if not no_abort_on_error:
                         sys.exit(1)
                     else:
                         continue
@@ -351,7 +393,6 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                     printerr("Generated tags:")
                     for repo, tag in sorted(list(generated_tags), key=lambda x: x[0]):
                         printerr(f"{repo} <- {tag}")
-                if verbose: printerr('Hashing...')
 
                 is_file_in_import_db, db_mtime, db_ctime = db.check_import_db(path)
                 if skip_already_imported and is_file_in_import_db:
@@ -359,6 +400,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                         continue
 
                 # calculate hash, check if Hydrus already knows the file
+                if verbose: printerr('Hashing...')
                 already_added = False
                 hexdigest = str()
                 if do_it:
@@ -375,18 +417,22 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                 # send file, tags, metadata to Hydrus as needed
                 if not already_added or force_add_files:
                     if verbose: printerr("Sending file to Hydrus...")
-                    if do_it: client.add_file(abspath)
+                    if do_it:
+                        if path_based_import:
+                            client.add_file(abspath)
+                        else:
+                            client.add_file(io.BytesIO(open(abspath, 'rb').read()))
                 if not already_added or force_add_metadata:
                     if verbose: printerr("Associating URLs...")
-                    if do_it: client.associate_url(hashes=[hexdigest],add=generated_urls)
+                    if do_it: client.associate_url(hashes=[hexdigest],add=list(generated_urls))
                     if verbose: printerr("Adding tags...")
                     tag_dict = defaultdict(list)
                     for repo, tag in generated_tags:
                         tag_dict[repo].append(tag)
                     if do_it:
                         client.add_tags(hashes=[hexdigest],service_to_tags=tag_dict)
+                if verbose: printerr("Writing entry to import database...")
                 if do_it:
-                    if verbose: printerr("Writing entry to import database...")
                     db.add_or_update_import_entry(path, import_time=time.time(), creation_time=ctime, modification_time=mtime, metadata=raw_metadata, hexdigest=hexdigest)
 
             else:
