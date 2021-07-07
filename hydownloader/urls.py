@@ -126,6 +126,8 @@ def subscription_data_to_url(downloader: str, keywords: str) -> str:
         return f"https://baraag.net/@{keywords}"
     if downloader == "pawoo":
         return f"https://pawoo.net/@{keywords}"
+    if downloader == "seisoparty":
+        return f"https://seiso.party/artists/{keywords}"
     if downloader == "hentaifoundry":
         return f"https://www.hentai-foundry.com/user/{keywords}/profile"
     if downloader == "yandere":
@@ -195,6 +197,8 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
         return ('hentaifoundry', m.group('user'))
     if m := re.match(r"https?://(www\.)?yande\.re/post\?tags=(?P<query>[^/&]+)(&commit=Search)?(&.*)?", u):
         return ('yandere', m.group('query').lower())
+    if m := re.match(r"(?:https?://)?seiso\.party/artists/(?P<site>[^/]+)/(?P<id>.+)", u):
+        return ('seisoparty', m.group('site')+"/"+m.group('id'))
 
     return ('','')
 
