@@ -574,8 +574,8 @@ def close_thread_connections() -> None:
 def shutdown() -> None:
     global _inited
     if not _inited: return
-    _inited = False
     close_thread_connections()
+    _inited = False
 
 def add_known_urls(urls: list[str], subscription_id: Optional[int] = None, url_id: Optional[int] = None) -> None:
     check_init()
