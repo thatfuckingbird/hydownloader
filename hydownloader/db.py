@@ -611,7 +611,7 @@ def get_conf(name : str) -> Union[str, int, bool]:
 def check_import_db(path: str) -> tuple[bool, Optional[float], Optional[float]]:
     check_init()
     c = get_shared_conn().cursor()
-    c.execute("select * from imported_files where path = ? limit 1",(path,))
+    c.execute("select * from imported_files where filename = ? limit 1",(path,))
     if row := c.fetchone():
         return True, row['modification_time'], row['creation_time']
     return False, None, None
