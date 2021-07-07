@@ -466,10 +466,23 @@ def route_index() -> str:
 def enable_cors_generic_route() -> None:
     add_cors_headers()
 
+def path_is_parent(parent_path: str, child_path: str) -> bool:
+    parent_path = os.path.abspath(parent_path)
+    child_path = os.path.abspath(child_path)
+
+    # Compare the common path of the parent and child path with the common path of just the parent path.
+    # Using the commonpath method on just the parent path will regularise the path name in the same way as the comparison that deals with both paths,
+    # removing any trailing path separator
+    return os.path.commonpath([parent_path]) == os.path.commonpath([parent_path, child_path])
+
 @route('/<filename:re:.*>', method='GET')
 def route_serve_file(filename: str):
     check_access()
-    if os.path.isfile(db.get_rootpath() + '/' + filename):
+    fullpath = db.get_rootpath() + '/' + filename
+    if os.path.isfile(fullpath):
+        if not path_is_parent(db.get_rootpath(), fullpath):
+            log.warning("hydownloader", f"Request received for file outside database rootpath: {fullpath}")
+            bottle.abort(403)
         return bottle.static_file(filename, root=db.get_rootpath())
     bottle.abort(404)
 
