@@ -240,7 +240,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
             else:
                 raw_metadata = open(json_path, "rb").read()
 
-            generated_urls = set()
+            generated_urls : set[str] = set()
             generated_tags : set[tuple[str, str]] = set()
             matched = False # will be true if at least 1 filter group matched the file
             json_data = None # this will hold the associated json metadata (if available)
