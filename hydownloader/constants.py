@@ -1427,8 +1427,8 @@ DEFAULT_GALLERY_DL_CONFIG = R"""{
             "archive-format": "{id}"
         },
 
-        "sankakucomplex": {
-            "archive-format": "{asset[id]}"
+        "sankaku": {
+            "archive-format": "{id}"
         },
 
         "pixiv": {
