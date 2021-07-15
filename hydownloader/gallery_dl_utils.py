@@ -104,7 +104,7 @@ def run_gallery_dl_with_custom_args(args: list[str], capture_output: bool = Fals
     result = subprocess.run(run_args, capture_output = capture_output, text = capture_output, check = False)
     return result
 
-def run_gallery_dl(url: str, subscription_mode: bool, ignore_anchor: bool, metadata_only: bool, log_file: str, console_output_file: str, unsupported_urls_file: str, overwrite_existing: bool, filter_: Optional[str] = None, chapter_filter: Optional[str] = None, abort_after: Optional[int] = None, test_mode: bool = False, old_log_file: Optional[str] = None, old_unsupported_urls_file: Optional[str] = None, max_file_count: Optional[int] = None, process_id: Optional[str] = None) -> str:
+def run_gallery_dl(url: str, subscription_mode: bool, ignore_anchor: bool, metadata_only: bool, log_file: str, console_output_file: str, unsupported_urls_file: str, overwrite_existing: bool, filter_: Optional[str] = None, chapter_filter: Optional[str] = None, abort_after: Optional[int] = None, test_mode: bool = False, old_log_file: Optional[str] = None, old_unsupported_urls_file: Optional[str] = None, max_file_count: Optional[int] = None, process_id: Optional[str] = None, write_pages: Optional[bool] = False) -> str:
     """
     Downloads a URL with gallery-dl using the current hydownloader environment.
     """
@@ -132,6 +132,8 @@ def run_gallery_dl(url: str, subscription_mode: bool, ignore_anchor: bool, metad
     run_args += ['--write-unsupported', unsupported_urls_file]
     if overwrite_existing:
         run_args += ['--no-skip']
+    if write_pages:
+        run_args += ['--write-pages']
     if not ignore_anchor:
         if not test_mode:
             if override := str(db.get_conf("gallery-dl.archive-override")):
