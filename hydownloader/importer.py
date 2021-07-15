@@ -402,7 +402,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                     if client.file_metadata(hashes=[hexdigest], only_identifiers=True):
                         printerr("File is already in Hydrus", False)
                         already_added = True
-                if verbose: printerr(f'Hash: {hexdigest}')
+                if verbose: printerr(f'Hash: {hexdigest}', False)
                 # send file, tags, metadata to Hydrus as needed
                 if not already_added or force_add_files:
                     if verbose: printerr("Sending file to Hydrus...", False)
