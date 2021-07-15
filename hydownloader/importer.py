@@ -25,6 +25,7 @@ import re
 import time
 import itertools
 import hashlib
+import urllib.parse
 from collections import defaultdict
 from typing import Optional, Union, Any
 import click
@@ -54,6 +55,10 @@ def get_namespaces_tags(data: dict[str, Any], key_prefix : str = 'tags_', separa
 # Helper function to use in user-defined importer expressions
 def clean_url(url: str) -> str:
     return re.sub(r'(?<!:)//', '/', url)
+
+def is_valid_url(url: str) -> str:
+    result = urllib.parse.urlsplit(url.strip())
+    return result.netloc and result.scheme
 
 @click.group()
 def cli() -> None:
@@ -187,6 +192,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
     force_add_files = jd.get('forceAddFiles', False)
     path_based_import = jd.get('usePathBasedImport', False)
     order_folder_contents = jd.get('orderFolderContents', 'default')
+    non_url_source_namespace = jd.get('nonUrlSourceNamespace', '')
 
     client = hydrus.Client(jd['apiKey'], jd['apiURL'])
 
@@ -252,6 +258,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                 # evaluate filter, load json metadata if the filter matches and we haven't loaded it yet
                 should_process = False
                 metadata_only = group.get("metadataOnly", False)
+                tag_repos_for_non_url_sources = group.get("tagReposForNonUrlSources", [])
                 try:
                     should_process = eval(group['filter'])
                 except:
@@ -373,6 +380,20 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                 if not os.path.getsize(abspath):
                     printerr(f"Found truncated file, won't be imported: {abspath}", not no_abort_on_error)
                     continue
+
+                generated_urls_filtered = []
+                invalid_url_tags = []
+                for url in generated_urls:
+                    url = url.strip()
+                    if is_valid_url(url):
+                        generated_urls_filtered.append(url)
+                    elif url:
+                        if verbose:
+                            printerr(f"Invalid source URL: {url}", False)
+                        for repo in tag_repos_for_non_url_sources:
+                            invalid_url_tags.append((repo,non_url_source_namespace + ':' + url if non_url_source_namespace else url))
+                generated_urls = generated_urls_filtered
+                generated_tags.update(invalid_url_tags)
 
                 if verbose:
                     printerr("Generated URLs:", False)
