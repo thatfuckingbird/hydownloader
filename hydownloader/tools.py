@@ -76,7 +76,7 @@ def check_results_of_post_url(data: dict, sitename: str) -> bool:
             log.info("hydownloader-test", f"Found expected file: {fname}")
             for content in filenames[fname]:
                 with open(abs_fname, encoding='utf-8-sig') as f:
-                    if re.search(content, f.read()):
+                    if content in f.read():
                         log.info("hydownloader-test", "Expected file content found")
                     else:
                         log.error("hydownloader-test", f"Expected file content ({content}) NOT found")
@@ -217,7 +217,7 @@ def test_internal(sites: str) -> bool:
                 "artstation/sergey_vasnev/artstation_6721469_24728858_Procession.jpg": [],
                 "artstation/sergey_vasnev/artstation_6721469_24728858_Procession.jpg.json": ['"title": "Procession",']
             },
-            'anchors': ["artstation24728858"]
+            'anchors': ["artstation6721469"]
         },
         'deviantart': {
             'url': "https://www.deviantart.com/squchan/art/Atelier-Ryza-820511154",
@@ -245,7 +245,7 @@ def test_internal(sites: str) -> bool:
         },
         'baraag': {
             'url': "https://baraag.net/@pumpkinnsfw/106191173043385531",
-            'anchors': ['baraag106191139078112401','baraag106191139927706653'],
+            'anchors': ['baraag106191173043385531_106191139078112401','baraag106191173043385531_106191139927706653'],
             'filenames': {
                 "mastodon/baraag.net/pumpkinnsfw/baraag_106191173043385531_106191139078112401.png": [],
                 "mastodon/baraag.net/pumpkinnsfw/baraag_106191173043385531_106191139078112401.png.json": ['"sensitive": true']
@@ -253,7 +253,7 @@ def test_internal(sites: str) -> bool:
         },
         'pawoo': {
             'url': "https://pawoo.net/@e050f256/101408660499763258",
-            'anchors': ['pawoo11289545','pawoo11289548'],
+            'anchors': ['pawoo101408660499763258_11289545','pawoo101408660499763258_11289548'],
             'filenames': {
                 "mastodon/pawoo.net/e050f256/pawoo_101408660499763258_11289548.png": [],
                 "mastodon/pawoo.net/e050f256/pawoo_101408660499763258_11289545.png": [],
@@ -273,8 +273,8 @@ def test_internal(sites: str) -> bool:
             'url': "https://yande.re/post/show/619304",
             'anchors': ["yandere619304"],
             'filenames': {
-                'yandere_619304_449a208b7a42f917498a00386e173118.jpg.json': [],
-                'yandere_619304_449a208b7a42f917498a00386e173118.jpg': ['"tags_artist": "zuima"']
+                'yandere/yandere_619304_449a208b7a42f917498a00386e173118.jpg': [],
+                'yandere/yandere_619304_449a208b7a42f917498a00386e173118.jpg.json': ['"tags_artist": "zuima"']
             }
         }
     }
