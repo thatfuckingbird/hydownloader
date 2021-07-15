@@ -121,6 +121,10 @@ def clear_imported(path: str, action: str, do_it: bool, no_skip_on_differing_tim
             if fname.endswith('.json'):
                 continue
 
+            # skip files still being downloaded
+            if fname.endswith('.part'):
+                continue
+
             # already imported file
             if fname.endswith('.HYDL-IMPORTED'):
                 continue
@@ -213,6 +217,10 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
         for fname in files:
             # json files hold metadata, don't import them to Hydrus
             if fname.endswith('.json'):
+                continue
+
+            # skip files still being downloaded
+            if fname.endswith('.part'):
                 continue
 
             # already imported file
