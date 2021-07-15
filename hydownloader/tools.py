@@ -279,8 +279,12 @@ def test_internal(sites: str) -> bool:
         }
     }
 
-    site_set = {site.strip() for site in sites.split(',')}
-    for site in site_set:
+    sites_done = set()
+    for site in sites.split(','):
+        site = site.strip()
+        if site in sites_done:
+            continue
+        sites_done.add(site)
         clear_test_env()
         log_file = db.get_rootpath()+f"/logs/test-site-{site}-gallery-dl.txt"
         should_break = False
