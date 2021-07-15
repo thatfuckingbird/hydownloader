@@ -59,8 +59,11 @@ def clean_url(url: str) -> str:
 def cli() -> None:
     pass
 
-def printerr(msg: Union[str, Exception]) -> None:
+def printerr(msg: Union[str, Exception], quit: bool) -> None:
     print(msg, file=sys.stderr)
+    if quit:
+        db.sync()
+        sys.exit(1)
 
 def parse_additional_data(result: defaultdict[str, list[str]], data_str: str) -> None:
     """
@@ -199,8 +202,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
         elif order_folder_contents == "ctime":
             files = sorted(files, key=lambda t: os.stat(t).st_ctime)
         elif order_folder_contents != "default":
-            printerr("The value of the orderFolderContents option is invalid")
-            sys.exit(1)
+            printerr("The value of the orderFolderContents option is invalid", True)
 
         for fname in files:
             # json files hold metadata, don't import them to Hydrus
@@ -234,9 +236,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
             raw_metadata = None
             if not os.path.isfile(json_path):
                 json_exists = False
-                printerr(f"Warning: no metadata file found for {path}")
-                if not no_abort_on_missing_metadata or not no_abort_on_error:
-                    sys.exit(1)
+                printerr(f"Warning: no metadata file found for {path}", not no_abort_on_missing_metadata)
             else:
                 raw_metadata = open(json_path, "rb").read()
 
@@ -245,7 +245,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
             matched = False # will be true if at least 1 filter group matched the file
             json_data = None # this will hold the associated json metadata (if available)
 
-            if verbose: printerr(f"Processing file: {path}...")
+            if verbose: printerr(f"Processing file: {path}...", False)
 
             # iterate over all filter groups, do they match this file?
             for group in jd['groups']:
@@ -255,14 +255,12 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                 try:
                     should_process = eval(group['filter'])
                 except:
-                    printerr(f"Failed to evaluate filter: {group['filter']}")
-                    if not no_abort_on_error: sys.exit(1)
+                    printerr(f"Failed to evaluate filter: {group['filter']}", not no_abort_on_error)
                 if not json_data and json_exists:
                     try:
                         json_data = json.load(open(json_path,encoding='utf-8-sig'))
                     except json.decoder.JSONDecodeError:
-                        printerr(f"Failed to parse JSON: {json_path}")
-                        if not no_abort_on_error: sys.exit(1)
+                        printerr(f"Failed to parse JSON: {json_path}", not no_abort_on_error)
                 if not should_process:
                     continue
                 if not metadata_only:
@@ -314,13 +312,12 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                             else:
                                 for eval_res_str in eval_res:
                                     if not isinstance(eval_res_str, str):
-                                        printerr(f"Invalid result type ({str(type(eval_res_str))}) while evaluating expression: {d['values']}")
-                                        if not no_abort_on_error: sys.exit(1)
+                                        printerr(f"Invalid result type ({str(type(eval_res_str))}) while evaluating expression: {d['values']}", not no_abort_on_error)
                                     else:
                                         generated_results.append(eval_res_str)
                         except Exception as e:
                             if verbose and not skip_on_error:
-                                printerr(f"Failed to evaluate expression: {d['values']}")
+                                printerr(f"Failed to evaluate expression: {d['values']}", False)
                                 print(e)
                             has_error = True
                     else: # multiple expressions (array of strings)
@@ -333,32 +330,27 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                                 else:
                                     for eval_res_str in eval_res:
                                         if not isinstance(eval_res_str, str):
-                                            printerr(f"Invalid result type ({str(type(eval_res_str))}) while evaluating expression: {eval_expr}")
-                                            if not no_abort_on_error: sys.exit(1)
+                                            printerr(f"Invalid result type ({str(type(eval_res_str))}) while evaluating expression: {eval_expr}", not no_abort_on_error)
                                         else:
                                             generated_results.append(eval_res_str)
                             except Exception as e:
                                 if verbose and not skip_on_error:
-                                    printerr(f"Failed to evaluate expression: {eval_expr}")
+                                    printerr(f"Failed to evaluate expression: {eval_expr}", False)
                                     printerr(e)
                                 has_error = True
 
                     # check for empty results or failed evaluation, as necessary
                     if not generated_results and not allow_no_result and not has_error:
-                        printerr(f"Error: the rule named {rule_name} yielded no results but this is not allowed")
-                        if not no_abort_on_error: sys.exit(1)
+                        printerr(f"Error: the rule named {rule_name} yielded no results but this is not allowed", not no_abort_on_error)
                     if '' in generated_results and not allow_empty and not has_error:
-                        printerr(f"Error: the rule named {rule_name} yielded an empty result but this is not allowed")
-                        if not no_abort_on_error: sys.exit(1)
+                        printerr(f"Error: the rule named {rule_name} yielded an empty result but this is not allowed", not no_abort_on_error)
                     if dtype == 'tag' and not allow_tags_ending_with_colon:
                         for gentag in generated_results:
                             if gentag.strip().endswith(':'):
-                                printerr(f"Error: the rule named {rule_name} yielded a tag ending with ':' ({gentag})")
-                                if not no_abort_on_error: sys.exit(1)
+                                printerr(f"Error: the rule named {rule_name} yielded a tag ending with ':' ({gentag})", not no_abort_on_error)
                     if has_error:
                         if not skip_on_error:
-                            printerr(f"Error: an expression failed to evaluate in the rule named {rule_name}")
-                            if not no_abort_on_error: sys.exit(1)
+                            printerr(f"Error: an expression failed to evaluate in the rule named {rule_name}", not no_abort_on_error)
 
                     # save results of the currently evaluated expressions
                     if dtype == 'url':
@@ -370,29 +362,25 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                         else: # tag repos should be extracted from the tags
                             for tag in generated_results:
                                 if not ":" in tag:
-                                    printerr(f"The generated tag '{tag}' must start with a tag repo name. In rule: {rule_name}.")
-                                    if not no_abort_on_error: sys.exit(1)
+                                    printerr(f"The generated tag '{tag}' must start with a tag repo name. In rule: {rule_name}.", not no_abort_on_error)
                                 else:
                                     repo = tag.split(":")[0]
                                     actual_tag = ":".join(tag.split(":")[1:])
                                     if actual_tag: generated_tags.add((repo,actual_tag))
             if matched:
-                printerr(f"File matched: {path}...")
+                printerr(f"File matched: {path}...", False)
 
                 if not os.path.getsize(abspath):
-                    printerr(f"Found truncated file, won't be imported: {abspath}")
-                    if not no_abort_on_error:
-                        sys.exit(1)
-                    else:
-                        continue
+                    printerr(f"Found truncated file, won't be imported: {abspath}", not no_abort_on_error)
+                    continue
 
                 if verbose:
-                    printerr("Generated URLs:")
+                    printerr("Generated URLs:", False)
                     for url in generated_urls:
-                        printerr(url)
-                    printerr("Generated tags:")
+                        printerr(url, False)
+                    printerr("Generated tags:", False)
                     for repo, tag in sorted(list(generated_tags), key=lambda x: x[0]):
-                        printerr(f"{repo} <- {tag}")
+                        printerr(f"{repo} <- {tag}", False)
 
                 is_file_in_import_db, db_mtime, db_ctime = db.check_import_db(path)
                 if skip_already_imported and is_file_in_import_db:
@@ -400,7 +388,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                         continue
 
                 # calculate hash, check if Hydrus already knows the file
-                if verbose: printerr('Hashing...')
+                if verbose: printerr('Hashing...', False)
                 already_added = False
                 hexdigest = str()
                 if do_it:
@@ -412,33 +400,33 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                             buf = hashedfile.read(65536 * 16)
                     hexdigest = hasher.hexdigest()
                     if client.file_metadata(hashes=[hexdigest], only_identifiers=True):
-                        printerr("File is already in Hydrus")
+                        printerr("File is already in Hydrus", False)
                         already_added = True
                 if verbose: printerr(f'Hash: {hexdigest}')
                 # send file, tags, metadata to Hydrus as needed
                 if not already_added or force_add_files:
-                    if verbose: printerr("Sending file to Hydrus...")
+                    if verbose: printerr("Sending file to Hydrus...", False)
                     if do_it:
                         if path_based_import:
                             client.add_file(abspath)
                         else:
                             client.add_file(io.BytesIO(open(abspath, 'rb').read()))
                 if not already_added or force_add_metadata:
-                    if verbose: printerr("Associating URLs...")
+                    if verbose: printerr("Associating URLs...", False)
                     if do_it: client.associate_url(hashes=[hexdigest],add=list(generated_urls))
-                    if verbose: printerr("Adding tags...")
+                    if verbose: printerr("Adding tags...", False)
                     tag_dict = defaultdict(list)
                     for repo, tag in generated_tags:
                         tag_dict[repo].append(tag)
                     if do_it:
                         client.add_tags(hashes=[hexdigest],service_to_tags=tag_dict)
-                if verbose: printerr("Writing entry to import database...")
+                if verbose: printerr("Writing entry to import database...", False)
                 if do_it:
                     db.add_or_update_import_entry(path, import_time=time.time(), creation_time=ctime, modification_time=mtime, metadata=raw_metadata, hexdigest=hexdigest)
                     db.sync()
 
             else:
-                if verbose: printerr(f"Skipping due to no matching filter: {path}")
+                if verbose: printerr(f"Skipping due to no matching filter: {path}", False)
 
     log.info("hydownloader-importer", f"Finished import job: {job}")
     db.shutdown()
