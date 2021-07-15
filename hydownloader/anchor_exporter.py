@@ -73,14 +73,27 @@ def update_anchor(path: str, hydrus_db_folder: str, sites: str, unrecognized_url
         client_db = sqlite3.connect("file:"+hydrus_db_folder+"/client.db?mode=ro", uri=True)
         client_db.row_factory = sqlite3.Row
         cc = client_db.cursor()
+
         log.info("hydownloader-anchor-exporter", "Querying Hydrus database for current URL IDs...")
-        cc.execute('select * from current_files natural inner join url_map')
+        current_files_tables = map(lambda x: x['name'], cc.execute('select name FROM sqlite_master where type =\'table\' and name like \'current_files%\'').fetchall())
+        current_files_queries = []
+        for table in current_files_tables:
+            current_files_queries.append(f"select * from {table} natural inner join url_map")
+        cc.execute(' union '.join(current_files_queries))
+
         for row in cc.fetchall():
             current_url_ids.add(row['url_id'])
+
         log.info("hydownloader-anchor-exporter", "Querying Hydrus database for deleted URL IDs...")
-        cc.execute('select * from deleted_files natural inner join url_map')
+        deleted_files_tables = map(lambda x: x['name'], cc.execute('select name FROM sqlite_master where type =\'table\' and name like \'deleted_files%\'').fetchall())
+        deleted_files_queries = []
+        for table in deleted_files_tables:
+            deleted_files_queries.append(f"select * from {table} natural inner join url_map")
+        cc.execute(' union '.join(deleted_files_queries))
+
         for row in cc.fetchall():
             deleted_url_ids.add(row['url_id'])
+
         client_db.close()
         if keep_old_hydrus_url_data:
             log.info("hydownloader-anchor-exporter", "Old Hydrus URL data will NOT be deleted from the shared hydownloader database")
