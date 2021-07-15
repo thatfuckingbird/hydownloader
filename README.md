@@ -4,7 +4,7 @@ Alternative download system for Hydrus.
 
 ## What is this and how it works?
 
-This is a set of utilites that provide a Hydrus-like download system outside of Hydrus, based on gallery-dl.
+This is a set of utilites that provide a Hydrus-like download system outside of Hydrus, based on [gallery-dl](https://github.com/mikf/gallery-dl/).
 The main component is a daemon that runs in the background and uses a database of subscriptions and URL data
 to control gallery-dl. It downloads files into a separate folder, independently of Hydrus. It also saves
 detailed metadata, checks for download errors, keeps track of already downloaded files and provides
@@ -75,8 +75,9 @@ Contents of a hydownloader database folder:
 * `anchor.db`: anchor database (DO NOT TOUCH)
 * `gallery-dl-cache.db`: gallery-dl cache to store session keys and similar (DO NOT TOUCH)
 * `gallery-dl-config.json`: gallery-dl configuration file with settings needed for correct hydownloader operation (DO NOT TOUCH)
-* `gallery-dl-user-config.json`: gallery-dl configuration file for user-provided configuration (mostly meant for setting usernames and passwords)
+* `gallery-dl-user-config.json`: gallery-dl configuration file for user-provided configuration (mostly meant for setting usernames and passwords), see the [gallery-dl documentation](https://github.com/mikf/gallery-dl/blob/master/docs/configuration.rst) for available options
 * `hydownloader-config.json`: hydownloader configuration file
+* `hydownloader-import-jobs.json`: configuration file for `hydownloader-importer` containing the rules for generating metadata for downloaded files
 
 Besides running `hydownloader-daemon`, you should check out `hydownloader-tools`. You can use it to:
 
