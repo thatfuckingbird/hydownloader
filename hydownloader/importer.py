@@ -434,6 +434,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                 if verbose: printerr("Writing entry to import database...")
                 if do_it:
                     db.add_or_update_import_entry(path, import_time=time.time(), creation_time=ctime, modification_time=mtime, metadata=raw_metadata, hexdigest=hexdigest)
+                    db.sync()
 
             else:
                 if verbose: printerr(f"Skipping due to no matching filter: {path}")
