@@ -1391,6 +1391,11 @@ DEFAULT_GALLERY_DL_USER_CONFIG = R"""{
             "tags": true,
             "notes": true
         },
+        "moebooru":
+        {
+            "tags": true,
+            "notes": true
+        },
         "kemonoparty":
         {
             "metadata": true
