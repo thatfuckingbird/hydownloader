@@ -1135,6 +1135,7 @@ DEFAULT_GALLERY_DL_USER_CONFIG = R"""{
             }
         ],
 
+        "tags": true,
         "artstation":
         {
             "external": false
