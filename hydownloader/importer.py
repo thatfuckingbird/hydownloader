@@ -168,7 +168,7 @@ def clear_imported(path: str, action: str, do_it: bool, no_skip_on_differing_tim
 @cli.command(help='Run an import job to transfer files and metadata into Hydrus.')
 @click.option('--path', type=str, required=True, help='hydownloader database path.')
 @click.option('--job', type=str, required=True, help='Name of the import job to run.')
-@click.option('--skip-already-imported', type=bool, required=False, default=False, is_flag=True, show_default=True, help='Skip files that were already imported in the past (based on the database of imported files).')
+@click.option('--skip-already-imported', type=bool, required=False, default=False, is_flag=True, show_default=True, help='Skip files that were already imported in the past (based on hydownloader\'s database of imported files).')
 @click.option('--no-skip-on-differing-times', type=bool, required=False, default=False, is_flag=True, show_default=True, help='Do not skip files that have different creation or modification date than what is in the database of already imported files. This flag only has effect when --skip-already-imported is used.')
 @click.option('--config', type=str, required=False, default=None, show_default=True, help='Import job configuration filepath override.')
 @click.option('--verbose', type=bool, is_flag=True, default=False, show_default=True, help='Print generated metadata and other information.')
