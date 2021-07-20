@@ -41,7 +41,7 @@ For some sites (most importantly, pixiv), neither passwords nor cookies are suff
 you have to acquire an OAuth token using your browser (possible copying the token out of the dev tools) and then adding this token to the gallery-dl configuration.
 To make this process easier, `hydownloader-tools` has commands to acquire OAuth tokens for some of these sites (like pixiv).
 See the `--help` of `hydownloader-tools` for what's available. Upon running the command, your browser should open the right login page
-and instructions will be displayed on what to do. Note that usually this OAuth tokens expire in a few seconds, so you have to be fast with copying the token
+and instructions will be displayed on what to do. Note that usually these OAuth tokens expire in a few seconds, so you have to be fast with copying the token
 from your browser into the command line.
 
 `hydownloader-tools` also contains a test command with many sites supported, which you can run any time and will tell you whether hydownloader
@@ -53,7 +53,7 @@ This serves two purposes: for supported sites, hydownloader will recognize URLs 
 re-downloading those files. Secondly, `hydownloader-daemon` will be able to give URL information through its API similarly to the Hydrus API.
 This makes it possible for external applications like Hydrus Companion to use this API instead of the Hydrus API for providing features like HC's inline link lookup.
 
-The URL export is done through the `hydownloader-exporter` tool. For information on how to use this tool, see its `--help` output. Make sure you review
+The URL export is done through the `hydownloader-anchor-exporter` tool. For information on how to use this tool, see its `--help` output. Make sure you review
 all the available command line parameters and their explanations there before running it. While it is safe to use as it only ever opens the
 Hydrus database in read-only mode, the correct command line parameters must be set depending on what URLs you want to export and which of the
 two previously mentioned use cases is relevant for you. Note that on large Hydrus databases, running this tool can lead to high (multiple gigabytes)
@@ -67,17 +67,68 @@ different database folders, so if your instances download from separate sites th
 
 ### hydownloader-systray
 
+TODO
 TODO: clarify archive/delete in systray
 
 ### Hydrus Companion
 
+You can use hydownloader as the backend for the [Hydrus Companion](https://gitgud.io/prkc/hydrus-companion) browser extension.
+While originally made for Hydrus, it also supports hydownloader now with mostly the same feature set.
+
+Hydrus Companion has many features that make downloading easier as you browse the web. Among them are sending URLs and pages directly from your browser to hydownloader for downloading,
+adding and managing hydownloader subscriptions from your browser, highlighting already known/downloaded URLs on webpages ("inline link lookup") and many more.
+
+Extensive documentation on how to configure the extension to work with hydownloader and on all the available features is included in the extension itself.
+See also the README in the linked git repository.
+
 ## Exporting data from Hydrus to hydownloader
+
+Currently you can export URLs from Hydrus to hydownloader in order to avoid redownloading files you already have in your Hydrus database and to
+provide URL information for services such as the inline link lookup in Hydrus Companion. This is done by using the `hydownloader-anchor-exporter` tool
+as detailed in the [Installation and configuration](installation-and-configuration) section.
+
+To avoid redownloading already downloaded files, so-called "anchors" (hence the "anchor exporter" name) are stored in a database,
+that identify a specific post on a specific website. For example, an anchor entry of `gelbooru4977152` identifies the post with number 4977152 on gelbooru.
+If this is found in the anchor database, the content won't be downloaded again.
+For supported sites, `hydownloader-anchor-exporter` can generate these anchors from post URLs stored in your Hydrus database
+(you can find the list of supported sites in the `--help` of the anchor exporter tool). It is also possible to selectively generate anchors only for some files.
+
+For URL information services (e.g. the inline link lookup in Hydrus Companion), it is not enough to store these anchors, but all
+URLs known to Hydrus should be exported to the hydownloader database. This can be done with the `--fill-known-urls` argument.
+Alongside the URLs, the file status (whether the files belonging to the URLs are deleted or not) is also exported.
+
+If, beside hydownloader, you also use Hydrus for downloading, or you use the URL information APIs of hydownloader, then you should periodically
+re-run the anchor exporter tool to update URL information in your hydownloader database based on the changes in your Hydrus instance.
+
+You should check the `--help` of `hydownloader-anchor-exporter` for more information and advanced features which are not documented here.
 
 ## Downloading
 
+There are two main ways to download with hydownloader: single URL downloads and subscriptions. Single URLs are one-off downloads: you give hydownloader a URL
+and it will download all content it finds there, then stop. Subscriptions are repeated downloads from the same site, where the aim is to get all new
+content since the last check. Subscriptions usually work on galleries (like images uploaded by an artist or the result of a tag search).
+
+Both for single URL downloads and subscriptions, gallery-dl must support the site you want to download from (direct links to files also work).
+For each individual subscription or single URL download, you can configure several properties governing the download process, e.g. whether to overwrite existing files
+or how often to check a subscription for new files.
+
 ### Single URLs
 
+TODO
+
 ### Subscriptions
+
+For subscriptions, hydownloader has additional support for some sites beyond what gallery-dl provides. This additional support includes recognizing URLs that are
+subscribable and extracting keywords from them. This makes it possible to store these subscriptions not as URLs, but as a downloader plus keywords pair,
+making subscription management much nicer and allowing for features such as directly adding subscriptions from your browser via Hydrus Companion.
+
+You can still subscribe to sites that gallery-dl supports but hydownloader does not recognize the URL as subscribable, by using the `raw` downloader. For this downloader, the keywords field
+should contain the full URL for the gallery you want to subscribe to.
+
+Subscriptions keep track of already downloaded sites by using the previously mentioned anchor database. This database is shared for the whole hydownloader instance,
+which means that it is safe to have multiple subscriptions that potentially yield the same files. These will be downloaded only once (for the first subscription that finds them).
+
+TODO
 
 #### Important note on sudden shutdowns in the middle of large subscription checks
 
@@ -101,15 +152,39 @@ is always better than just suddenly terminating it.
 
 ## Management and maintenance
 
+hydownloader saves large amounts of additional information (logs and subscription check history) and provides tools to analyze this information in order
+to find and diagnose download problems. This is especially important for subscriptions, where problems could easily go unnoticed for a long time with subscriptions
+producing no files.
+
 ### Subscription checks
+
+A history of checks for all subscriptions is stored in the database. For each check, you can view the time, status (whether there was any error) and the number
+of new/already seen files. `hydownloader-systray` can display check history for a single subscription or for all subscriptions.
+Old entries can also be archived, which works the same way as for single URL queue entries.
 
 ### Logs
 
+hydownloader stores the following logs:
+
+- A main log (daemon log), generated by `hydownloader-daemon` and the other hydownloader components. This log records various events (startup, shutdown, subscription checks, downloads, etc.) and
+any problems (warnings, errors). This is stored as `daemon.txt` in the `logs` subfolder of your hydownloader database folder.
+- A log file for each subscription. This is generated by gallery-dl and has information about the details of the download process and any network problems.
+- A log file for each single URL download. Same content as the subscription log.
+- Unsupported URLs (these are URLs that gallery-dl encountered but could not handle) are also stored in separate text files for each single URL download and subscription.
+
+All logs are stored as text files in the `logs` subfolder of your hydownloader database folder. You can use `hydownloader-systray` to view and search/filter them.
+
 ### Self-tests
+
+TODO
 
 ### Reports
 
+TODO
+
 ### Other tools
+
+TODO
 
 ## Importing downloaded data into Hydrus
 
