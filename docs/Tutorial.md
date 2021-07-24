@@ -67,8 +67,13 @@ different database folders, so if your instances download from separate sites th
 
 ### hydownloader-systray
 
-TODO
-TODO: clarify archive/delete in systray
+After installing and configuring hydownloader, you need some way to actually access its features like adding/managing URLs and subscriptions.
+Since the hydownloader daemon runs in the background and is accessible through a HTTP API, it would be very inconvenient having to directly interact with it.
+[hydownloader-systray](https://github.com/thatfuckingbird/hydownloader-systray) is an easy to use, multiplatform GUI application for managing hydownloader.
+You tell it the address that the hydownloader daemon uses and your access key, and it will provide an interface for URLs, subscriptions, subscription check history
+and logs. You can add and delete URLs and subscriptions and change their various properties. It also displays the current status
+of the hydownloader daemon (what it is doing currently, how many subs and URLs are queued). Some management actions are also accessible.
+Read the documentation at the [hydownloader-systray](https://github.com/thatfuckingbird/hydownloader-systray) repo on how to install, configure and use it.
 
 ### Hydrus Companion
 
@@ -114,7 +119,42 @@ or how often to check a subscription for new files.
 
 ### Single URLs
 
-TODO
+When you send a URL for downloading to the hydownloader daemon, it will get added to the download queue.
+hydownloader periodically checks this queue and downloads any URLs that were not yet downloaded.
+Already downloaded URLs remain in the database so you can review your URL download history, redownload them, etc.
+
+Each URL has various properties associated with it, which control the download process.
+These are visible in (and can be changed from) hydownloader-systray. It is very important to understand what these properties
+do as they can drastically affect the behavior of hydownloader and the download results.
+
+These are the properties associated with each URL (the most important ones with bold names):
+
+| Name | Value | Explanation |
+|-------|---------|---------|
+| **ID** | integer | A unique numeric ID identifying this URL entry in the database (not user editable). |
+| **URL** | text | The URL to download. |
+| Priority | number | The priority of this URL. Entries with higher priority will be downloaded first (default is 0). |
+| Ignore anchor | boolean | If set to true, the anchor database will not be used when downloading this URL, meaning that even if it is known to hydownloader, it will be downloaded again (unless the previously downloaded files are still there and overwrite is not enabled). |
+| Overwrite existing | boolean | Overwrite existing downloaded files, if there is any. The default behavior is to skip. |
+| **Additional data** | text | This field holds metadata like additional tags you want associated with files downloaded from this URL. Currently you can write tags here separated by commas. Hydrus Companion also saves its generated metadata and tags here. More formats might be supported in the future. |
+| **Status** | integer | Numerical status of this URL entry. -1 means not yet processed (this is how hydownloader finds the entries it needs to download), 0 means successfully downloaded. Higher values mean some kind of error happened during the download (see the result status field). |
+| Result status | text | The status of the download, as text (either 'ok' or the error description if the download errored). Set by hydownloader after the download is finished. If there was an error, checking the log belonging to this URL entry will usually tell you the details. |
+| Time added | datetime |The time the URL was added to the hydownloader database. Written by hydownloader, not user editable. |
+| Time processed | datetime | The time the URL was processed (downloaded) by hydownloader. Written by hydownloader, not user editable. |
+| **Paused** | boolean | Paused URLs won't be downloaded. You need to unpause the URL before hydownloader will process it. |
+| Metadata only | boolean | Only generate metadata files, do not download media. |
+| Filter | text | This will be used as the value for the `filter` option of gallery-dl. Can be used to filter what is downloaded based on file type or other properties (depending on what the site supports). See the gallery-dl documentation for more info on filters. |
+| Max files | integer | Maximum number of files to download from this URL. By default, there is no limit. |
+| New files | integer | Number of new files downloaded from this URL (not including metadata files). Written after the download is done, not user editable. |
+| Already seen files | integer | Number of files on this URL that were already previously downloaded. Written after the download is done, not user editable. |
+| Comment | text | You can write any additional notes for yourself in this field. It will not be processed by hydownloader. |
+| Archived | boolean | Clients connecting to hydownloader (like hydownloader-systray) will not list archived URLs by default. This does not affect the working of hydownloader itself in any way, but is used so that you can hide old URLs you are done with from the GUI (and reduce network traffic when requesting the list of URLs). (This has no relation to the inbox/archive status in Hydrus.) |
+
+If you want to change some of these properties before the download happens, it is best to add the URL as paused,
+do the changes, then unpause it.
+
+Note that deleting URLs only means that their entry is removed from the database table that holds the URL queue.
+All the downloaded files, logs, etc. will remain.
 
 ### Subscriptions
 
@@ -128,7 +168,31 @@ should contain the full URL for the gallery you want to subscribe to.
 Subscriptions keep track of already downloaded sites by using the previously mentioned anchor database. This database is shared for the whole hydownloader instance,
 which means that it is safe to have multiple subscriptions that potentially yield the same files. These will be downloaded only once (for the first subscription that finds them).
 
-TODO
+Just like with URLs, subscriptions also have several properties to control how hydownloader processes them.
+It is essential to understand these to be able to effectively utilize the subscription feature.
+
+These are the properties associated with each subscription (the most important ones with bold names):
+
+| Name | Value | Explanation |
+|-------|---------|---------|
+| **ID** | integer | A unique numeric ID identifying this subscription in the database (not user editable). |
+| **Downloader** | text | The site to download from, or `raw`. See the explanation above. |
+| **Keywords** | text | The search keywords. See the explanation above. |
+| Priority | number | Same as for single URLs. |
+| **Paused** | boolean | Same as for single URLs. |
+| **Check interval** | integer | How often should hydownloader check for new files. **Value is in seconds.** |
+| **Abort after** | integer | Stop looking for new files after this many consecutive already seen files were encountered. |
+| **Max files (regular check)** | integer | Maximum number of files to download on a regular check. |
+| **Max files (initial check)** | integer | Maximum number of files to download on the first check of this subscription (applies when "last check" is empty). |
+| Last check | datetime | When was this subscription last checked for new files (successfully or not). |
+| Last successful check | datetime| When was the last check of this subscription that didn't have any errors. |
+| **Additional data** | text | Same as for single URLs. |
+| Time created | datetime | The date and time when this subscription was created. |
+| Filter | text | Same as for single URLs. |
+| Comment | text | Same as for single URLs. |
+
+Note that deleting subscriptions only means that their entry is removed from the database table that holds subscriptions.
+All the downloaded files, logs, etc. will remain.
 
 #### Important note on sudden shutdowns in the middle of large subscription checks
 
@@ -174,17 +238,50 @@ any problems (warnings, errors). This is stored as `daemon.txt` in the `logs` su
 
 All logs are stored as text files in the `logs` subfolder of your hydownloader database folder. You can use `hydownloader-systray` to view and search/filter them.
 
-### Self-tests
+### Download tests
 
-TODO
+One of the primary principles in making hydownloader was that it should not only provide a download system, it should provide
+a **correct** one. This means that it should retrieve all requested files, with as much (correct) metadata as possible and
+that it should be easy to notice and diagnose problems as they happen. It also means that it should be able to test
+downloading from various sites and that these downloads indeed produce the expected results (including metadata).
+These features are especially helpful when sites change in ways that break downloading.
+
+Beyond the previously explained logging features, `hydownloader-tools` also has a built-in test feature.
+This will attempt to download from the selected sites, using your hydownloader configuration and will check the results against known-good ones.
+The test downloads use your hydownloader configuration but will use the `test` directory instead of the regular data directory and a separate
+anchor database (also under ṫhe `test` directory), so you can safely run these tests without it affecting your usual downloads.
+
+There is also a special, non-download test called the `environment` test. Instead of downloading, this will check
+whether all the dependencies of hydownloader are installed and that the versions are compatible.
+
+The `test` directory is cleaned before every test download, and also after every successful one. When a test download fails,
+the cause of failure will be printed to the main log (and to the command line) and the `test` directory is left intact.
+You can then inspect the download logs, any downloaded files and the anchor database there to diagnose issues.
+
+The test feature is accessible through the `test` command of `hydownloader-tools`. See the `--help` for this command for the
+list of supported sites and various other options.
+
+It is recommended to periodically run tests for sites you usually download from, just to make sure everything is still working as it should.
 
 ### Reports
 
-TODO
+The previously introduced `test` command helps to ensure downloading is working as it should.
+However, it cannot find problems with your local URL download queue and subscriptions.
+
+The `report` command (also in `hydownloader-tools`) was created to help you find failing or otherwise misbehaving subscriptions
+and URLs. For example, a subscription might not be producing any more files because the artist deleted or moved the gallery,
+or it could be repeatedly failing checks for some other reason.
+
+The report calculates and prints various statistics (to the command line and the main log) aimed to detect misbehaving subscriptions and
+single URLs (like "subscriptions that didn't error but produced no files", or "subscriptions/URLs due for download for too long without actually being processed", and many others).
+You can also control how verbose the report is with the various parameters of the `report`˙command (as usual, see the `--help` for more on these).
+
+It is recommended to periodically run and review the report to ensure that all your URLs and subscriptions are being downloaded as they should be.
 
 ### Other tools
 
-TODO
+There are also some other commands found in `hydownloader-tools` to help with some specific or rare situations (logging into pixiv, mass adding subscriptions or URLs, etc.).
+Check the `--help` to see what is available.
 
 ## Importing downloaded data into Hydrus
 

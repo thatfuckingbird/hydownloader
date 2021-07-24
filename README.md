@@ -190,6 +190,8 @@ Here is a quick table of contents for the source code:
 
 ## Planned features
 
+* Add an "average/median time spent on (successful) check" statistic to the report
+* Exclude archived URLs from the report by default
 * Mass reverse lookup (SauceNAO + local db)
 * When using the API, "run_tests" and other long lasting actions should run in a separate worker thread
 * Statistics: time spent downloading (in a given time interval)
