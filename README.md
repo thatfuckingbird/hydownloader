@@ -2,7 +2,7 @@
 
 Alternative download system for Hydrus.
 
-## What is this and how it works?
+## What is this and how does it work?
 
 This is a set of utilites that provide a Hydrus-like download system outside of Hydrus, based on [gallery-dl](https://github.com/mikf/gallery-dl/).
 The main component is a daemon that runs in the background and uses a database of subscriptions and URL data
