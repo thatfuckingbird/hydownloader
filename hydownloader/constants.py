@@ -90,6 +90,11 @@ DEFAULT_IMPORT_JOBS = """
             "name": "source URLs from single URL queue",
             "allowNoResult": true,
             "values": "single_urls"
+          },
+          {
+            "name": "gallery-dl file url",
+            "values": "json_data.get('gallerydl_file_url', '')",
+            "allowEmpty": true
           }
         ]
       },
@@ -1432,6 +1437,8 @@ DEFAULT_GALLERY_DL_USER_CONFIG = R"""{
 
 DEFAULT_GALLERY_DL_CONFIG = R"""{
     "comment": "DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING. IT *WILL* BREAK HYDOWNLOADER.",
+
+    "url-metadata": "gallerydl_file_url",
 
     "output": {
         "mode": "pipe",
