@@ -295,7 +295,31 @@ def get_additional_data_for_file(filepath: str) -> list[dict]:
     check_init()
     c = get_conn().cursor()
     c.execute("select * from additional_data where file = ?", (filepath,))
-    return c.fetchall()
+    results = []
+    # get the current additional_data field of related single URLs and subscriptions
+    for entry in c.fetchall():
+        results.append(entry)
+        if entry['url_id']:
+            for sub in get_subs_by_id([entry['subscription_id']]):
+                if sub['additional_data']:
+                    results.append({
+                        'file': entry['file'],
+                        'time_added': None,
+                        'subscription_id': sub['id'],
+                        'url_id': None,
+                        'additional_data': sub['additional_data']
+                    })
+        if entry['subscription_id']:
+            for url in get_queued_urls_by_id([entry['url_id']], True):
+                if url['additional_data']:
+                    results.append({
+                        'file': entry['file'],
+                        'time_added': None,
+                        'subscription_id': None,
+                        'url_id': url['id'],
+                        'additional_data': url['additional_data']
+                    })
+    return results
 
 def add_or_update_subscriptions(sub_data: list[dict]) -> bool:
     check_init()
