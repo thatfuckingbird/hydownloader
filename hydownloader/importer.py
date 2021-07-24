@@ -255,6 +255,12 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
             fname_noext, fname_ext = os.path.splitext(fname)
             if fname_ext.startswith('.'): fname_ext = fname_ext[1:]
 
+            is_file_in_import_db, db_mtime, db_ctime = db.check_import_db(path)
+            if skip_already_imported and is_file_in_import_db:
+                if not (no_skip_on_differing_times and (db_mtime != mtime or db_ctime != ctime)):
+                    if verbose: printerr(f"Already imported, skipping: {path}...", False)
+                    continue
+
             # find the path of the associated json metadata file, check if it exists
             # for pixiv ugoira, the same metadata file belongs both to the .webm and the .zip,
             # so this needs special handling
@@ -275,12 +281,6 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
             json_data = None # this will hold the associated json metadata (if available)
 
             if verbose: printerr(f"Processing file: {path}...", False)
-
-            is_file_in_import_db, db_mtime, db_ctime = db.check_import_db(path)
-            if skip_already_imported and is_file_in_import_db:
-                if not (no_skip_on_differing_times and (db_mtime != mtime or db_ctime != ctime)):
-                    if verbose: printerr(f"Already imported, skipping: {path}...", False)
-                    continue
 
             # iterate over all filter groups, do they match this file?
             for group in jd['groups']:
