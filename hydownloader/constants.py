@@ -39,8 +39,6 @@ DEFAULT_IMPORT_JOBS = """
   "default": {
     "apiURL": "http://127.0.0.1:45869",
     "apiKey": "",
-    "forceAddMetadata": true,
-    "forceAddFiles": false,
     "usePathBasedImport": false,
     "orderFolderContents": "name",
     "nonUrlSourceNamespace": "hydl-non-url-source",

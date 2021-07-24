@@ -176,7 +176,9 @@ def clear_imported(path: str, action: str, do_it: bool, no_skip_on_differing_tim
 @click.option('--no-abort-on-missing-metadata', type=bool, is_flag=True, show_default=True, default=False, help='Do not stop importing when a metadata file is not found.')
 @click.option('--filename-regex', type=str, default=None, show_default=True, help='Only run the importer on files whose filepath matches the regex given here. This is an additional restriction on top of the filters defined in the import job.')
 @click.option('--no-abort-on-error', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort on errors. Useful to check for any potential errors before actually importing files.')
-def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differing_times: bool, config: Optional[str], verbose: bool, do_it: bool, no_abort_on_missing_metadata: bool, filename_regex: Optional[str], no_abort_on_error: bool) -> None:
+@click.option('--no-force-add-metadata', type=bool, default=False, show_default=True, is_flag=True, help='Do not add metadata for files already in Hydrus.')
+@click.option('--force-add-files', type=bool, default=False, show_default=True, is_flag=True, help='Send files to Hydrus even if they are already in Hydrus.')
+def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differing_times: bool, config: Optional[str], verbose: bool, do_it: bool, no_abort_on_missing_metadata: bool, filename_regex: Optional[str], no_abort_on_error: bool, no_force_add_metadata: bool, force_add_files: bool) -> None:
     log.init(path, True)
     db.init(path)
 
@@ -192,8 +194,6 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
         log.fatal("hydownloader-importer", f"Job not found in configuration file: {job}")
     jd = jobs[job]
 
-    force_add_metadata = jd.get('forceAddMetadata', True)
-    force_add_files = jd.get('forceAddFiles', False)
     path_based_import = jd.get('usePathBasedImport', False)
     order_folder_contents = jd.get('orderFolderContents', 'default')
     non_url_source_namespace = jd.get('nonUrlSourceNamespace', '')
@@ -440,7 +440,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                             client.add_file(abspath)
                         else:
                             client.add_file(io.BytesIO(open(abspath, 'rb').read()))
-                if not already_added or force_add_metadata:
+                if not already_added or not no_force_add_metadata:
                     if verbose: printerr("Associating URLs...", False)
                     if do_it: client.associate_url(hashes=[hexdigest],add=list(generated_urls))
                     if verbose: printerr("Adding tags...", False)
