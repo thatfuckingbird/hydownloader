@@ -26,11 +26,25 @@ import time
 import itertools
 import hashlib
 import urllib.parse
+import requests
+import urllib3.util.retry
 from collections import defaultdict
 from typing import Optional, Union, Any
 import click
 import hydrus
 from hydownloader import db, log
+
+def get_session(retries: Union[int, float], backoff_factor=Union[int, float]) -> requests.Session:
+    session = requests.session()
+    # https://findwork.dev/blog/advanced-usage-python-requests-timeouts-retries-hooks/#combining-timeouts-and-retries
+    retry = urllib3.util.retry.Retry(
+        total=retries,
+        backoff_factor=backoff_factor
+    )
+    adapter = requests.adapters.HTTPAdapter(max_retries=retry)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    return session
 
 # Helper function to use in user-defined importer expressions
 def get_namespaces_tags(data: dict[str, Any], key_prefix : str = 'tags_', separator : Optional[str] =' ') -> list[tuple[str,str]]:
@@ -199,6 +213,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
     non_url_source_namespace = jd.get('nonUrlSourceNamespace', '')
 
     client = hydrus.Client(jd['apiKey'], jd['apiURL'])
+    client._session = get_session(5, 1)
 
     log.info("hydownloader-importer", f"Starting import job: {job}")
 
