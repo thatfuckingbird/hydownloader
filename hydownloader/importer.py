@@ -389,7 +389,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                     printerr(f"Found truncated file, won't be imported: {abspath}", not no_abort_on_error)
                     continue
 
-                generated_urls_filtered = []
+                generated_urls_filtered : list[str] = []
                 invalid_url_tags = []
                 for url in generated_urls:
                     url = url.strip()
@@ -400,12 +400,11 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                             printerr(f"Invalid source URL: {url}", False)
                         for repo in tag_repos_for_non_url_sources:
                             invalid_url_tags.append((repo,non_url_source_namespace + ':' + url if non_url_source_namespace else url))
-                generated_urls = generated_urls_filtered
                 generated_tags.update(invalid_url_tags)
 
                 if verbose:
                     printerr("Generated URLs:", False)
-                    for url in generated_urls:
+                    for url in generated_urls_filtered:
                         printerr(url, False)
                     printerr("Generated tags:", False)
                     for repo, tag in sorted(list(generated_tags), key=lambda x: x[0]):
@@ -442,7 +441,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                             client.add_file(io.BytesIO(open(abspath, 'rb').read()))
                 if not already_added or not no_force_add_metadata:
                     if verbose: printerr("Associating URLs...", False)
-                    if do_it: client.associate_url(hashes=[hexdigest],add=list(generated_urls))
+                    if do_it: client.associate_url(hashes=[hexdigest],add=generated_urls_filtered)
                     if verbose: printerr("Adding tags...", False)
                     tag_dict = defaultdict(list)
                     for repo, tag in generated_tags:
