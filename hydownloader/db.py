@@ -43,20 +43,24 @@ def _shared_db_path() -> str:
 def get_conn() -> sqlite3.Connection:
     global _conn
     thread_id = threading.get_ident()
-    with _conn_lock:
-        if not thread_id in _conn:
+    if not thread_id in _conn:
+        with _conn_lock:
             _conn[thread_id] = sqlite3.connect(_path+"/hydownloader.db", timeout=24*60*60)
+            _conn[thread_id].cursor().execute('pragma journal_mode=wal')
             _conn[thread_id].row_factory = lambda c, r: dict(zip([col[0] for col in c.description], r))
-        return _conn[thread_id]
+            return _conn[thread_id]
+    return _conn[thread_id]
 
 def get_shared_conn() -> sqlite3.Connection:
     global _shared_conn
     thread_id = threading.get_ident()
-    with _shared_conn_lock:
-        if not thread_id in _shared_conn:
+    if not thread_id in _shared_conn:
+        with _shared_conn_lock:
             _shared_conn[thread_id] = sqlite3.connect(_shared_db_path(), timeout=24*60*60)
+            _shared_conn[thread_id].cursor().execute('pragma journal_mode=wal')
             _shared_conn[thread_id].row_factory = lambda c, r: dict(zip([col[0] for col in c.description], r))
-        return _shared_conn[thread_id]
+            return _shared_conn[thread_id]
+    return _shared_conn[thread_id]
 
 def upsert_dict(table: str, d: dict, no_commit: bool = False) -> None:
     keys = d.keys()
