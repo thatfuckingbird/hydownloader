@@ -146,6 +146,9 @@ def create_db() -> None:
     c.execute(C.CREATE_VERSION_STATEMENT)
     c.execute(C.CREATE_SUBSCRIPTION_CHECKS_STATEMENT)
     c.execute(C.CREATE_KNOWN_URL_INDEX_STATEMENT)
+    c.execute(C.CREATE_FILE_INDEX_STATEMENT)
+    c.execute(C.CREATE_URL_ID_INDEX_STATEMENT)
+    c.execute(C.CREATE_SUBSCRIPTION_ID_INDEX_STATEMENT)
     c.execute('insert into version(version) values (?)', (__version__,))
     get_conn().commit()
 
@@ -173,20 +176,20 @@ def associate_additional_data(filename: str, subscription_id: Optional[int] = No
     filename = os.path.relpath(filename, get_datapath())
     c = get_conn().cursor()
     data = None
-    already_saved = 0
+    already_saved = None
     if subscription_id is not None:
         c.execute('select additional_data from subscriptions where id = ?', (subscription_id,))
         rows = c.fetchall()
         if len(rows): data = rows[0]['additional_data']
-        c.execute('select * from additional_data where file = ? and subscription_id = ? and data = ?', (filename, subscription_id, data))
-        already_saved = len(c.fetchall())
+        c.execute('select * from additional_data where file = ? and subscription_id = ? and data = ? limit 1', (filename, subscription_id, data))
+        already_saved = c.fetchone()
     else:
         c.execute('select additional_data from single_url_queue where id = ?', (url_id,))
         rows = c.fetchall()
         if len(rows): data = rows[0]['additional_data']
-        c.execute('select * from additional_data where file = ? and url_id = ? and data = ?', (filename, url_id, data))
-        already_saved = len(c.fetchall())
-    if already_saved == 0:
+        c.execute('select * from additional_data where file = ? and url_id = ? and data = ? limit 1', (filename, url_id, data))
+        already_saved = c.fetchone()
+    if not already_saved:
         c.execute('insert into additional_data(file, data, subscription_id, url_id, time_added) values (?,?,?,?,?)', (filename, data, subscription_id, url_id, time.time()))
     if not no_commit: get_conn().commit()
 
