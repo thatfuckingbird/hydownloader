@@ -1084,6 +1084,24 @@ CREATE TABLE "subscription_checks" (
 )
 """
 
+CREATE_URL_ID_INDEX_STATEMENT = """
+CREATE INDEX "url_id_index" ON "additional_data" (
+	"url_id"
+)
+"""
+
+CREATE_SUBSCRIPTION_ID_INDEX_STATEMENT = """
+CREATE INDEX "subscription_id_index" ON "additional_data" (
+	"subscription_id"
+)
+"""
+
+CREATE_FILE_INDEX_STATEMENT = """
+CREATE INDEX "file_index" ON "additional_data" (
+	"file"
+)
+"""
+
 SHARED_CREATE_KNOWN_URLS_STATEMENT = """
 CREATE TABLE "known_urls" (
 	"url"	TEXT,
