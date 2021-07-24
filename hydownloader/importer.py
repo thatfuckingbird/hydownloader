@@ -261,6 +261,12 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
 
             if verbose: printerr(f"Processing file: {path}...", False)
 
+            is_file_in_import_db, db_mtime, db_ctime = db.check_import_db(path)
+            if skip_already_imported and is_file_in_import_db:
+                if not (no_skip_on_differing_times and (db_mtime != mtime or db_ctime != ctime)):
+                    if verbose: printerr(f"Already imported, skipping: {path}...", False)
+                    continue
+
             # iterate over all filter groups, do they match this file?
             for group in jd['groups']:
                 # evaluate filter, load json metadata if the filter matches and we haven't loaded it yet
@@ -409,11 +415,6 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                     printerr("Generated tags:", False)
                     for repo, tag in sorted(list(generated_tags), key=lambda x: x[0]):
                         printerr(f"{repo} <- {tag}", False)
-
-                is_file_in_import_db, db_mtime, db_ctime = db.check_import_db(path)
-                if skip_already_imported and is_file_in_import_db:
-                    if not (no_skip_on_differing_times and (db_mtime != mtime or db_ctime != ctime)):
-                        continue
 
                 # calculate hash, check if Hydrus already knows the file
                 if verbose: printerr('Hashing...', False)
