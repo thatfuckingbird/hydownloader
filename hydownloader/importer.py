@@ -351,7 +351,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                             except Exception as e:
                                 if verbose and not skip_on_error:
                                     printerr(f"Failed to evaluate expression: {eval_expr}", False)
-                                    printerr(e)
+                                    printerr(e, not no_abort_on_error)
                                 has_error = True
 
                     # check for empty results or failed evaluation, as necessary
