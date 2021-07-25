@@ -422,13 +422,14 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                         for repo in tag_repos_for_non_url_sources:
                             invalid_url_tags.append((repo,non_url_source_namespace + ':' + url if non_url_source_namespace else url))
                 generated_tags.update(invalid_url_tags)
+                generated_urls_filtered = sorted(generated_urls_filtered)
 
                 if verbose:
                     printerr("Generated URLs:", False)
                     for url in generated_urls_filtered:
                         printerr(url, False)
                     printerr("Generated tags:", False)
-                    for repo, tag in sorted(list(generated_tags), key=lambda x: x[0]):
+                    for repo, tag in sorted(list(generated_tags), key=lambda x: x[0]+x[1]):
                         printerr(f"{repo} <- {tag}", False)
 
                 # calculate hash, check if Hydrus already knows the file
