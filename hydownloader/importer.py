@@ -444,7 +444,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                             hasher.update(buf)
                             buf = hashedfile.read(65536 * 16)
                     hexdigest = hasher.hexdigest()
-                    if client.file_metadata(hashes=[hexdigest], only_identifiers=True):
+                    if any(map(lambda x: x.get("is_local", False), client.file_metadata(hashes=[hexdigest]))):
                         printerr("File is already in Hydrus", False)
                         already_added = True
                 if verbose: printerr(f'Hash: {hexdigest}', False)
