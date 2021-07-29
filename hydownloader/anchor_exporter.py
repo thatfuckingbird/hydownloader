@@ -36,7 +36,8 @@ def cli() -> None:
 @click.option('--recognized-urls-file', type=str, required=False, default=None, show_default=True, help="Write URLs that were recognized by the anchor generator to this file.")
 @click.option('--fill-known-urls', type=bool, is_flag=True, required=False, default=False, show_default=True, help="Transfer all Hydrus URLs into the hydownloader database as known URLs.")
 @click.option('--keep-old-hydrus-url-data', type=bool, is_flag=True, required=False, default=False, show_default=True, help="If this is true when --fill-known-urls is used, then old URL data exported from Hydrus in previous runs of this tool will be kept in the hydownloader known URL database. This is useful only if you want to export URLs from multiple Hydrus databases, in which case you should set this to true when calling this tool with the 2nd and later databases. In other cases enabling this will lead to outdated and/or duplicated data.")
-def update_anchor(path: str, hydrus_db_folder: str, sites: str, unrecognized_urls_file: Optional[str], recognized_urls_file: Optional[str], fill_known_urls: bool, keep_old_hydrus_url_data: bool) -> None:
+@click.option('--process-urls-even-if-file-missing', type=bool, is_flag=True, required=False, default=False, show_default=True, help="Process URLs that are in your Hydrus DB, but have no files associated with them (either current or deleted). By default, such URLs are skipped.")
+def update_anchor(path: str, hydrus_db_folder: str, sites: str, unrecognized_urls_file: Optional[str], recognized_urls_file: Optional[str], fill_known_urls: bool, keep_old_hydrus_url_data: bool, process_urls_even_if_file_missing: bool) -> None:
     """
     This function goes through all URLs in a Hydrus database, and tries to match them to known site-specific URL patterns to
     generate anchor database entries that gallery-dl can recognize. For some sites, the anchor format differs
@@ -67,39 +68,39 @@ def update_anchor(path: str, hydrus_db_folder: str, sites: str, unrecognized_url
     recognized_urls = set()
     current_url_ids = set()
     deleted_url_ids = set()
-    if fill_known_urls:
-        if not os.path.isfile(hydrus_db_folder+"/client.db"):
-            log.fatal("hydownloader-anchor-exporter", "The client.db database was not found at the given location!")
-        client_db = sqlite3.connect("file:"+hydrus_db_folder+"/client.db?mode=ro", uri=True)
-        client_db.row_factory = sqlite3.Row
-        cc = client_db.cursor()
 
-        log.info("hydownloader-anchor-exporter", "Querying Hydrus database for current URL IDs...")
-        current_files_tables = map(lambda x: x['name'], cc.execute('select name FROM sqlite_master where type =\'table\' and name like \'current_files%\'').fetchall())
-        current_files_queries = []
-        for table in current_files_tables:
-            current_files_queries.append(f"select * from {table} natural inner join url_map")
-        cc.execute(' union '.join(current_files_queries))
+    if not os.path.isfile(hydrus_db_folder+"/client.db"):
+        log.fatal("hydownloader-anchor-exporter", "The client.db database was not found at the given location!")
+    client_db = sqlite3.connect("file:"+hydrus_db_folder+"/client.db?mode=ro", uri=True)
+    client_db.row_factory = sqlite3.Row
+    cc = client_db.cursor()
 
-        for row in cc.fetchall():
-            current_url_ids.add(row['url_id'])
+    log.info("hydownloader-anchor-exporter", "Querying Hydrus database for current URL IDs...")
+    current_files_tables = map(lambda x: x['name'], cc.execute('select name FROM sqlite_master where type =\'table\' and name like \'current_files%\'').fetchall())
+    current_files_queries = []
+    for table in current_files_tables:
+        current_files_queries.append(f"select * from {table} natural inner join url_map")
+    cc.execute(' union '.join(current_files_queries))
 
-        log.info("hydownloader-anchor-exporter", "Querying Hydrus database for deleted URL IDs...")
-        deleted_files_tables = map(lambda x: x['name'], cc.execute('select name FROM sqlite_master where type =\'table\' and name like \'deleted_files%\'').fetchall())
-        deleted_files_queries = []
-        for table in deleted_files_tables:
-            deleted_files_queries.append(f"select * from {table} natural inner join url_map")
-        cc.execute(' union '.join(deleted_files_queries))
+    for row in cc.fetchall():
+        current_url_ids.add(row['url_id'])
 
-        for row in cc.fetchall():
-            deleted_url_ids.add(row['url_id'])
+    log.info("hydownloader-anchor-exporter", "Querying Hydrus database for deleted URL IDs...")
+    deleted_files_tables = map(lambda x: x['name'], cc.execute('select name FROM sqlite_master where type =\'table\' and name like \'deleted_files%\'').fetchall())
+    deleted_files_queries = []
+    for table in deleted_files_tables:
+        deleted_files_queries.append(f"select * from {table} natural inner join url_map")
+    cc.execute(' union '.join(deleted_files_queries))
 
-        client_db.close()
-        if keep_old_hydrus_url_data:
-            log.info("hydownloader-anchor-exporter", "Old Hydrus URL data will NOT be deleted from the shared hydownloader database")
-        else:
-            log.info("hydownloader-anchor-exporter", "Deleting old Hydrus URL data from shared hydownloader database...")
-            db.delete_all_hydrus_known_urls()
+    for row in cc.fetchall():
+        deleted_url_ids.add(row['url_id'])
+
+    client_db.close()
+    if keep_old_hydrus_url_data:
+        log.info("hydownloader-anchor-exporter", "Old Hydrus URL data will NOT be deleted from the shared hydownloader database")
+    else:
+        log.info("hydownloader-anchor-exporter", "Deleting old Hydrus URL data from shared hydownloader database...")
+        db.delete_all_hydrus_known_urls()
 
     sites_to_keywords : dict[str, Tuple[list[str], list[str]]] = {
         'pixiv': (["pixi"],[]),
@@ -140,10 +141,16 @@ def update_anchor(path: str, hydrus_db_folder: str, sites: str, unrecognized_url
         processed += 1
         if processed % 1000 == 0:
             print(f"Processed {processed}/{all_rows} URLs", file=sys.stderr)
+        is_current = row['url_id'] in current_url_ids
+        is_deleted = row['url_id'] in deleted_url_ids
+        if not is_current and not is_deleted:
+            if process_urls_even_if_file_missing:
+                print(f"Found URL with no files associated, processing regardless: {row['url']}")
+            else:
+                print(f"Found URL with no files associated, skipping: {row['url']}")
+                continue
         if fill_known_urls:
             known_url_status = 1
-            is_current = row['url_id'] in current_url_ids
-            is_deleted = row['url_id'] in deleted_url_ids
             if is_current and is_deleted:
                 known_url_status = 4
             elif is_deleted:
