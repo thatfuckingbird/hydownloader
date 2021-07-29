@@ -184,7 +184,7 @@ These are the properties associated with each subscription (the most important o
 | **Abort after** | integer | Stop looking for new files after this many consecutive already seen files were encountered. |
 | **Max files (regular check)** | integer | Maximum number of files to download on a regular check. |
 | **Max files (initial check)** | integer | Maximum number of files to download on the first check of this subscription (applies when "last check" is empty). |
-| Last check | datetime | When was this subscription last checked for new files (successfully or not). |
+| Last check | datetime | When was this subscription last checked for new files (successfully or not). A subscription check will be considered an "initial check" if and only if this field is not set when the check starts. Clearing this field will make hydownloader treat the subscriptin as if it were never checked before. |
 | Last successful check | datetime| When was the last check of this subscription that didn't have any errors. |
 | **Additional data** | text | Same as for single URLs. |
 | Time created | datetime | The date and time when this subscription was created. |
