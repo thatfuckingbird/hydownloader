@@ -33,6 +33,9 @@ Note that you have to run `hydownloader-importer` yourself to add downloaded fil
 as technically Hydrus is not necessary to use hydownloader. There are two gallery-dl configuration files: `gallery-dl-user-config.json` and `gallery-dl-config.json`.
 These use gallery-dl's options and configuration format, see their [documentation](https://github.com/mikf/gallery-dl/blob/master/docs/configuration.rst) for more info. Generally you can freely modify `gallery-dl-user-config.json` (and this is the place to specify usernames, passwords and other site-specific options),
 but only change `gallery-dl-config.json` if you know what you are doing - modifying the options there could break the communication between hydownloader and gallery-dl.
+Note that changes to the gallery-dl configuration files will be applied on the next download or subscription check, so you don't have to restart hydownloader to apply them,
+but of course they won't apply to the already running URL download and subscription check.
+
 Some sites also need cookies to access login-gated content. These should be added to `cookies.txt` in the database folder. While you can edit this manually,
 it is usually better to use some tool to export cookies in the right format (for example Hydrus Companion can do this).
 Generally, you should do all configuration while `hydownloader-daemon` is not running.
