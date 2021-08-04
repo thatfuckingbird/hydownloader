@@ -28,6 +28,7 @@ from hydownloader import log, uri_normalizer, __version__, constants as C
 _conn_lock = threading.Lock()
 _conn: dict[int, sqlite3.Connection] = {}
 _shared_conn_lock = threading.Lock()
+_update_lock = threading.Lock()
 _shared_conn: dict[int, sqlite3.Connection] = {}
 _closed_threads_lock = threading.Lock()
 _closed_threads: set[int] = set()
@@ -130,7 +131,7 @@ def init(path : str) -> None:
     get_shared_conn()
     if need_shared_db_init: create_shared_db()
 
-    check_db_version()
+    check_and_update_db()
 
     _inited = True
 
@@ -220,14 +221,34 @@ def check_init() -> None:
     if not _inited:
         log.fatal("hydownloader", "Database used but not initalized")
 
-def check_db_version() -> None:
+def get_db_version() -> str:
     c = get_conn().cursor()
     c.execute('select version from version')
     v = c.fetchall()
     if len(v) != 1:
         log.fatal("hydownloader", "Invalid version table in hydownloader database")
-    if v[0]['version'] != __version__:
-        log.fatal("hydownloader", "Unsupported hydownloader database version found")
+    return v[0]['version']
+
+def check_and_update_db() -> None:
+    with _update_lock:
+        while True:
+            version = get_db_version()
+            if version == __version__:
+                break
+            elif version == "0.1.0": # 0.1.0 -> 0.2.0
+                log.information("hydownloader", "Starting database upgrade to version 0.2.0")
+                with sqlite3.connect(_path+"/hydownloader.db") as connection:
+                    cur = connection.cursor()
+                    cur.execute('begin exclusive transaction')
+                    log.information("hydownloader", "Adding gallerydl_config to subscriptions...")
+                    cur.execute('alter table "subscriptions" add "gallerydl_config" text')
+                    log.information("hydownloader", "Adding gallerydl_config to single URLs...")
+                    cur.execute('alter table "single_url_queue" add "gallerydl_config" text')
+                    log.information("hydownloader", "Updating version number...")
+                    cur.execute('update version set version = \'0.2.0\'")
+                log.information("hydownloader", "Upgraded database to version 0.2.0")
+            else:
+                log.fatal("hydownloader", "Unsupported hydownloader database version found")
 
 def get_due_subscriptions() -> list[dict]:
     check_init()

@@ -136,7 +136,8 @@ def subscription_worker() -> None:
                     subscription_mode=True,
                     abort_after=sub['abort_after'],
                     max_file_count = sub['max_files_initial'] if initial_check else sub['max_files_regular'],
-                    process_id = proc_id
+                    process_id = proc_id,
+                    gallerydl_config = sub['gallerydl_config']
                     )
                 new_sub_data = {
                     'id': sub['id']
@@ -217,7 +218,8 @@ def url_queue_worker() -> None:
                     chapter_filter=None,
                     subscription_mode=False,
                     max_file_count = urlinfo['max_files'],
-                    process_id = proc_id
+                    process_id = proc_id,
+                    gallerydl_config = urlinfo['gallerydl_config']
                     )
                 new_url_data = {
                     'id': urlinfo['id']

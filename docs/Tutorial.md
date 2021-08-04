@@ -147,6 +147,7 @@ These are the properties associated with each URL (the most important ones with 
 | **Paused** | boolean | Paused URLs won't be downloaded. You need to unpause the URL before hydownloader will process it. |
 | Metadata only | boolean | Only generate metadata files, do not download media. |
 | Filter | text | This will be used as the value for the `filter` option of gallery-dl. Can be used to filter what is downloaded based on file type or other properties (depending on what the site supports). See the gallery-dl documentation for more info on filters. |
+| gallery-dl config | text | Path (either absolute, or relative to the database directory) of an additional gallery-dl configuration file. This makes it possible to load custom gallery-dl configuration for individual URLs. |
 | Max files | integer | Maximum number of files to download from this URL. By default, there is no limit. |
 | New files | integer | Number of new files downloaded from this URL (not including metadata files). Written after the download is done, not user editable. |
 | Already seen files | integer | Number of files on this URL that were already previously downloaded. Written after the download is done, not user editable. |
@@ -191,6 +192,7 @@ These are the properties associated with each subscription (the most important o
 | Last successful check | datetime| When was the last check of this subscription that didn't have any errors. |
 | **Additional data** | text | Same as for single URLs. |
 | Time created | datetime | The date and time when this subscription was created. |
+| gallery-dl config | text | Same as for single URLs. |
 | Filter | text | Same as for single URLs. |
 | Comment | text | Same as for single URLs. |
 

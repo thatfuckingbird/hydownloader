@@ -104,7 +104,7 @@ def run_gallery_dl_with_custom_args(args: list[str], capture_output: bool = Fals
     result = subprocess.run(run_args, capture_output = capture_output, text = capture_output, check = False)
     return result
 
-def run_gallery_dl(url: str, subscription_mode: bool, ignore_anchor: bool, metadata_only: bool, log_file: str, console_output_file: str, unsupported_urls_file: str, overwrite_existing: bool, filter_: Optional[str] = None, chapter_filter: Optional[str] = None, abort_after: Optional[int] = None, test_mode: bool = False, old_log_file: Optional[str] = None, old_unsupported_urls_file: Optional[str] = None, max_file_count: Optional[int] = None, process_id: Optional[str] = None, write_pages: Optional[bool] = False) -> str:
+def run_gallery_dl(url: str, subscription_mode: bool, ignore_anchor: bool, metadata_only: bool, log_file: str, console_output_file: str, unsupported_urls_file: str, overwrite_existing: bool, filter_: Optional[str] = None, chapter_filter: Optional[str] = None, abort_after: Optional[int] = None, test_mode: bool = False, old_log_file: Optional[str] = None, old_unsupported_urls_file: Optional[str] = None, max_file_count: Optional[int] = None, process_id: Optional[str] = None, write_pages: Optional[bool] = False, gallerydl_config: Optional[str] = None) -> str:
     """
     Downloads a URL with gallery-dl using the current hydownloader environment.
     """
@@ -116,6 +116,10 @@ def run_gallery_dl(url: str, subscription_mode: bool, ignore_anchor: bool, metad
         run_args += ["-c", db.get_rootpath() + "/gallery-dl-config.json"]
     if os.path.isfile(db.get_rootpath() + "/gallery-dl-user-config.json"):
         run_args += ["-c", db.get_rootpath() + "/gallery-dl-user-config.json"]
+    if gallerydl_config:
+        if not os.path.isabs(gallerydl_config):
+            gallerydl_config = db.get_rootpath() + '/' + gallerydl_config
+        run_args += ["-c", gallerydl_config]
     run_args += ['--cookies', db.get_rootpath()+'/cookies.txt']
     if not test_mode:
         run_args += ['--dest', db.get_datapath()+'/gallery-dl']
