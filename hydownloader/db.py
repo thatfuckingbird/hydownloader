@@ -236,17 +236,17 @@ def check_and_update_db() -> None:
             if version == __version__:
                 break
             elif version == "0.1.0": # 0.1.0 -> 0.2.0
-                log.information("hydownloader", "Starting database upgrade to version 0.2.0")
+                log.info("hydownloader", "Starting database upgrade to version 0.2.0")
                 with sqlite3.connect(_path+"/hydownloader.db") as connection:
                     cur = connection.cursor()
                     cur.execute('begin exclusive transaction')
-                    log.information("hydownloader", "Adding gallerydl_config to subscriptions...")
+                    log.info("hydownloader", "Adding gallerydl_config to subscriptions...")
                     cur.execute('alter table "subscriptions" add "gallerydl_config" text')
-                    log.information("hydownloader", "Adding gallerydl_config to single URLs...")
+                    log.info("hydownloader", "Adding gallerydl_config to single URLs...")
                     cur.execute('alter table "single_url_queue" add "gallerydl_config" text')
-                    log.information("hydownloader", "Updating version number...")
-                    cur.execute('update version set version = \'0.2.0\'")
-                log.information("hydownloader", "Upgraded database to version 0.2.0")
+                    log.info("hydownloader", "Updating version number...")
+                    cur.execute('update version set version = \'0.2.0\'')
+                log.info("hydownloader", "Upgraded database to version 0.2.0")
             else:
                 log.fatal("hydownloader", "Unsupported hydownloader database version found")
 
