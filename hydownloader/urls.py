@@ -163,7 +163,7 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
         return ('danbooru', m.group('keywords').lower())
     if m := re.match(r"https?://(www\.)?behoimi\.org/post(/index)?\?tags=(?P<keywords>[^&]+)(&.*)?", u):
         return ('3dbooru', m.group('keywords').lower())
-    if m := re.match(r"https?://(chan|beta)\.sankakucomplex\.com/(post/index)?\?tags=(?P<keywords>[^&]+)(&.*)?", u):
+    if m := re.match(r"https?://(chan|beta)\.sankakucomplex\.com/(post/index)?\?tags=(?P<keywords>[^&]*)(&.*)?", u):
         return ('sankaku', m.group('keywords').lower())
     if (m := re.match(r"https?://(www\.)?artstation\.com/(?P<username>[^/&]+)(&.*)?/?", u)) and not m.group('username') in ['search', 'about', 'subscribe', 'learning', 'marketplace', 'prints', 'jobs', 'blogs', 'contests', 'podcast', 'guides']:
         return ('artstationuser', m.group('username'))
