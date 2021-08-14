@@ -230,6 +230,14 @@ def get_db_version() -> str:
     return v[0]['version']
 
 def check_and_update_db() -> None:
+    def write_new_config(names: list[str]):
+        for name in names:
+            if name == "gallery-dl-user-config.json":
+                with open(_path+f"/{name}.NEW", 'w', encoding='utf-8') as f:
+                    f.write(C.DEFAULT_GALLERY_DL_USER_CONFIG)
+            else:
+                continue
+            log.info("hydownloader", f"Written {name}.NEW with default content")
     with _update_lock:
         while True:
             version = get_db_version()
@@ -247,6 +255,20 @@ def check_and_update_db() -> None:
                     log.info("hydownloader", "Updating version number...")
                     cur.execute('update version set version = \'0.2.0\'')
                 log.info("hydownloader", "Upgraded database to version 0.2.0")
+            elif version == "0.2.0": # 0.2.0 -> 0.3.0
+                log.info("hydownloader", "Starting database upgrade to version 0.3.0")
+                with sqlite3.connect(_path+"/hydownloader.db") as connection:
+                    cur = connection.cursor()
+                    cur.execute('begin exclusive transaction')
+                    write_new_config(["gallery-dl-user-config.json"])
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! The default content of gallery-dl-user-config.json changed.")
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! The `\"external\": true` config option was added in the `\"extractor\"` group.")
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! Enabling this option will make gallery-dl follow external links on some sites (usually embeds, or in the case of danbooru, the source link if the image is not accessible or was deleted).")
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! Edit your gallery-dl-user-config.json accordingly if you want to enable this option. This change is optional.")
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! A file with the new default content, with name ending in .NEW, was created in your database directory to help with applying the changes.")
+                    log.info("hydownloader", "Updating version number...")
+                    cur.execute('update version set version = \'0.3.0\'')
+                log.info("hydownloader", "Upgraded database to version 0.3.0")
             else:
                 log.fatal("hydownloader", "Unsupported hydownloader database version found")
 

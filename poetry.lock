@@ -58,7 +58,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "gallery-dl"
-version = "1.18.2"
+version = "1.18.3"
 description = "Command-line program to download image galleries and collections from several image hosting sites"
 category = "main"
 optional = false
@@ -200,7 +200,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "c4a50a842959b10ae1ef22f1fba017c7795dc547f80aabfc4d18dbaffc9ccaa9"
+content-hash = "d5699c7985c238f77f3b40864f9db42635a4f11d7976eaf026079b9219783d69"
 
 [metadata.files]
 astroid = [
@@ -228,8 +228,8 @@ colorama = [
     {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
 ]
 gallery-dl = [
-    {file = "gallery_dl-1.18.2-py3-none-any.whl", hash = "sha256:4079363535fcda2b8ecaa4ead1295b5afd54a886a523dd41e74aa86b5c69b7eb"},
-    {file = "gallery_dl-1.18.2.tar.gz", hash = "sha256:786772ce774929ef1ba64d8394dbab329a72447fd8b930968bc1fb0aacdba567"},
+    {file = "gallery_dl-1.18.3-py3-none-any.whl", hash = "sha256:e680234bda8351e2e6fe0f330e090a154f21284747980a10ac465e3488487256"},
+    {file = "gallery_dl-1.18.3.tar.gz", hash = "sha256:6e058dd25a8a54ead41479579fd73de71472abb980a6254765c5e538b591d162"},
 ]
 hydrus-api = [
     {file = "hydrus-api-2.14.3.tar.gz", hash = "sha256:888a4af4a20e1fb786b862e28ae7e122bcf10aa9284d1f4087493bf1cfbfe2fd"},
