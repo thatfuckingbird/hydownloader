@@ -110,6 +110,30 @@ re-run the anchor exporter tool to update URL information in your hydownloader d
 
 You should check the `--help` of `hydownloader-anchor-exporter` for more information and advanced features which are not documented here.
 
+## IMPORTANT: Keeping hydownloader up to date
+
+You should regularly update hydownloader (which will also update gallery-dl and other dependencies) to keep up with changing sites and
+receive new features and bugfixes.
+
+The easiest (and recommended) way of doing this is to keep a git clone of the hydownloader repo and occassionally run `git pull` then `poetry install`.
+This will update the hydownloader source code and also its dependencies (most importantly gallery-dl).
+
+Some updates involve changing the hydownloader database structure or configuration files. The database structure is updated automatically next time hydownloader is started,
+but configuration file updates usually have to be done manually by the user, to avoid ovewriting any custom configuration.
+The best way to do this is to shut down hydownloader, then run
+
+```
+poetry run hydownloader-tools test --path /path/to/your/db --sites environment
+```
+
+This will apply the update, do a short compatibility test of your environment (no downloading involved), then quit.
+**Information about any configuration file changes that have to be manually applied will be written to the log
+during the update. Make sure to read the log and apply any changes before you start using hydownloader again.**
+The log is printed in the command line and also saved to `daemon.txt`.
+To help with applying the changes, the new default versions of changed configuration files will be written to your database folder, with `.NEW` appended to the filename.
+
+You might want to run some download tests after an update to make sure everything is still working as it should. This is also done with the `test` command of hydownloader-tools, see later sections of this tutorial.
+
 ## Downloading
 
 There are two main ways to download with hydownloader: single URL downloads and subscriptions. Single URLs are one-off downloads: you give hydownloader a URL
