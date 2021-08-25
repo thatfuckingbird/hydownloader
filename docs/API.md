@@ -22,7 +22,7 @@ Returns a JSON object with a `version` field containing the API version (an inte
 
 ### POST /url_info
 
-The request body must be a JSON object containing a list of URLs in the `url` field.
+The request body must be a JSON object containing a list of URLs in the `urls` field.
 The response is a JSON list of URL info objects.
 Each object has the following keys:
 
