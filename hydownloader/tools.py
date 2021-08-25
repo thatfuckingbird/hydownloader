@@ -515,7 +515,6 @@ def mass_add_subscriptions(path: str, file_: str, downloader: str, additional_da
                 new_sub['max_files_regular'] = max_files_regular
             if abort_after is not None:
                 new_sub['abort_after'] = abort_after
-            a = db.get_subscriptions_by_downloader_data(downloader,line)
             if skip_existing:
                 subs = db.get_subscriptions_by_downloader_data(downloader,line)
                 if subs:
