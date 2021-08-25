@@ -490,7 +490,8 @@ def mass_add_urls(path: str, file_: str, additional_data: Optional[str], metadat
 @click.option('--check-interval', type=int, required=True, help='Check interval in seconds.')
 @click.option('--random-check-interval', type=int, default=0, show_default=True, help='A random number of seconds between 0 and this value will be added to the base check interval.')
 @click.option('--encode-keywords', type=bool, is_flag=True, default=False, show_default=True, help="Applies URL encoding to keywords. Spaces are replaced with unencoded '+' characters. Keywords are converted to lowercase.")
-def mass_add_subscriptions(path: str, file_: str, downloader: str, additional_data: Optional[str], paused: bool, filter_: Optional[str], abort_after: int, max_files_initial: Optional[int], max_files_regular: Optional[int], check_interval: int, random_check_interval: int, encode_keywords: bool) -> None:
+@click.option('--skip-existing', type=bool, is_flag=True, default=False, show_default=True, help="Skip adding existing sub queries.")
+def mass_add_subscriptions(path: str, file_: str, downloader: str, additional_data: Optional[str], paused: bool, filter_: Optional[str], abort_after: int, max_files_initial: Optional[int], max_files_regular: Optional[int], check_interval: int, random_check_interval: int, encode_keywords: bool, skip_existing: bool) -> None:
     log.init(path, True)
     db.init(path)
     for line in open(file_, 'r', encoding='utf-8-sig'):
@@ -514,6 +515,12 @@ def mass_add_subscriptions(path: str, file_: str, downloader: str, additional_da
                 new_sub['max_files_regular'] = max_files_regular
             if abort_after is not None:
                 new_sub['abort_after'] = abort_after
+            a = db.get_subscriptions_by_downloader_data(downloader,line)
+            if skip_existing:
+                subs = db.get_subscriptions_by_downloader_data(downloader,line)
+                if subs:
+                    log.info("hydownloader-tools", f"Skipped existing subscription {line} with downloader {downloader}")
+                    continue
             db.add_or_update_subscriptions([new_sub])
             log.info("hydownloader-tools", f"Added subscription {line} with downloader {downloader}")
 
