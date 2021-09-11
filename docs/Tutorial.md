@@ -243,6 +243,29 @@ finish the currently running subscription and URL download before actually shutt
 Even if you do not have subs that might be affected, doing a graceful shutdown and letting hydownloader finish whatever it is currently doing first
 is always better than just suddenly terminating it.
 
+### Setting default values for subscription and single URL properties
+
+You can set default values for subscription and single URL properties in `hydownloader-config.json`.
+Subscriptions can have different default values for each downloader. Setting these defaults is done by
+adding them as key-value pairs to the `url-defaults`, `subscription-defaults-any` (defaults for all downloaders) and
+`subscription-defaults-downloadername` JSON objects in the configuration. The downloader-specific subscription defaults
+take priority over the generic 'any' defaults. The names of the configuration keys have to match the column names
+in the database. Take care to use the correct JSON data types, e.g. numbers for numeric columns, strings for text columns, etc.
+
+Here is an excerpt from a sample `hydownloader-config.json`:
+
+```
+    "url-defaults": {
+      "max_files": 50
+    },
+    "subscription-defaults-any": {
+      "abort_after": 2000
+    },
+    "subscription-defaults-gelbooru": {
+      "abort_after": 5000
+    }
+```
+
 ## Management and maintenance
 
 hydownloader saves large amounts of additional information (logs and subscription check history) and provides tools to analyze this information in order

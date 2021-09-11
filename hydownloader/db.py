@@ -312,6 +312,11 @@ def add_or_update_urls(url_data: list[dict]) -> bool:
         if add and not "url" in item: continue
         if add: item["time_added"] = time.time()
         if 'url' in item: item['url'] = uri_normalizer.normalizes(item['url'])
+        if add:
+            defaults = get_conf('url-defaults', True)
+            if defaults:
+                for key in defaults:
+                    if not key in item: item[key] = defaults[key]
         upsert_dict("single_url_queue", item, no_commit = True)
         if add:
             log.info("hydownloader", f"Added URL: {item['url']}")
@@ -375,6 +380,15 @@ def add_or_update_subscriptions(sub_data: list[dict]) -> bool:
         if add and not "downloader" in item: continue
         if add and not "additional_data" in item: item["additional_data"] = ""
         if add: item["time_created"] = time.time()
+        if add:
+            defaults_downloader = get_conf(f"subscription-defaults-{item['downloader']}", True)
+            if defaults_downloader:
+                for key in defaults_downloader:
+                    if not key in item: item[key] = defaults_downloader[key]
+            defaults_any = get_conf(f"subscription-defaults-any", True)
+            if defaults_any:
+                for key in defaults_any:
+                    if not key in item: item[key] = defaults_any[key]
         upsert_dict("subscriptions", item, no_commit = True)
         if add:
             log.info("hydownloader", f"Added subscription: {item['keywords']} for downloader {item['downloader']}")
@@ -673,14 +687,17 @@ def get_known_urls(patterns: set[str]) -> list[dict]:
     c.execute("select * from known_urls where "+where, tuple(patterns))
     return c.fetchall()
 
-def get_conf(name : str) -> Union[str, int, bool]:
+def get_conf(name : str, optional: bool = False) -> Optional[Union[str, int, bool, dict]]:
     check_init()
     if name in _config:
         return _config[name]
     if name in C.DEFAULT_CONFIG:
         log.warning("hydownloader", f'Configuration key not found in user config, default value was used: {name}')
         return C.DEFAULT_CONFIG[name]
-    log.fatal("hydownloader", f'Invalid configuration key: {name}')
+    if not optional:
+        log.fatal("hydownloader", f'Invalid configuration key: {name}')
+    else:
+        return None
 
 def check_import_db(path: str) -> tuple[bool, Optional[float], Optional[float]]:
     check_init()
