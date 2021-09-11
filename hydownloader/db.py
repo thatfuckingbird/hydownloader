@@ -269,6 +269,20 @@ def check_and_update_db() -> None:
                     log.info("hydownloader", "Updating version number...")
                     cur.execute('update version set version = \'0.3.0\'')
                 log.info("hydownloader", "Upgraded database to version 0.3.0")
+            elif version == "0.3.0": # 0.3.0 -> 0.4.0
+                log.info("hydownloader", "Starting database upgrade to version 0.4.0")
+                with sqlite3.connect(_path+"/hydownloader.db") as connection:
+                    cur = connection.cursor()
+                    cur.execute('begin exclusive transaction')
+                    write_new_config(["gallery-dl-user-config.json"])
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! The default content of gallery-dl-user-config.json changed.")
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! The `\"fallback\": false` config option was added for twitter.")
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! This disables downloading secondary, lower resolution ('fallback') versions of images if the full resolution download fails.")
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! Edit your gallery-dl-user-config.json accordingly if you want to enable this option. This change is optional.")
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! A file with the new default content, with name ending in .NEW, was created in your database directory to help with applying the changes.")
+                    log.info("hydownloader", "Updating version number...")
+                    cur.execute('update version set version = \'0.4.0\'')
+                log.info("hydownloader", "Upgraded database to version 0.4.0")
             else:
                 log.fatal("hydownloader", "Unsupported hydownloader database version found")
 
