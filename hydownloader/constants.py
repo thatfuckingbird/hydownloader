@@ -1388,7 +1388,8 @@ DEFAULT_GALLERY_DL_USER_CONFIG = R"""{
             "retweets": true,
             "twitpic": false,
             "users": "timeline",
-            "videos": true
+            "videos": true,
+            "fallback": false
         },
         "unsplash":
         {
