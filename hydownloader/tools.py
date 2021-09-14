@@ -452,6 +452,13 @@ def init_db(path: str) -> None:
     log.init(path, True)
     db.init(path)
 
+@cli.command(help='Rotate the main daemon log.')
+@click.option('--path', type=str, required=True, help='Database path.')
+def rotate_daemon_log(path: str) -> None:
+    log.init(path, True)
+    db.init(path)
+    log.rotate()
+
 @cli.command(help='Queue multiple URLs at once.')
 @click.option('--path', type=str, required=True, help='Database path.')
 @click.option('--file', 'file_', type=str, required=True, help='File with URLs, one URL in each line.')

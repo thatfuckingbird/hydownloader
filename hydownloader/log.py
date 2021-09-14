@@ -25,9 +25,10 @@ from typing import Optional, NoReturn
 
 _inited = False
 _log = logging.getLogger(__name__)
+_fileHandler = None
 
 def init(path: str, debug: bool) -> None:
-    global _log, _inited
+    global _log, _inited, _fileHandler
     fmt = '%(levelname)s %(asctime)s %(message)s'
 
     streamHandler = logging.StreamHandler()
@@ -38,12 +39,12 @@ def init(path: str, debug: bool) -> None:
         except:
             print(f"Could not create log folder at {logdir}")
             raise
-    fileHandler = logging.handlers.RotatingFileHandler(logdir+"/daemon.txt", backupCount=128)
+    _fileHandler = logging.handlers.RotatingFileHandler(logdir+"/daemon.txt", backupCount=128)
     streamHandler.setFormatter(logging.Formatter(fmt))
-    fileHandler.setFormatter(logging.Formatter(fmt))
+    _fileHandler.setFormatter(logging.Formatter(fmt))
 
     _log.addHandler(streamHandler)
-    _log.addHandler(fileHandler)
+    _log.addHandler(_fileHandler)
     _log.setLevel(logging.DEBUG if debug else logging.INFO)
 
     _inited = True
@@ -71,3 +72,7 @@ def fatal(category: str, msg: str, exc_info: Optional[Exception] = None) -> NoRe
 def debug(category: str, msg: str, exc_info: Optional[Exception] = None) -> None:
     check_init()
     _log.debug(f"[{category}] {msg}", exc_info = exc_info)
+
+def rotate() -> None:
+    check_init()
+    _fileHandler.doRollover()
