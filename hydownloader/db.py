@@ -299,7 +299,7 @@ def get_due_subscriptions() -> list[dict]:
             (last_check = last_successful_check or last_check is null) and
             (max(last_check,ifnull(last_successful_check, 0)) + check_interval <= ? or last_check is null) and
             (max(last_check,ifnull(last_successful_check, 0)) + 60 <= ? or last_check is null)
-        order by ifnull(last_check, 0) asc, priority desc
+        order by priority desc, ifnull(last_check, 0) asc
     """, (current_time, current_time)).fetchall())
     # subs with errors (last check != last successful check)
     result.extend(c.execute(
@@ -309,7 +309,7 @@ def get_due_subscriptions() -> list[dict]:
             last_check is not null and
             (last_check <> last_successful_check or last_successful_check is null) and
             max(last_check,ifnull(last_successful_check, 0)) + 60 <= ?
-        order by max(last_check,ifnull(last_successful_check, 0)) asc, priority desc
+        order by priority desc, max(last_check,ifnull(last_successful_check, 0)) asc
     """, (current_time,)).fetchall())
     return result
 
