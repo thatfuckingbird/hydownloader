@@ -1,3 +1,10 @@
+# 0.5.0 (not yet released)
+
+* New command added to hydownloader-tools: rotate-daemon-log
+* New options added to the report feature to include/exclude archived URLs and paused subscriptions
+* Changed how the order of due subs is determined, priority is the primary ordering value now
+* The `get_subscription_checks` API endpoint was changed to allow retrieving check history for multiple subs at once
+
 # 0.4.0 (2021-09-11)
 
 * Updated gallery-dl to 1.18.4
