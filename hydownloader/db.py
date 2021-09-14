@@ -430,15 +430,15 @@ def add_subscription_check(subscription_id: int, new_files: int, already_seen_fi
     c.execute('insert into subscription_checks(subscription_id, new_files, already_seen_files, time_started, time_finished, status) values (?,?,?,?,?,?)', (subscription_id,new_files,already_seen_files,time_started,time_finished,status))
     get_conn().commit()
 
-def get_subscription_checks(subscription_id: Optional[int], archived: bool) -> list[dict]:
+def get_subscription_checks(subscription_ids: list[int], archived: bool) -> list[dict]:
     check_init()
     c = get_conn().cursor()
     c.arraysize = 1000
-    if subscription_id:
+    if subscription_ids:
         if archived:
-            c.execute('select rowid, * from subscription_checks where subscription_id = ? order by rowid asc', (subscription_id,))
+            c.execute(f'select rowid, * from subscription_checks where subscription_id in {"(" + ",".join(["?"]*len(subscription_ids)) + ")"} order by rowid asc', tuple(subscription_ids))
         else:
-            c.execute('select rowid, * from subscription_checks where subscription_id = ? and archived <> 1 order by rowid asc', (subscription_id,))
+            c.execute(f'select rowid, * from subscription_checks where subscription_id in {"(" + ",".join(["?"]*len(subscription_ids)) + ")"} and archived <> 1 order by rowid asc', tuple(subscription_ids))
     else:
         if archived:
             c.execute('select rowid, * from subscription_checks order by rowid asc')

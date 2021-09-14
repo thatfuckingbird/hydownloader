@@ -341,7 +341,7 @@ def route_get_subscriptions() -> str:
 @route('/get_subscription_checks', method='POST')
 def route_get_subscription_checks() -> str:
     check_access()
-    return json.dumps(db.get_subscription_checks(subscription_id = bottle.request.json['subscription_id'], archived = bottle.request.json.get("archived", False)))
+    return json.dumps(db.get_subscription_checks(subscription_ids = bottle.request.json.get('ids', []), archived = bottle.request.json.get("archived", False)))
 
 @route('/delete_subscriptions', method='POST')
 def route_delete_subscriptions() -> dict:

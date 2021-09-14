@@ -74,7 +74,7 @@ the ID column is called "rowid".
 ### POST /get_subscription_checks
 
 Works the same as the corresponding endpoints for URLs and subscriptions, except that instead of "id",
-the ID column is called "rowid".
+the ID column is called "rowid". The "from" and "to" keys fields are not supported.
 
 ### POST /subscriptions_last_files
 
