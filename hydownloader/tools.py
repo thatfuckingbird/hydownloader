@@ -419,10 +419,12 @@ def test_internal(sites: str) -> bool:
 @click.option('--path', type=str, required=True, help='Database path.')
 @click.option('--verbose', type=bool, is_flag=True, required=False, default=False, show_default=True, help='More details (listing individual subscriptions/URLs, not just aggregate numbers). Might produce a lot of output.')
 @click.option('--no-urls', type=bool, is_flag=True, required=False, default=False, show_default=True, help='Only report about subscriptions, not single URL downloads.')
-def report(path: str, verbose: bool, no_urls: bool) -> None:
+@click.option('--include-archived', type=bool, is_flag=True, required=False, default=False, show_default=True, help='Include archived URL entries in the statistics.')
+@click.option('--include-paused', type=bool, is_flag=True, required=False, default=False, show_default=True, help='Include paused subscriptions in the statistics.')
+def report(path: str, verbose: bool, no_urls: bool, include_archived: bool, include_paused: bool) -> None:
     log.init(path, True)
     db.init(path)
-    db.report(verbose, not no_urls)
+    db.report(verbose, not no_urls, include_archived)
 
 @cli.command(help='Acquire OAuth token needed for Pixiv.')
 @click.option('--path', type=str, required=True, help='Database path.')

@@ -513,7 +513,7 @@ def get_queued_urls_by_id(url_ids: list[int], archived: bool) -> list[dict]:
             result.append(row)
     return result
 
-def report(verbose: bool, urls: bool = True) -> None:
+def report(verbose: bool, urls: bool = True, archived: bool = False, paused: bool = False) -> None:
     check_init()
     c = get_conn().cursor()
 
@@ -524,42 +524,50 @@ def report(verbose: bool, urls: bool = True) -> None:
             return 'never'
         return datetime.datetime.fromtimestamp(float(timestamp)).isoformat()
 
+    archived_condition = "archived = 0"
+    if archived:
+        archived_condition = "true"
+
+    paused_condition = "paused = 0"
+    if paused:
+        paused_condition = "true"
+
     log.info('hydownloader-report', 'Generating report...')
-    urls_paused = len(c.execute('select * from single_url_queue where paused = 1').fetchall())
+    urls_paused = len(c.execute(f'select * from single_url_queue where {archived_condition} and paused = 1').fetchall())
     subs_paused = len(c.execute('select * from subscriptions where paused = 1').fetchall())
-    urls_errored_entries = c.execute('select * from single_url_queue where status > 0').fetchall()
+    urls_errored_entries = c.execute(f'select * from single_url_queue where {archived_condition} and status > 0').fetchall()
     urls_errored = len(urls_errored_entries)
-    subs_errored_entries = c.execute('select * from subscriptions where last_check is not null and last_successful_check <> last_check').fetchall()
+    subs_errored_entries = c.execute(f'select * from subscriptions where {paused_condition} and last_check is not null and last_successful_check <> last_check').fetchall()
     subs_errored = len(subs_errored_entries)
-    urls_no_files_entries = c.execute('select * from single_url_queue where status = 0 and (new_files is null or already_seen_files is null or new_files + already_seen_files = 0)').fetchall()
+    urls_no_files_entries = c.execute(f'select * from single_url_queue where {archived_condition} and status = 0 and (new_files is null or already_seen_files is null or new_files + already_seen_files = 0)').fetchall()
     urls_no_files = len(urls_no_files_entries)
     subs_no_files_entries = c.execute((
-        'select * from subscriptions where last_check is not null and id in '
-        '(select subscription_id from subscription_checks group by subscription_id having sum(new_files) + sum(already_seen_files) <= 0)'
+        f'select * from subscriptions where {paused_condition} and last_check is not null and id in '
+        f'(select subscription_id from subscription_checks group by subscription_id having sum(new_files) + sum(already_seen_files) <= 0)'
     )).fetchall()
     subs_no_files = len(subs_no_files_entries)
-    urls_waiting_long_entries = c.execute(f'select * from single_url_queue where time_processed is null and time_added + 86400 <= {time.time()}').fetchall()
+    urls_waiting_long_entries = c.execute(f'select * from single_url_queue where {archived_condition} and time_processed is null and time_added + 86400 <= {time.time()}').fetchall()
     urls_waiting_long = len(urls_waiting_long_entries)
     subs_waiting_long_entries = c.execute((
-        f'select * from subscriptions where (last_check is not null and last_check + check_interval <= {time.time()})'
+        f'select * from subscriptions where {paused_condition} and (last_check is not null and last_check + check_interval <= {time.time()})'
         f'or (last_check is null and time_created + check_interval <= {time.time()})'
     )).fetchall()
     subs_waiting_long = len(subs_waiting_long_entries)
     subs_no_recent_files_entries = c.execute((
-        'select * from subscriptions where last_check is not null and id in '
+        f'select * from subscriptions where {paused_condition} and last_check is not null and id in '
         f'(select subscription_id from subscription_checks where time_started + 30 * 86400 >= {time.time()} group by subscription_id having sum(new_files) + sum(already_seen_files) <= 0)'
-        f'or id not in (select subscription_id from subscription_checks group by subscription_id having max(time_started) + 30 * 86400 < {time.time()})'
+        f'or id in (select subscription_id from subscription_checks group by subscription_id having max(time_started) + 30 * 86400 < {time.time()})'
     )).fetchall()
     subs_no_recent_files = len(subs_no_recent_files_entries)
     subs_queued = len(get_due_subscriptions())
     urls_queued = len(get_urls_to_download())
     all_subs = len(c.execute('select * from subscriptions').fetchall())
-    all_urls = len(c.execute('select * from single_url_queue').fetchall())
-    all_sub_checks = len(c.execute('select * from subscription_checks').fetchall())
+    all_urls = len(c.execute(f'select * from single_url_queue where {archived_condition}').fetchall())
+    all_sub_checks = len(c.execute(f'select * from subscription_checks').fetchall())
     all_file_results = len(c.execute('select * from additional_data').fetchall())
-    last_time_url_processed_results = c.execute('select max(time_processed) t from single_url_queue').fetchall()
+    last_time_url_processed_results = c.execute(f'select max(time_processed) t from single_url_queue where {archived_condition}').fetchall()
     last_time_url_processed = format_date(last_time_url_processed_results[0]['t'] if last_time_url_processed_results else 'never')
-    last_time_sub_checked_results = c.execute('select max(time_finished) t from subscription_checks').fetchall()
+    last_time_sub_checked_results = c.execute(f'select max(time_finished) t from subscription_checks').fetchall()
     last_time_sub_checked = format_date(last_time_sub_checked_results[0]['t'] if last_time_sub_checked_results else 'never')
 
     def print_url_entries(entries: list[dict]) -> None:
