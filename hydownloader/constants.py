@@ -1468,6 +1468,11 @@ DEFAULT_GALLERY_DL_CONFIG = R"""{
         "skip": true
     },
 
+    "downloader":
+    {
+        "progress": null
+    },
+
     "extractor":
     {
         "cookies-update": true,

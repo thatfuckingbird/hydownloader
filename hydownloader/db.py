@@ -235,6 +235,9 @@ def check_and_update_db() -> None:
             if name == "gallery-dl-user-config.json":
                 with open(_path+f"/{name}.NEW", 'w', encoding='utf-8') as f:
                     f.write(C.DEFAULT_GALLERY_DL_USER_CONFIG)
+            elif name == "gallery-dl-config.json":
+                with open(_path+f"/{name}.NEW", 'w', encoding='utf-8') as f:
+                    f.write(C.DEFAULT_GALLERY_DL_CONFIG)
             else:
                 continue
             log.info("hydownloader", f"Written {name}.NEW with default content")
@@ -283,6 +286,20 @@ def check_and_update_db() -> None:
                     log.info("hydownloader", "Updating version number...")
                     cur.execute('update version set version = \'0.4.0\'')
                 log.info("hydownloader", "Upgraded database to version 0.4.0")
+            elif version == "0.4.0": # 0.4.0 -> 0.5.0
+                log.info("hydownloader", "Starting database upgrade to version 0.5.0")
+                with sqlite3.connect(_path+"/hydownloader.db") as connection:
+                    cur = connection.cursor()
+                    cur.execute('begin exclusive transaction')
+                    write_new_config(["gallery-dl-config.json"])
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! The default content of gallery-dl-config.json changed.")
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! A \"downloader\" section was added, containing the `\"progress\": null` option.")
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! This disables the newly (in version 1.19.0) introduced progress indicator feature of gallery-dl that could interfere with log file parsing.")
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! Edit your gallery-dl-config.json accordingly. This change is NOT optional.")
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! A file with the new default content, with name ending in .NEW, was created in your database directory to help with applying the changes.")
+                    log.info("hydownloader", "Updating version number...")
+                    cur.execute('update version set version = \'0.5.0\'')
+                log.info("hydownloader", "Upgraded database to version 0.5.0")
             else:
                 log.fatal("hydownloader", "Unsupported hydownloader database version found")
 
