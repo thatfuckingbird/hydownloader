@@ -15,6 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import sqlite3
+import sys
 import os
 import os.path
 import json
@@ -91,6 +92,8 @@ def upsert_dict(table: str, d: dict, no_commit: bool = False) -> None:
     if not no_commit: get_conn().commit()
 
 def init(path : str) -> None:
+    sys.stderr.reconfigure(encoding='utf-8')
+    sys.stdout.reconfigure(encoding='utf-8')
     os.environ["PYTHONIOENCODING"] = "utf-8"
     global _inited, _path, _config
     _path = path
