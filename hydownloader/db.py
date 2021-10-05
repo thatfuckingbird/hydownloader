@@ -91,6 +91,7 @@ def upsert_dict(table: str, d: dict, no_commit: bool = False) -> None:
     if not no_commit: get_conn().commit()
 
 def init(path : str) -> None:
+    os.environ["PYTHONIOENCODING"] = "utf-8"
     global _inited, _path, _config
     _path = path
     if not os.path.isdir(path):
