@@ -1,3 +1,7 @@
+# 0.6.0 (2021-10-02)
+
+* Fix: URLs were converted to lowercase in some log messages (downloading was unaffected)
+
 # 0.5.0 (2021-10-02)
 
 * New command added to hydownloader-tools: rotate-daemon-log
