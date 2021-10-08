@@ -1,7 +1,8 @@
-# 0.6.0 (not yet released)
+# 0.6.0 (2021-10-08)
 
 * Fix: URLs were converted to lowercase in some log messages (downloading was unaffected)
 * Fix: crash due wrong encoding on Windows when reading gallery-dl output (now hydownloader set PYTHONIOENCODING=utf-8)
+* Fix: URLs containing colons (fuck you twitter)
 
 # 0.5.0 (2021-10-02)
 

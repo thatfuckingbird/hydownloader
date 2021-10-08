@@ -160,7 +160,7 @@ def normalize(
         path = "/"
 
     path = urllib.parse.unquote(path)
-    path = urllib.parse.quote(path, safe='/@')
+    path = urllib.parse.quote(path, safe='/@:')
     return (scheme, authority, path, query, fragment)
 
 
