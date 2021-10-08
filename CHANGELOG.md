@@ -3,6 +3,7 @@
 * Fix: URLs were converted to lowercase in some log messages (downloading was unaffected)
 * Fix: crash due wrong encoding on Windows when reading gallery-dl output (now hydownloader set PYTHONIOENCODING=utf-8)
 * Fix: URLs containing colons (fuck you twitter)
+* Fix: gallery-dl configuration for twitter direct image links
 
 # 0.5.0 (2021-10-02)
 

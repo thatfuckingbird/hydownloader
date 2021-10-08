@@ -1502,7 +1502,10 @@ DEFAULT_GALLERY_DL_CONFIG = R"""{
         },
 
         "twitter": {
-            "archive-format": "{tweet_id}_{num}"
+            "archive-format": "{tweet_id}_{num}",
+            "image": {
+              "archive-format": "image{filename}"
+            }
         },
 
         "deviantart": {
