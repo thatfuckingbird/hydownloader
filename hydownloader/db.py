@@ -304,6 +304,21 @@ def check_and_update_db() -> None:
                     log.info("hydownloader", "Updating version number...")
                     cur.execute('update version set version = \'0.5.0\'')
                 log.info("hydownloader", "Upgraded database to version 0.5.0")
+            elif version == "0.5.0": # 0.5.0 -> 0.6.0
+                log.info("hydownloader", "Starting database upgrade to version 0.6.0")
+                with sqlite3.connect(_path+"/hydownloader.db") as connection:
+                    cur = connection.cursor()
+                    cur.execute('begin exclusive transaction')
+                    write_new_config(["gallery-dl-config.json"])
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! The default content of gallery-dl-config.json changed.")
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! The \"image\" subsection was added to the \"twitter\" section, containing configuration for properly handling direct twitter image links.")
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! Without this configuration, trying to download direct image links from twitter (using the twimg.com domain) will error.")
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! Keep in mind that even though after this change downloading direct image links will work, it will produce less metadata than downloading a tweet URL, so if possible, always prefer downloading tweets instead of direct image links.")
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! Edit your gallery-dl-config.json accordingly. This change is NOT optional.")
+                    log.warning("hydownloader", "!!MANUAL INTERVETION REQUIRED!! A file with the new default content, with name ending in .NEW, was created in your database directory to help with applying the changes.")
+                    log.info("hydownloader", "Updating version number...")
+                    cur.execute('update version set version = \'0.6.0\'')
+                log.info("hydownloader", "Upgraded database to version 0.6.0")
             else:
                 log.fatal("hydownloader", "Unsupported hydownloader database version found")
 
