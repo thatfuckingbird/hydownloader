@@ -1470,7 +1470,11 @@ DEFAULT_GALLERY_DL_CONFIG = R"""{
 
     "downloader":
     {
-        "progress": null
+        "progress": null,
+
+        "ytdl": {
+            "module": "yt_dlp"
+        }
     },
 
     "extractor":
@@ -1543,6 +1547,10 @@ DEFAULT_GALLERY_DL_CONFIG = R"""{
 
         "moebooru": {
             "archive-format": "{id}"
+        },
+
+        "ytdl": {
+            "module": "yt_dlp"
         }
     }
 }

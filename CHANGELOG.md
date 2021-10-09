@@ -1,3 +1,7 @@
+# 0.7.0 (not yet released)
+
+* Switch from youtube-dl to yt-dlp, as youtube-dl seems abandoned
+
 # 0.6.0 (2021-10-08)
 
 * Fix: URLs were converted to lowercase in some log messages (downloading was unaffected)
