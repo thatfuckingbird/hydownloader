@@ -6,7 +6,7 @@ RUN python3 -m ensurepip && python3 -m pip install poetry
 RUN poetry build
 
 FROM alpine:edge
-RUN apk add python3 ffmpeg yt-dlp --no-cache
+RUN apk add python3 ffmpeg gcc g++ make libffi-dev openssl-dev --no-cache
 COPY --from=0 /opt/dist /opt/dist
 RUN python3 -m ensurepip && python3 -m pip install /opt/dist/*.whl
 VOLUME /db
