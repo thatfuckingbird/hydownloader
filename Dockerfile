@@ -5,8 +5,8 @@ RUN apt-get update && apt-get -y install curl python3 python3-distutils
 RUN python3 -m ensurepip && python3 -m pip install poetry
 RUN poetry build
 
-FROM alpine
-RUN apk add python3 ffmpeg yt-dlp --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main --no-cache
+FROM alpine:edge
+RUN apk add python3 ffmpeg yt-dlp --no-cache
 COPY --from=0 /opt/dist /opt/dist
 RUN python3 -m ensurepip && python3 -m pip install /opt/dist/*.whl
 VOLUME /db
