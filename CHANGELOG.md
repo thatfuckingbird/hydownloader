@@ -1,6 +1,7 @@
-# 0.7.0 (not yet released)
+# 0.7.0 (2021-10-25)
 
 * Switch from youtube-dl to yt-dlp, as youtube-dl seems abandoned
+* Update gallery-dl to 1.19.1
 
 # 0.6.0 (2021-10-08)
 
