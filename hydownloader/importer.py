@@ -34,6 +34,11 @@ import click
 import hydrus
 from hydownloader import db, log
 
+def unfuck_path_separator(path: str) -> str:
+    if os.name == 'nt':
+        return path.replace('\\', '/')
+    return path
+
 def get_session(retries: Union[int, float], backoff_factor=Union[int, float]) -> requests.Session:
     session = requests.session()
     # https://findwork.dev/blog/advanced-usage-python-requests-timeouts-retries-hooks/#combining-timeouts-and-retries
@@ -131,6 +136,9 @@ def clear_imported(path: str, action: str, do_it: bool, no_skip_on_differing_tim
     data_path = db.get_datapath()
     for root, _, files in os.walk(data_path):
         for fname in files:
+            fname = unfuck_path_separator(fname)
+            root = unfuck_path_separator(root)
+
             # json files hold metadata, don't import them to Hydrus
             if fname.endswith('.json'):
                 continue
@@ -144,7 +152,7 @@ def clear_imported(path: str, action: str, do_it: bool, no_skip_on_differing_tim
                 continue
 
             abspath = root + "/" + fname
-            path = os.path.relpath(abspath, start = data_path)
+            path = unfuck_path_separator(os.path.relpath(abspath, start = data_path))
             ctime = os.stat(abspath).st_ctime
             mtime = os.stat(abspath).st_mtime
 
@@ -230,6 +238,9 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
             printerr("The value of the orderFolderContents option is invalid", True)
 
         for fname in files:
+            fname = unfuck_path_separator(fname)
+            root = unfuck_path_separator(root)
+
             # json files hold metadata, don't import them to Hydrus
             if fname.endswith('.json'):
                 continue
@@ -243,7 +254,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                 continue
 
             abspath = root + "/" + fname
-            path = os.path.relpath(abspath, start = data_path)
+            path = unfuck_path_separator(os.path.relpath(abspath, start = data_path))
             if filename_regex and not re.match(filename_regex, path):
                 continue
 
