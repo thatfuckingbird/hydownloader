@@ -128,14 +128,6 @@ optional = false
 python-versions = ">=3.5, <4"
 
 [[package]]
-name = "nuitka"
-version = "0.6.16.4"
-description = "Python compiler with full language support and CPython compatibility"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "platformdirs"
 version = "2.3.0"
 description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
@@ -324,9 +316,6 @@ mccabe = [
 mutagen = [
     {file = "mutagen-1.45.1-py3-none-any.whl", hash = "sha256:9c9f243fcec7f410f138cb12c21c84c64fde4195481a30c9bfb05b5f003adfed"},
     {file = "mutagen-1.45.1.tar.gz", hash = "sha256:6397602efb3c2d7baebd2166ed85731ae1c1d475abca22090b7141ff5034b3e1"},
-]
-nuitka = [
-    {file = "Nuitka-0.6.16.4.tar.gz", hash = "sha256:986d8c46a3db9f27e0d28817413715bdd9dfb6ad97770ba0d1b51b4b0a028538"},
 ]
 platformdirs = [
     {file = "platformdirs-2.3.0-py3-none-any.whl", hash = "sha256:8003ac87717ae2c7ee1ea5a84a1a61e87f3fbd16eb5aadba194ea30a9019f648"},

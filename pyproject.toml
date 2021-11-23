@@ -21,7 +21,6 @@ hydrus-api = "^2.14.3"
 yt-dlp = "^2021.9.25"
 
 [tool.poetry.dev-dependencies]
-Nuitka = "^0.6.14"
 pylint = "^2.8.2"
 
 [build-system]
