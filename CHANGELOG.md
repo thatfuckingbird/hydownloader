@@ -1,8 +1,9 @@
 # 0.8.0 (2021-11-07)
 
-* (experimental) Added tracking of missed subscription checks (either due to hydownloader being interrupted or severely exceeding check interval)
-*
-
+* (experimental) Add tracking of missed subscription checks (either due to hydownloader being interrupted or severely exceeding check interval)
+* Update gallery-dl to 1.19.2
+* The importer now uses forward slashes (/) for filepaths on all platforms. This is a breaking change and the importer configuration might need to be updated
+* Removed Nuitka from dev dependencies
 
 # 0.7.0 (2021-10-25)
 
