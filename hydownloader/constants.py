@@ -1086,6 +1086,16 @@ CREATE TABLE "subscription_checks" (
 )
 """
 
+CREATE_MISSED_SUBSCRIPTION_CHECKS_STATEMENT = """
+CREATE TABLE "missed_subscription_checks" (
+	"subscription_id"	INTEGER,
+	"time"	INTEGER,
+	"reason"	INTEGER,
+	"data"	TEXT,
+	"archived"	INTEGER NOT NULL DEFAULT 0
+)
+"""
+
 CREATE_URL_ID_INDEX_STATEMENT = """
 CREATE INDEX "url_id_index" ON "additional_data" (
 	"url_id"
@@ -1424,7 +1434,7 @@ DEFAULT_GALLERY_DL_USER_CONFIG = R"""{
         },
         "kemonoparty":
         {
-            "metadata": true
+            "metadata": true,
         }
     },
 

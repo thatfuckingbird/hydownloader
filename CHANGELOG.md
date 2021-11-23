@@ -1,3 +1,9 @@
+# 0.8.0 (2021-11-07)
+
+* (experimental) Added tracking of missed subscription checks (either due to hydownloader being interrupted or severely exceeding check interval)
+*
+
+
 # 0.7.0 (2021-10-25)
 
 * Switch from youtube-dl to yt-dlp, as youtube-dl seems abandoned

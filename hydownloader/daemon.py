@@ -123,6 +123,9 @@ def subscription_worker() -> None:
                 check_started_time = time.time()
                 status_msg = f"checking subscription: {sub['id']} (downloader: {sub['downloader']}, keywords: {sub['keywords']})"
                 set_subscription_worker_status(status_msg)
+                missed_sub_check_rowid = db.add_missed_subscription_check(sub['id'], 0, None)
+                if sub['last_check'] and sub['last_check'] + 2*sub['check_interval'] <= time.time():
+                    db.add_missed_subscription_check(sub['id'], 1, str(time.time()-sub['last_check']))
                 log.info(f"subscription-{sub['id']}", capitalize_first_char(status_msg))
                 if initial_check:
                     log.info(f"subscription-{sub['id']}", "This is the first check for this subscription")
@@ -157,6 +160,7 @@ def subscription_worker() -> None:
                 check_ended_time = time.time()
                 db.add_subscription_check(sub['id'], new_files=new_files, already_seen_files=skipped_files, time_started=check_started_time, time_finished=check_ended_time, status=result if result else 'ok')
                 db.add_or_update_subscriptions([new_sub_data])
+                db.delete_missed_subscription_check(missed_sub_check_rowid)
                 status_msg = f"finished checking subscription: {sub['id']} (downloader: {sub['downloader']}, keywords: {sub['keywords']}), new files: {new_files}, skipped: {skipped_files}"
                 set_subscription_worker_status(status_msg)
                 log.info(f"subscription-{sub['id']}", capitalize_first_char(status_msg))
@@ -329,6 +333,11 @@ def route_add_or_update_subscription_checks() -> dict:
     check_access()
     return {'status': db.add_or_update_subscription_checks(bottle.request.json)}
 
+@route('/add_or_update_missed_subscription_checks', method='POST')
+def route_add_or_update_missed_subscription_checks() -> dict:
+    check_access()
+    return {'status': db.add_or_update_missed_subscription_checks(bottle.request.json)}
+
 @route('/get_subscriptions', method='POST')
 def route_get_subscriptions() -> str:
     check_access()
@@ -347,6 +356,11 @@ def route_get_subscriptions() -> str:
 def route_get_subscription_checks() -> str:
     check_access()
     return json.dumps(db.get_subscription_checks(subscription_ids = bottle.request.json.get('ids', []), archived = bottle.request.json.get("archived", False)))
+
+@route('/get_missed_subscription_checks', method='POST')
+def route_get_missed_subscription_checks() -> str:
+    check_access()
+    return json.dumps(db.get_missed_subscription_checks(subscription_ids = bottle.request.json.get('ids', []), archived = bottle.request.json.get("archived", False)))
 
 @route('/delete_subscriptions', method='POST')
 def route_delete_subscriptions() -> dict:

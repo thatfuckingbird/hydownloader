@@ -76,6 +76,16 @@ the ID column is called "rowid".
 Works the same as the corresponding endpoints for URLs and subscriptions, except that instead of "id",
 the ID column is called "rowid". The "from" and "to" keys fields are not supported.
 
+### POST /add_or_update_missed_subscription_checks
+
+Works the same as the corresponding endpoints for URLs and subscriptions, except that instead of "id",
+the ID column is called "rowid".
+
+### POST /get_missed_subscription_checks
+
+Works the same as the corresponding endpoints for URLs and subscriptions, except that instead of "id",
+the ID column is called "rowid". The "from" and "to" keys fields are not supported.
+
 ### POST /subscriptions_last_files
 
 The request body must be a JSON object with a field called "ids" which must be a list of

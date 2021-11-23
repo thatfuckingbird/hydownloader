@@ -154,6 +154,7 @@ def create_db() -> None:
     c.execute(C.CREATE_FILE_INDEX_STATEMENT)
     c.execute(C.CREATE_URL_ID_INDEX_STATEMENT)
     c.execute(C.CREATE_SUBSCRIPTION_ID_INDEX_STATEMENT)
+    c.execute(C.CREATE_MISSED_SUBSCRIPTION_CHECKS_STATEMENT)
     c.execute('insert into version(version) values (?)', (__version__,))
     get_conn().commit()
 
@@ -468,11 +469,31 @@ def add_or_update_subscription_checks(sub_data: list[dict]) -> bool:
     get_conn().commit()
     return True
 
+def add_or_update_missed_subscription_checks(sub_data: list[dict]) -> bool:
+    check_init()
+    for item in sub_data:
+        add = "rowid" not in item
+        if add: item["time"] = time.time()
+        upsert_dict("missed_subscription_checks", item, no_commit = True)
+        if add:
+            log.info("hydownloader", f"Added missed subscription check entry: rowid {item['rowid']}")
+        else:
+            log.info("hydownloader", f"Updated missed subscription check entry with rowid {item['rowid']}")
+    get_conn().commit()
+    return True
+
 def add_subscription_check(subscription_id: int, new_files: int, already_seen_files: int, time_started: Union[float,int], time_finished: Union[float,int], status: str) -> None:
     check_init()
     c = get_conn().cursor()
     c.execute('insert into subscription_checks(subscription_id, new_files, already_seen_files, time_started, time_finished, status) values (?,?,?,?,?,?)', (subscription_id,new_files,already_seen_files,time_started,time_finished,status))
     get_conn().commit()
+
+def add_missed_subscription_check(subscription_id: int, reason: int, data: Optional[str]) -> int:
+    check_init()
+    c = get_conn().cursor()
+    c.execute('insert into missed_subscription_checks(subscription_id, reason, data, archived, time) values (?,?,?,?,?)', (subscription_id,reason,data,False,time.time()))
+    get_conn().commit()
+    return c.lastrowid
 
 def get_subscription_checks(subscription_ids: list[int], archived: bool) -> list[dict]:
     check_init()
@@ -488,6 +509,22 @@ def get_subscription_checks(subscription_ids: list[int], archived: bool) -> list
             c.execute('select rowid, * from subscription_checks order by rowid asc')
         else:
             c.execute('select rowid, * from subscription_checks where archived <> 1 order by rowid asc')
+    return list(c.fetchall())
+
+def get_missed_subscription_checks(subscription_ids: list[int], archived: bool) -> list[dict]:
+    check_init()
+    c = get_conn().cursor()
+    c.arraysize = 1000
+    if subscription_ids:
+        if archived:
+            c.execute(f'select rowid, * from missed_subscription_checks where subscription_id in {"(" + ",".join(["?"]*len(subscription_ids)) + ")"} order by rowid asc', tuple(subscription_ids))
+        else:
+            c.execute(f'select rowid, * from missed_subscription_checks where subscription_id in {"(" + ",".join(["?"]*len(subscription_ids)) + ")"} and archived <> 1 order by rowid asc', tuple(subscription_ids))
+    else:
+        if archived:
+            c.execute('select rowid, * from missed_subscription_checks order by rowid asc')
+        else:
+            c.execute('select rowid, * from missed_subscription_checks where archived <> 1 order by rowid asc')
     return list(c.fetchall())
 
 def delete_urls(url_ids: list[int]) -> bool:
@@ -507,6 +544,12 @@ def delete_subscriptions(sub_ids: list[int]) -> bool:
     get_conn().commit()
     log.info("hydownloader", f"Deleted subscriptions with IDs: {', '.join(map(str, sub_ids))}")
     return True
+
+def delete_missed_subscription_check(rowid: int) -> None:
+    check_init()
+    c = get_conn().cursor()
+    c.execute('delete from missed_subscription_checks where rowid = ?', (rowid,))
+    get_conn().commit()
 
 def get_subs_by_range(range_: Optional[tuple[int, int]] = None) -> list[dict]:
     check_init()
