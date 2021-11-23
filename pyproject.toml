@@ -10,7 +10,6 @@ hydownloader-importer = "hydownloader.importer:main"
 hydownloader-anchor-exporter = "hydownloader.anchor_exporter:main"
 hydownloader-daemon = "hydownloader.daemon:main"
 hydownloader-tools = "hydownloader.tools:main"
-hydownloader-metadata-server = "hydownloader.metadata_server:main"
 
 [tool.poetry.dependencies]
 python = "^3.9"
