@@ -1,3 +1,8 @@
+# 0.9.0 (2021-11-28)
+
+* Update gallery-dl to 1.19.3
+* Update yt-dlp and some other dependencies to their latest versions
+
 # 0.8.0 (2021-11-23)
 
 * (experimental) Add tracking of missed subscription checks (either due to hydownloader being interrupted or severely exceeding check interval)

@@ -1435,7 +1435,8 @@ DEFAULT_GALLERY_DL_USER_CONFIG = R"""{
         "kemonoparty":
         {
             "metadata": true,
-            "comments": true
+            "comments": true,
+            "dms": true
         }
     },
 
