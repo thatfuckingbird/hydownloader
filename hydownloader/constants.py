@@ -99,7 +99,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/pixiv/')",
+        "filter": "pstartswith(path, 'gallery-dl/pixiv/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -172,7 +172,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/nijie/')",
+        "filter": "pstartswith(path, 'gallery-dl/nijie/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -208,7 +208,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/patreon/')",
+        "filter": "pstartswith(path, 'gallery-dl/patreon/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -244,7 +244,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/newgrounds/')",
+        "filter": "pstartswith(path, 'gallery-dl/newgrounds/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -279,7 +279,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/mastodon/')",
+        "filter": "pstartswith(path, 'gallery-dl/mastodon/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -315,7 +315,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/webtoons/')",
+        "filter": "pstartswith(path, 'gallery-dl/webtoons/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -339,7 +339,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/reddit/')",
+        "filter": "pstartswith(path, 'gallery-dl/reddit/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -360,7 +360,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/danbooru/')",
+        "filter": "pstartswith(path, 'gallery-dl/danbooru/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -397,7 +397,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/gelbooru/')",
+        "filter": "pstartswith(path, 'gallery-dl/gelbooru/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -435,7 +435,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/sankaku/')",
+        "filter": "pstartswith(path, 'gallery-dl/sankaku/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -475,7 +475,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/idolcomplex/')",
+        "filter": "pstartswith(path, 'gallery-dl/idolcomplex/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -510,7 +510,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/hentaifoundry/')",
+        "filter": "pstartswith(path, 'gallery-dl/hentaifoundry/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -545,7 +545,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/deviantart/')",
+        "filter": "pstartswith(path, 'gallery-dl/deviantart/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -580,7 +580,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/twitter/')",
+        "filter": "pstartswith(path, 'gallery-dl/twitter/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -606,7 +606,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/kemonoparty/')",
+        "filter": "pstartswith(path, 'gallery-dl/kemonoparty/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -625,7 +625,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/directlink/')",
+        "filter": "pstartswith(path, 'gallery-dl/directlink/')",
         "tagReposForNonUrlSources": ["my tags"],
         "urls": [
           {
@@ -635,7 +635,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/3dbooru/')",
+        "filter": "pstartswith(path, 'gallery-dl/3dbooru/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -669,7 +669,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/safebooru/')",
+        "filter": "pstartswith(path, 'gallery-dl/safebooru/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -703,7 +703,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/tumblr/')",
+        "filter": "pstartswith(path, 'gallery-dl/tumblr/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -736,7 +736,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/fantia/')",
+        "filter": "pstartswith(path, 'gallery-dl/fantia/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -766,7 +766,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/fanbox/')",
+        "filter": "pstartswith(path, 'gallery-dl/fanbox/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -805,7 +805,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/lolibooru/')",
+        "filter": "pstartswith(path, 'gallery-dl/lolibooru/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -840,7 +840,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/yandere/')",
+        "filter": "pstartswith(path, 'gallery-dl/yandere/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -875,7 +875,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/artstation/')",
+        "filter": "pstartswith(path, 'gallery-dl/artstation/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -919,7 +919,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/imgur/')",
+        "filter": "pstartswith(path, 'gallery-dl/imgur/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
@@ -953,7 +953,7 @@ DEFAULT_IMPORT_JOBS = """
         ]
       },
       {
-        "filter": "path.startswith('gallery-dl/seisoparty/')",
+        "filter": "pstartswith(path, 'gallery-dl/seisoparty/')",
         "tagReposForNonUrlSources": ["my tags"],
         "tags": [
           {
