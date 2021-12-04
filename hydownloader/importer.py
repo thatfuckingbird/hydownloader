@@ -89,6 +89,9 @@ def printerr(msg: Union[str, Exception], quit: bool) -> None:
         db.sync()
         sys.exit(1)
 
+def pstartswith(path1: str, path2: str) -> bool:
+    return path1.startswith(path2) or path1.startswith(unfuck_path_separator(path2))
+
 def parse_additional_data(result: defaultdict[str, list[str]], data_str: str) -> None:
     """
     This parses the data field of the additonal_data table.
@@ -136,9 +139,6 @@ def clear_imported(path: str, action: str, do_it: bool, no_skip_on_differing_tim
     data_path = db.get_datapath()
     for root, _, files in os.walk(data_path):
         for fname in files:
-            fname = unfuck_path_separator(fname)
-            root = unfuck_path_separator(root)
-
             # json files hold metadata, don't import them to Hydrus
             if fname.endswith('.json'):
                 continue
@@ -152,7 +152,7 @@ def clear_imported(path: str, action: str, do_it: bool, no_skip_on_differing_tim
                 continue
 
             abspath = root + "/" + fname
-            path = unfuck_path_separator(os.path.relpath(abspath, start = data_path))
+            path = os.path.relpath(abspath, start = data_path)
             ctime = os.stat(abspath).st_ctime
             mtime = os.stat(abspath).st_mtime
 
@@ -238,9 +238,6 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
             printerr("The value of the orderFolderContents option is invalid", True)
 
         for fname in files:
-            fname = unfuck_path_separator(fname)
-            root = unfuck_path_separator(root)
-
             # json files hold metadata, don't import them to Hydrus
             if fname.endswith('.json'):
                 continue
@@ -254,7 +251,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                 continue
 
             abspath = root + "/" + fname
-            path = unfuck_path_separator(os.path.relpath(abspath, start = data_path))
+            path = os.path.relpath(abspath, start = data_path)
             if filename_regex and not re.match(filename_regex, path):
                 continue
 
