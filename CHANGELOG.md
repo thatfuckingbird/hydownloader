@@ -1,3 +1,8 @@
+# 0.10.0 (???)
+
+* Updated hydrus-api module
+* Further fixes to handling forward vs. backslashes in filepaths
+
 # 0.9.0 (2021-11-28)
 
 * Update gallery-dl to 1.19.3
