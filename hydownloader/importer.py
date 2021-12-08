@@ -220,8 +220,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
     order_folder_contents = jd.get('orderFolderContents', 'default')
     non_url_source_namespace = jd.get('nonUrlSourceNamespace', '')
 
-    client = hydrus.Client(jd['apiKey'], jd['apiURL'])
-    client._session = get_session(5, 1)
+    client = hydrus.Client(jd['apiKey'], jd['apiURL'], session=get_session(5, 1))
 
     log.info("hydownloader-importer", f"Starting import job: {job}")
 
@@ -452,7 +451,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                             hasher.update(buf)
                             buf = hashedfile.read(65536 * 16)
                     hexdigest = hasher.hexdigest()
-                    if any(map(lambda x: x.get("is_local", False), client.file_metadata(hashes=[hexdigest]))):
+                    if any(map(lambda x: x.get("is_local", False), client.get_file_metadata(hashes=[hexdigest]))):
                         printerr("File is already in Hydrus", False)
                         already_added = True
                 if verbose: printerr(f'Hash: {hexdigest}', False)
@@ -466,13 +465,13 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                             client.add_file(io.BytesIO(open(abspath, 'rb').read()))
                 if not already_added or not no_force_add_metadata:
                     if verbose: printerr("Associating URLs...", False)
-                    if do_it: client.associate_url(hashes=[hexdigest],add=generated_urls_filtered)
+                    if do_it: client.associate_url(hashes=[hexdigest],urls_to_add=generated_urls_filtered)
                     if verbose: printerr("Adding tags...", False)
                     tag_dict = defaultdict(list)
                     for repo, tag in generated_tags:
                         tag_dict[repo].append(tag)
                     if do_it:
-                        client.add_tags(hashes=[hexdigest],service_to_tags=tag_dict)
+                        client.add_tags(hashes=[hexdigest],service_names_to_tags=tag_dict)
                 if verbose: printerr("Writing entry to import database...", False)
                 if do_it:
                     db.add_or_update_import_entry(path, import_time=time.time(), creation_time=ctime, modification_time=mtime, metadata=raw_metadata, hexdigest=hexdigest)
