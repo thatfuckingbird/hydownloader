@@ -39,7 +39,7 @@ def init(path: str, debug: bool) -> None:
         except:
             print(f"Could not create log folder at {logdir}")
             raise
-    _fileHandler = logging.handlers.RotatingFileHandler(logdir+"/daemon.txt", backupCount=128)
+    _fileHandler = logging.handlers.RotatingFileHandler(logdir+"/daemon.txt", backupCount=128, encoding='utf-8')
     streamHandler.setFormatter(logging.Formatter(fmt))
     _fileHandler.setFormatter(logging.Formatter(fmt))
 
