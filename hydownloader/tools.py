@@ -277,6 +277,7 @@ def test_internal(sites: str) -> bool:
         log_file = db.get_rootpath()+f"/logs/test-site-{site}-gallery-dl.txt"
         should_break = False
         if site == 'environment':
+            log.info("hydownloader-test", f"Python version: {sys.version}")
             log.info("hydownloader-test", "Querying gallery-dl version")
             version_str = gallery_dl_utils.run_gallery_dl_with_custom_args(['--version'], capture_output = True).stdout.strip()
             try:
