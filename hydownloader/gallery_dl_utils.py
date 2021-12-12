@@ -63,7 +63,10 @@ def check_db_for_anchors(anchor_patterns: list[str]) -> bool:
         else:
             conditions.append("entry = ?")
             values.append(pattern)
-    c.execute("select 1 from archive where "+" or ".join(conditions)+" limit 1", values)
+    try:
+        c.execute("select 1 from archive where "+" or ".join(conditions)+" limit 1", values)
+    except sqlite3.OperationalError:
+        return False
     return c.fetchone() is not None
 
 def check_anchor_for_url(url: str) -> bool:
