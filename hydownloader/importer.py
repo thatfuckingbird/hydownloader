@@ -90,7 +90,7 @@ def printerr(msg: Union[str, Exception], quit: bool) -> None:
         sys.exit(1)
 
 def pstartswith(path1: str, path2: str) -> bool:
-    return path1.startswith(path2) or path1.startswith(unfuck_path_separator(path2))
+    return path1.startswith(path2) or unfuck_path_separator(path1).startswith(unfuck_path_separator(path2))
 
 def parse_additional_data(result: defaultdict[str, list[str]], data_str: str) -> None:
     """
