@@ -132,26 +132,14 @@ def test_internal(sites: str) -> bool:
             'anchors': ["danbooru4455434"]
         },
         'pixiv': {
-            'url': "https://www.pixiv.net/en/artworks/88865254",
+            'url': "https://www.pixiv.net/en/artworks/94515594",
             'filenames': {
-                "pixiv/3316400 rogia/88865254_p7.jpg.json": [],
-                "pixiv/3316400 rogia/88865254_p6.jpg.json": [],
-                "pixiv/3316400 rogia/88865254_p5.jpg.json": [],
-                "pixiv/3316400 rogia/88865254_p4.jpg.json": [],
-                "pixiv/3316400 rogia/88865254_p3.jpg.json": [],
-                "pixiv/3316400 rogia/88865254_p2.jpg.json": ["Fate/GrandOrder", '"title": "メイドロリンチちゃん"', '"tags":', '"tags": ['],
-                "pixiv/3316400 rogia/88865254_p1.jpg.json": [],
-                "pixiv/3316400 rogia/88865254_p0.jpg.json": [],
-                "pixiv/3316400 rogia/88865254_p7.jpg": [],
-                "pixiv/3316400 rogia/88865254_p6.jpg": [],
-                "pixiv/3316400 rogia/88865254_p5.jpg": [],
-                "pixiv/3316400 rogia/88865254_p4.jpg": [],
-                "pixiv/3316400 rogia/88865254_p3.jpg": [],
-                "pixiv/3316400 rogia/88865254_p2.jpg": [],
-                "pixiv/3316400 rogia/88865254_p1.jpg": [],
-                "pixiv/3316400 rogia/88865254_p0.jpg": []
+                "pixiv/5382985 bluetom1/94515594_p1.jpg.json": [],
+                "pixiv/5382985 bluetom1/94515594_p0.jpg.json": ['"name": "無職転生"'],
+                "pixiv/5382985 bluetom1/94515594_p1.jpg": [],
+                "pixiv/5382985 bluetom1/94515594_p0.jpg": []
             },
-            'anchors': ["pixiv88865254_p00","pixiv88865254_p01","pixiv88865254_p02","pixiv88865254_p03","pixiv88865254_p04","pixiv88865254_p05","pixiv88865254_p06", "pixiv88865254_p07"]
+            'anchors': ["pixiv94515594_p00","pixiv94515594_p01"]
         },
         'pixiv_ugoira': {
             'url': "https://www.pixiv.net/en/artworks/88748768",
