@@ -32,6 +32,7 @@ from collections import defaultdict
 from typing import Optional, Union, Any
 import click
 import hydrus
+import dateutil.parser
 from hydownloader import db, log
 
 def unfuck_path_separator(path: str) -> str:
@@ -78,6 +79,15 @@ def clean_url(url: str) -> str:
 def is_valid_url(url: str) -> str:
     result = urllib.parse.urlsplit(url.strip())
     return result.netloc and result.scheme
+
+def convdate(date: str) -> str:
+    return dateutil.parser.parse(date).strftime("%Y-%m-%d")
+
+def convtime(time: str) -> str:
+    return dateutil.parser.parse(time).strftime("%H:%M:%S")
+
+def convdatetime(datetime: str) -> str:
+    return dateutil.parser.parse(datetime).strftime("%Y-%m-%d %H:%M:%S")
 
 @click.group()
 def cli() -> None:
