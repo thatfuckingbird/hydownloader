@@ -91,6 +91,15 @@ def upsert_dict(table: str, d: dict, no_commit: bool = False) -> None:
     c.execute(query, values)
     if not no_commit: get_conn().commit()
 
+def validate_json_syntax(path: str) -> None:
+    files_to_check = ["gallery-dl-config.json", "gallery-dl-user-config.json", "hydownloader-config.json", "hydownloader-import-jobs.json"]
+    for file in files_to_check:
+        try:
+            log.info("hydownloader", f"Checking file for syntax errors: {file}")
+            json.load(open(path+"/"+file, 'r'))
+        except json.decoder.JSONDecodeError as e:
+            log.fatal("hydownloader", f"The file {file} contains invalid JSON syntax.", e)
+
 def init(path : str) -> None:
     sys.stderr.reconfigure(encoding='utf-8')
     sys.stdout.reconfigure(encoding='utf-8')
@@ -135,6 +144,7 @@ def init(path : str) -> None:
     get_shared_conn()
     if need_shared_db_init: create_shared_db()
 
+    validate_json_syntax(path)
     check_and_update_db()
 
     _inited = True
