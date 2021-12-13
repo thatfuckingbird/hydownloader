@@ -465,7 +465,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                             client.add_file(io.BytesIO(open(abspath, 'rb').read()))
                 if not already_added or not no_force_add_metadata:
                     if verbose: printerr("Associating URLs...", False)
-                    if do_it: client.associate_url(hashes=[hexdigest],urls_to_add=generated_urls_filtered)
+                    if do_it and generated_urls_filtered: client.associate_url(hashes=[hexdigest],urls_to_add=generated_urls_filtered)
                     if verbose: printerr("Adding tags...", False)
                     tag_dict = defaultdict(list)
                     for repo, tag in generated_tags:
