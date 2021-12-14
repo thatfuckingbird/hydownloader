@@ -164,7 +164,7 @@ def run_gallery_dl(url: str, subscription_mode: bool, ignore_anchor: bool, metad
     console_out = open(console_output_file, 'a', encoding='utf-8')
     console_out.write('\n')
 
-    popen = subprocess.Popen(run_args, text = True, stdout = console_out, stderr = console_out)
+    popen = subprocess.Popen(run_args, text = True, stdout = console_out, stderr = console_out, preexec_fn = os.setpgrp)
     if process_id:
         with _process_map_lock:
             _process_map[process_id] = popen
