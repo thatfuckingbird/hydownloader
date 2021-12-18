@@ -36,6 +36,11 @@ Each object has the following keys:
 | sub_keywords | the subscription keywords string extracted from this URL if it matches a hydownloader subscription downloader, or an empty string if there is no match |
 | existing_subscriptions | a list of hydownloader subscription entries that match this URL (have the same downloader and keywords as the ones extracted from this URL) |
 
+### POST /subscription_data_to_url
+
+The request body must be a JSON object containing the `downloader` and `keywords` string fields.
+It returns an object with the `url` field containing a string with the gallery URL generated from the given downloader and keywords, or an empty string if no URL could be generated.
+
 ### POST /add_or_update_urls
 
 The request body must be a JSON list of URL database entry objects. If an object does not have the "id" field, it will be treated as a new URL to add.

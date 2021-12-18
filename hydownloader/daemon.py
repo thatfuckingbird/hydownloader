@@ -299,6 +299,11 @@ def route_url_info() -> str:
         result.append(url_info)
     return json.dumps(result)
 
+@route('/subscription_data_to_url', method='POST')
+def route_subscription_data_to_url() -> str:
+    check_access()
+    return {'url': urls.subscription_data_to_url(bottle.request.json['downloader'], bottle.request.json['keywords'], True)}
+
 @route('/add_or_update_urls', method='POST')
 def route_add_urls() -> dict:
     check_access()

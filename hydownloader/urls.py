@@ -81,7 +81,7 @@ def urls_for_known_url_lookup(url: str) -> set[str]:
 
     return result
 
-def subscription_data_to_url(downloader: str, keywords: str) -> str:
+def subscription_data_to_url(downloader: str, keywords: str, allow_fail: bool = False) -> str:
     """
     This function takes a hydownloader downloader name (not the same as a gallery-dl downloader name!)
     and some keywords and generates a (usually gallery) URL for gallery-dl to download.
@@ -138,7 +138,10 @@ def subscription_data_to_url(downloader: str, keywords: str) -> str:
     if downloader == "yandere":
         return f"https://yande.re/post?tags={keywords}"
 
-    log.fatal("hydownloader", f"Invalid downloader: {downloader}")
+    if not allow_fail:
+        log.fatal("hydownloader", f"Invalid downloader: {downloader}")
+    else:
+        return ""
 
 def subscription_data_from_url(url: str) -> tuple[str, str]:
     """
