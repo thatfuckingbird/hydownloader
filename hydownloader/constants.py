@@ -34,8 +34,7 @@ DEFAULT_CONFIG : dict[str, Union[str, int, bool]] = {
     "shared-db-override": ""
 }
 
-DEFAULT_IMPORT_JOBS = """
-{
+DEFAULT_IMPORT_JOBS = """{
   "default": {
     "apiURL": "http://127.0.0.1:45869",
     "apiKey": "",
