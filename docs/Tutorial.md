@@ -228,7 +228,11 @@ All the downloaded files, logs, etc. will remain.
 `hydownloader-daemon` is usually resilient to sudden shutdowns and network errors, with the exception that if it happens to be terminated in the middle of a large subscription check,
 then subsequent checks might miss older not-yet-downloaded files (as it sees that there are many already downloaded files and stops searching).
 
-You can work this around either by increasing the number of required consecutive already-seen files to stop searching (configurable for each subscription),
+You can identify all potential instances of missed files (caused either by sudden shutdown, gallery-dl erroring or some other cause) by checking the list of 'missed subscription checks' (see later).
+If you find an entry there for a specific sub, you can manually open the source gallery of that sub and check for any missed files. If you regularly check the 'missed subscription checks' list,
+you can be sure that no files were skipped that should have been downloaded.
+
+Other ways you can work around this are either by increasing the number of required consecutive already-seen files to stop searching (configurable for each subscription),
 or by manually queueing a one-off download with a high stop threshold if you know that a specific subscription might be affected.
 If the number of already-seen files required to stop is larger than the amount a single check of the subscription
 can ever produce then of course this problem can never occur.
@@ -277,6 +281,23 @@ producing no files.
 A history of checks for all subscriptions is stored in the database. For each check, you can view the time, status (whether there was any error) and the number
 of new/already seen files. `hydownloader-systray` can display check history for a single subscription or for all subscriptions.
 Old entries can also be archived, which works the same way as for single URL queue entries.
+
+### Missed subscription checks
+
+The 'missed subscription checks' list contains instances of subscription checks that failed or were interrupted in such a way
+that it could result in files not being downloaded that should have been. If you see entries in this list, you can manually check the source gallery of the associated subscriptions to make sure no files were missed.
+
+Note that due to how this feature is implemented, the currently running subscription will always show up as an entry in this list, but will be removed as soon as it successfully finishes. You can just ignore that entry (or check the list only when no subscriptions are running).
+
+Each entry contains the ID of the affected subscription and the time of the check.
+Each entry also has a reason (numerical code), that tells you what the problem was that caused this entry to be added.
+There is also a field for additional data, with contents dependent on the reason.
+
+| Reason (numerical code) | Meaning | Data meaning |
+|-------|---------|---------|
+| 0 | hydownloader was suddenly interrupted (e.g. power outage, OS crash, process killed, etc.) while a subscription check was running. | No additional data. |
+| 1 | The subscription has been due for a check longer than its check interval. This might or might not be a problem depending on the source gallery. For example, if your subscription source is a 'toplist' gallery that rotates daily, then you might miss files if you don't check often enough. This was designed to identify such instances. In normal galleries this is usually not a problem. | The time since the last check (in seconds). |
+| 2 | gallery-dl finished with an error, but also yielded some new files. This means that even though there were new files during this subscription check, something happened that made gallery-dl error after it already downloaded some new files. A typical example is the internet connection (or the site) going down in the middle of a check. This is a problem because on the next check, it is possible that gallery-dl won't go back far enough to get any files that might have been missed due to the interruption, since it sees the newer downloaded ones and stops the check early. | The gallery-dl error code/reason. |
 
 ### Logs
 

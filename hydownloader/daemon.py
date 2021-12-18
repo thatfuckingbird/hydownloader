@@ -159,6 +159,8 @@ def subscription_worker() -> None:
                 output_postprocessors.parse_log_files(False, proc_id)
                 check_ended_time = time.time()
                 db.add_subscription_check(sub['id'], new_files=new_files, already_seen_files=skipped_files, time_started=check_started_time, time_finished=check_ended_time, status=result if result else 'ok')
+                if result and new_files > 0:
+                    db.add_missed_subscription_check(sub['id'], 2, result)
                 db.add_or_update_subscriptions([new_sub_data])
                 db.delete_missed_subscription_check(missed_sub_check_rowid)
                 status_msg = f"finished checking subscription: {sub['id']} (downloader: {sub['downloader']}, keywords: {sub['keywords']}), new files: {new_files}, skipped: {skipped_files}"
