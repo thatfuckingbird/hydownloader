@@ -1,7 +1,19 @@
-# 0.10.0 (???)
+# 0.10.0 (2021-12-18)
 
 * Updated hydrus-api module
-* Further fixes to handling forward vs. backslashes in filepaths
+* Further fixes to handling forward vs. backslashes in filepaths, including updates to the default importer job configuration
+* Updated dependencies (including youtube-dlp and youtube-dl)
+* Log files are now UTF-8 encoded, even on Windows (the daemon log will be automatically rotated because of this when you upgrade your db)
+* Do not error in some specific circumstances if the anchor db hasn't been created yet
+* Fix failing pixiv test in hydownloader-tools
+* Added Python version display to the environment test in hydownloader-tools
+* Importer: do not try to associate URLs if there are no URLs for a file
+* Importer: added some datetime conversion helper functions
+* Configuration files are now checked on startup for correct syntax
+* Interrupting the process with Ctrl+C should now actually wait for the currently running downloads to finish
+* Added /subscription_data_to_url API endpoint
+* Extended the tracking of missed subscription checks, now all instances of potentially missed files can be identified just from checking this list
+* Documentation updates, including documenting the 'missed subscription checks' feature
 
 # 0.9.0 (2021-11-28)
 

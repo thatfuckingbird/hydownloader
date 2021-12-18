@@ -253,6 +253,9 @@ def check_and_update_db() -> None:
             elif name == "gallery-dl-config.json":
                 with open(_path+f"/{name}.NEW", 'w', encoding='utf-8') as f:
                     f.write(C.DEFAULT_GALLERY_DL_CONFIG)
+            elif name == "hydownloader-import-jobs.json":
+                with open(_path+f"/{name}.NEW", 'w', encoding='utf-8') as f:
+                    f.write(C.DEFAULT_IMPORT_JOBS)
             else:
                 continue
             log.info("hydownloader", f"Written {name}.NEW with default content")
@@ -368,6 +371,22 @@ def check_and_update_db() -> None:
                     log.info("hydownloader", "Updating version number...")
                     cur.execute('update version set version = \'0.9.0\'')
                 log.info("hydownloader", "Upgraded database to version 0.9.0")
+            elif version == "0.9.0": # 0.9.0 -> 0.10.0
+                log.rotate()
+                log.info("hydownloader", "Starting database upgrade to version 0.10.0")
+                log.info("hydownloader", "The daemon log file has been rotated due to the switch to UTF-8 encoding")
+                with sqlite3.connect(_path+"/hydownloader.db") as connection:
+                    cur = connection.cursor()
+                    cur.execute('begin exclusive transaction')
+                    write_new_config(["hydownloader-import-jobs.json"])
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! The default content of hydownloader-import-jobs.json changed.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! The \"path.startswith\" function was replaced with \"pstartswith\". This should hopefully resolve all path matching issues in the importer on Windows.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! You can do this replacement yourself by replacing all instances of \"path.startswith(\" with \"pstartswith(path, \" (without the outer double quotes) in the importer job config JSON file.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! This change is optional but highly recommended if you are on Windows.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! A file with the new default content, with name ending in .NEW, was created in your database directory to help with applying the changes.")
+                    log.info("hydownloader", "Updating version number...")
+                    cur.execute('update version set version = \'0.10.0\'')
+                log.info("hydownloader", "Upgraded database to version 0.10.0")
             else:
                 log.fatal("hydownloader", "Unsupported hydownloader database version found")
 
