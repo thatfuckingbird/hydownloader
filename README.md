@@ -32,6 +32,9 @@ The main differences:
 * Subscriptions are checked on a fixed (set by the user) time interval, no adaptive check timing like in Hydrus.
 * There is no direct equivalent of the Hydrus "thread watcher" feature, though it can be replicated with subscriptions with short check timing.
 
+**WARNING: Making a downloader system that works with many sites, does not lose/skip files or metadata and correctly handles error conditions is a complex problem.
+Accordingly, hydownloader is also a complex application that requires investing time and effort to learn. If you are not willing to read documentation and learn, you are better off finding some simpler, less powerful solution.**
+
 ## Installation
 
 0. Install Python 3.9 or newer. On Windows, make sure you install from the official Python site. If the installers asks you whether it should add the Python executable to PATH say yes.
