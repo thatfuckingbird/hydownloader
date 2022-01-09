@@ -59,7 +59,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "gallery-dl"
-version = "1.19.3"
+version = "1.20.1"
 description = "Command-line program to download image galleries and collections from several image hosting sites"
 category = "main"
 optional = false
@@ -73,7 +73,7 @@ video = ["youtube-dl"]
 
 [[package]]
 name = "hydrus-api"
-version = "3.22.4"
+version = "3.22.5"
 description = "Python module implementing the Hydrus API"
 category = "main"
 optional = false
@@ -271,7 +271,7 @@ websockets = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "44d78a5578b5922382d1d63d31956a6acee4d5747f955ff40d6dd19b9bfe5550"
+content-hash = "5b4ba0606973f63976fccdb38c390a616a1199f9994944ec3ac9144a8cdc6e00"
 
 [metadata.files]
 astroid = [
@@ -299,12 +299,12 @@ colorama = [
     {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
 ]
 gallery-dl = [
-    {file = "gallery_dl-1.19.3-py3-none-any.whl", hash = "sha256:b18ae655f428fe32eae7bc9874b098d2c06162142d8b98937bed9153acddab60"},
-    {file = "gallery_dl-1.19.3.tar.gz", hash = "sha256:db3973a17f1074e4f4cb99b635b94c1926bdd549263e1df909498f3c6aa93484"},
+    {file = "gallery_dl-1.20.1-py3-none-any.whl", hash = "sha256:3b229b62f5f2a63d46646cb1d695b2792b3f2ebb23343bab506f85c48986e8ed"},
+    {file = "gallery_dl-1.20.1.tar.gz", hash = "sha256:a1c06625381485f82aa14a038a622d40ab9cc2c8d150dd65c66df96dbf427f62"},
 ]
 hydrus-api = [
-    {file = "hydrus-api-3.22.4.tar.gz", hash = "sha256:80cb9a8ccd94d4fdb74c88b48e39f49d38b2c625a68a889f7c09cb0da1cd0a07"},
-    {file = "hydrus_api-3.22.4-py3-none-any.whl", hash = "sha256:64c9e15fd270268572c5c9d0bcde4def992bb5ade2d36c5eb9bfc016093d8628"},
+    {file = "hydrus-api-3.22.5.tar.gz", hash = "sha256:a92732ce879737bab7a99b8ce45951ac6ff8f6af44bc46fa02ffe703b9c26ec0"},
+    {file = "hydrus_api-3.22.5-py3-none-any.whl", hash = "sha256:e15a382f29ebc0d248d060ee1ee2de434da15f15dbcc394575d0940305197a9b"},
 ]
 idna = [
     {file = "idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
