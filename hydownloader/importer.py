@@ -31,7 +31,7 @@ import urllib3.util.retry
 from collections import defaultdict
 from typing import Optional, Union, Any
 import click
-import hydrus
+import hydrus_api
 import dateutil.parser
 from hydownloader import db, log
 
@@ -230,7 +230,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
     order_folder_contents = jd.get('orderFolderContents', 'default')
     non_url_source_namespace = jd.get('nonUrlSourceNamespace', '')
 
-    client = hydrus.Client(jd['apiKey'], jd['apiURL'], session=get_session(5, 1))
+    client = hydrus_api.Client(jd['apiKey'], jd['apiURL'], session=get_session(5, 1))
 
     log.info("hydownloader-importer", f"Starting import job: {job}")
 

@@ -18,7 +18,7 @@ bottle = "^0.12.19"
 gallery-dl = "^1.20.1"
 youtube_dl = "^2021.6.6"
 yt-dlp = "^2021.11.10"
-hydrus-api = "^3.22.1"
+hydrus-api = "^3.22.5"
 python-dateutil = "^2.8.2"
 
 [tool.poetry.dev-dependencies]
