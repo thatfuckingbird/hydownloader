@@ -1,3 +1,11 @@
+# 0.12.0 (2022-01-28)
+
+* Dependency updates (most importantly gallery-dl to 1.20.2)
+
+# 0.11.0 (2022-01-09)
+
+* Dependency updates (most importantly gallery-dl to 1.20.1)
+
 # 0.10.0 (2021-12-18)
 
 * Updated hydrus-api module
