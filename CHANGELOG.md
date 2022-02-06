@@ -1,3 +1,7 @@
+# 0.13.0 (2022-02-06)
+
+* Dependency updates (most importantly gallery-dl to 1.20.4)
+
 # 0.12.0 (2022-01-28)
 
 * Dependency updates (most importantly gallery-dl to 1.20.2)
