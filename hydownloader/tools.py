@@ -112,7 +112,7 @@ def test_internal(sites: str) -> bool:
         'gelbooru': {
             'url': "https://gelbooru.com/index.php?page=post&s=view&id=6002236",
             'filenames': {
-                "gelbooru/gelbooru_6002236_0ef507cc4c222406da544db3231de323.jpg.json": ["1girl ", "wings", '"rating": "q"', '"tags_general":'],
+                "gelbooru/gelbooru_6002236_0ef507cc4c222406da544db3231de323.jpg.json": ["1girl ", "wings", '"rating": "questionable"', '"tags_general":'],
                 "gelbooru/gelbooru_6002236_0ef507cc4c222406da544db3231de323.jpg": []
             },
             'anchors': ["gelbooru6002236"]
@@ -340,7 +340,7 @@ def test_internal(sites: str) -> bool:
                 log.error("hydownloader-test", f'Error returned while trying to download "sensitive" content: return code {result.returncode}, {status_txt}')
                 sensitive_ok = False
                 should_break = True
-            sensitive_results_cnt = len(re.findall("https://danbooru.donmai.us/data", result.stdout))
+            sensitive_results_cnt = len(re.findall("https://cdn.donmai.us/", result.stdout))
             if sensitive_results_cnt < 10:
                 log.error("hydownloader-test", f'Failed to find "sensitive" content, insufficient number of results: {sensitive_results_cnt}')
                 sensitive_ok = False
