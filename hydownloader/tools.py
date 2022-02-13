@@ -22,6 +22,7 @@ import sys
 import random
 import sqlite3
 import time
+import signal
 import subprocess
 import re
 import urllib.parse
@@ -529,6 +530,7 @@ def reparse_all_logfiles(path: str) -> None:
     output_postprocessors.parse_log_files(True)
 
 def main() -> None:
+    signal.signal(signal.SIGTTOU, signal.SIG_IGN)
     cli()
     ctx = click.get_current_context()
     click.echo(ctx.get_help())
