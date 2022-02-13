@@ -92,7 +92,6 @@ def end_downloader_threads() -> None:
         time.sleep(1)
 
 def subscription_worker() -> None:
-    signal.signal(signal.SIGTTOU, signal.SIG_IGN)
     global _sub_worker_ended_flag
     proc_id = 'sub worker'
     try:
@@ -186,7 +185,6 @@ def subscription_worker() -> None:
         shutdown()
 
 def url_queue_worker() -> None:
-    signal.signal(signal.SIGTTOU, signal.SIG_IGN)
     global _url_worker_ended_flag
     proc_id = 'url worker'
     try:
