@@ -1163,7 +1163,7 @@ DEFAULT_GALLERY_DL_USER_CONFIG = R"""{
                 "whitelist": ["pixiv", "danbooru"],
                 "keep-files": true,
                 "ffmpeg-twopass": false,
-                "ffmpeg-args": ["-c:v", "libvpx-vp9", "-lossless", "1", "-pix_fmt", "yuv420p", "-y"]
+                "ffmpeg-args": ["-nostdin", "-c:v", "libvpx-vp9", "-lossless", "1", "-pix_fmt", "yuv420p", "-y"]
             }
         ],
 
