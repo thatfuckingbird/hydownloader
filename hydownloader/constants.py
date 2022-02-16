@@ -1472,6 +1472,7 @@ DEFAULT_GALLERY_DL_CONFIG = R"""{
     "comment": "DO NOT CHANGE THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING. IT *WILL* BREAK HYDOWNLOADER.",
 
     "url-metadata": "gallerydl_file_url",
+    "signals-ignore": ["SIGTTOU", "SIGTTIN"],
 
     "output": {
         "mode": "pipe",

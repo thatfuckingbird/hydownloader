@@ -411,6 +411,23 @@ def check_and_update_db() -> None:
                     log.info("hydownloader", "Updating version number...")
                     cur.execute('update version set version = \'0.13.0\'')
                 log.info("hydownloader", "Upgraded database to version 0.13.0")
+            elif version == "0.13.0": # 0.13.0 -> 0.14.0
+                log.info("hydownloader", "Starting database upgrade to version 0.14.0")
+                with sqlite3.connect(_path+"/hydownloader.db") as connection:
+                    cur = connection.cursor()
+                    cur.execute('begin exclusive transaction')
+                    write_new_config(["gallery-dl-user-config.json", "gallery-dl-config.json"])
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! The default content of gallery-dl-user-config.json changed.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! The `\"-nostdin\"` flag was added to ffmpeg-args. This is to prevent some rare ffmpeg hangs.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! Edit your gallery-dl-user-config.json accordingly if you want to apply this change. This change is optional, but recommended.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! A file with the new default content, with name ending in .NEW, was created in your database directory to help with applying the changes.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! The default content of gallery-dl-config.json changed.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! The `\"signals-ignore\": [\"SIGTTOU\", \"SIGTTIN\"]` top level config option was added. This is to prevent some rare ffmpeg hangs.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! Edit your gallery-dl-config.json accordingly if you want to apply this change. This change is optional, but recommended.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! A file with the new default content, with name ending in .NEW, was created in your database directory to help with applying the changes.")
+                    log.info("hydownloader", "Updating version number...")
+                    cur.execute('update version set version = \'0.14.0\'')
+                log.info("hydownloader", "Upgraded database to version 0.14.0")
             else:
                 log.fatal("hydownloader", "Unsupported hydownloader database version found")
 

@@ -1,3 +1,10 @@
+# 0.14.0 (2022-02-16)
+
+* Dependency updates (most importantly gallery-dl to 1.20.5)
+* gelbooru: recognize sample URL variants
+* Fixed some failing site tests
+* Fixed ffmpeg hang due to SIGTTOU on Linux
+
 # 0.13.0 (2022-02-06)
 
 * Dependency updates (most importantly gallery-dl to 1.20.4)
