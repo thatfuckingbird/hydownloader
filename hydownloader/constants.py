@@ -31,7 +31,8 @@ DEFAULT_CONFIG : dict[str, Union[str, int, bool]] = {
     "daemon.access_key": "change me you retard or get hacked",
     "gallery-dl.archive-override": "",
     "gallery-dl.data-override": "",
-    "shared-db-override": ""
+    "shared-db-override": "",
+    "disable-wal": False
 }
 
 DEFAULT_IMPORT_JOBS = """{

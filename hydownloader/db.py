@@ -48,7 +48,10 @@ def get_conn() -> sqlite3.Connection:
     if not thread_id in _conn:
         with _conn_lock:
             _conn[thread_id] = sqlite3.connect(_path+"/hydownloader.db", timeout=24*60*60)
-            _conn[thread_id].cursor().execute('pragma journal_mode=wal')
+            if get_conf('disable-wal', False, True):
+                _conn[thread_id].cursor().execute('pragma journal_mode=delete')
+            else:
+                _conn[thread_id].cursor().execute('pragma journal_mode=wal')
             _conn[thread_id].row_factory = lambda c, r: dict(zip([col[0] for col in c.description], r))
             return _conn[thread_id]
     return _conn[thread_id]
@@ -59,7 +62,10 @@ def get_shared_conn() -> sqlite3.Connection:
     if not thread_id in _shared_conn:
         with _shared_conn_lock:
             _shared_conn[thread_id] = sqlite3.connect(_shared_db_path(), timeout=24*60*60)
-            _shared_conn[thread_id].cursor().execute('pragma journal_mode=wal')
+            if get_conf('disable-wal', False, True):
+                _shared_conn[thread_id].cursor().execute('pragma journal_mode=delete')
+            else:
+                _shared_conn[thread_id].cursor().execute('pragma journal_mode=wal')
             _shared_conn[thread_id].row_factory = lambda c, r: dict(zip([col[0] for col in c.description], r))
             return _shared_conn[thread_id]
     return _shared_conn[thread_id]
@@ -136,9 +142,9 @@ def init(path : str) -> None:
         hydl_cfg.close()
     if not os.path.isfile(path+"/cookies.txt"):
         open(path+"/cookies.txt", "w", encoding="utf-8").close()
+    _config = json.load(open(path+"/hydownloader-config.json", "r", encoding="utf-8-sig"))
     get_conn()
     if needs_db_init: create_db()
-    _config = json.load(open(path+"/hydownloader-config.json", "r", encoding="utf-8-sig"))
 
     need_shared_db_init = not os.path.isfile(_shared_db_path())
     get_shared_conn()
@@ -428,6 +434,14 @@ def check_and_update_db() -> None:
                     log.info("hydownloader", "Updating version number...")
                     cur.execute('update version set version = \'0.14.0\'')
                 log.info("hydownloader", "Upgraded database to version 0.14.0")
+            elif version == "0.14.0": # 0.14.0 -> 0.15.0
+                log.info("hydownloader", "Starting database upgrade to version 0.15.0")
+                with sqlite3.connect(_path+"/hydownloader.db") as connection:
+                    cur = connection.cursor()
+                    cur.execute('begin exclusive transaction')
+                    log.info("hydownloader", "Updating version number...")
+                    cur.execute('update version set version = \'0.15.0\'')
+                log.info("hydownloader", "Upgraded database to version 0.15.0")
             else:
                 log.fatal("hydownloader", "Unsupported hydownloader database version found")
 
@@ -896,8 +910,8 @@ def get_known_urls(patterns: set[str]) -> list[dict]:
     c.execute("select * from known_urls where "+where, tuple(patterns))
     return c.fetchall()
 
-def get_conf(name : str, optional: bool = False) -> Optional[Union[str, int, bool, dict]]:
-    check_init()
+def get_conf(name : str, optional: bool = False, no_check: bool = False) -> Optional[Union[str, int, bool, dict]]:
+    if not no_check: check_init()
     if name in _config:
         return _config[name]
     if name in C.DEFAULT_CONFIG:

@@ -1,3 +1,7 @@
+# 0.15.0 (2022-02-17)
+
+* Added option to disable WAL journaling
+
 # 0.14.0 (2022-02-16)
 
 * Dependency updates (most importantly gallery-dl to 1.20.5)
