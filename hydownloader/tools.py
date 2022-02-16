@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # hydownloader
-# Copyright (C) 2021  thatfuckingbird
+# Copyright (C) 2021-2022  thatfuckingbird
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
