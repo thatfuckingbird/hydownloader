@@ -1,3 +1,7 @@
+# 0.16.0 (?)
+
+* Added subscription check time statistics to the report
+
 # 0.15.0 (2022-02-17)
 
 * Added option to disable WAL journaling

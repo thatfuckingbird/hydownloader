@@ -770,6 +770,48 @@ def report(verbose: bool, urls: bool = True, archived: bool = False, paused: boo
     last_time_url_processed = format_date(last_time_url_processed_results[0]['t'] if last_time_url_processed_results else 'never')
     last_time_sub_checked_results = c.execute(f'select max(time_finished) t from subscription_checks').fetchall()
     last_time_sub_checked = format_date(last_time_sub_checked_results[0]['t'] if last_time_sub_checked_results else 'never')
+    time_spent_checking_all = c.execute('select sum(time_finished-time_started) val from subscription_checks').fetchone()['val']
+    time_spent_checking_bad = c.execute('select sum(time_finished-time_started) val from subscription_checks where status <> \'ok\'').fetchone()['val']
+    time_spent_checking_all_30d = c.execute(f'select sum(time_finished-time_started) val from subscription_checks where time_started > {time.time()}-30*86400').fetchone()['val']
+    time_spent_checking_bad_30d = c.execute(f'select sum(time_finished-time_started) val from subscription_checks where status <> \'ok\' and time_started > {time.time()}-30*86400').fetchone()['val']
+    time_spent_checking_all_7d = c.execute(f'select sum(time_finished-time_started) val from subscription_checks where time_started > {time.time()}-7*86400').fetchone()['val']
+    time_spent_checking_bad_7d = c.execute(f'select sum(time_finished-time_started) val from subscription_checks where status <> \'ok\' and time_started > {time.time()}-7*86400').fetchone()['val']
+    calc_median_query = ' select avg(len) val from (select len from checks order by len limit 2 - (select count(*) from checks) % 2 offset (select (count(*) - 1) / 2 from checks))'
+    avg_check_time_all = c.execute('select avg(time_finished-time_started) val from subscription_checks').fetchone()['val']
+    avg_check_time_good = c.execute('select avg(time_finished-time_started) val from subscription_checks where status = \'ok\'').fetchone()['val']
+    avg_check_time_bad = c.execute('select avg(time_finished-time_started) val from subscription_checks where status <> \'ok\'').fetchone()['val']
+    median_check_time_all = c.execute('with checks(len) as (select time_finished-time_started from subscription_checks)'+calc_median_query).fetchone()['val']
+    median_check_time_good = c.execute('with checks(len) as (select time_finished-time_started from subscription_checks where status = \'ok\')'+calc_median_query).fetchone()['val']
+    median_check_time_bad = c.execute('with checks(len) as (select time_finished-time_started from subscription_checks where status <> \'ok\')'+calc_median_query).fetchone()['val']
+    avg_check_time_all_30d = c.execute(f'select avg(time_finished-time_started) val from subscription_checks where time_started > {time.time()}-30*86400').fetchone()['val']
+    avg_check_time_good_30d = c.execute(f'select avg(time_finished-time_started) val from subscription_checks where status = \'ok\' and time_started > {time.time()}-30*86400').fetchone()['val']
+    avg_check_time_bad_30d = c.execute(f'select avg(time_finished-time_started) val from subscription_checks where status <> \'ok\' and time_started > {time.time()}-30*86400').fetchone()['val']
+    median_check_time_all_30d = c.execute(f'with checks(len) as (select time_finished-time_started from subscription_checks where time_started > {time.time()}-30*86400)'+calc_median_query).fetchone()['val']
+    median_check_time_good_30d = c.execute(f'with checks(len) as (select time_finished-time_started from subscription_checks where status = \'ok\' and time_started > {time.time()}-30*86400)'+calc_median_query).fetchone()['val']
+    median_check_time_bad_30d = c.execute(f'with checks(len) as (select time_finished-time_started from subscription_checks where status <> \'ok\' and time_started > {time.time()}-30*86400)'+calc_median_query).fetchone()['val']
+    avg_check_time_all_7d = c.execute(f'select avg(time_finished-time_started) val from subscription_checks where time_started > {time.time()}-7*86400').fetchone()['val']
+    avg_check_time_good_7d = c.execute(f'select avg(time_finished-time_started) val from subscription_checks where status = \'ok\' and time_started > {time.time()}-7*86400').fetchone()['val']
+    avg_check_time_bad_7d = c.execute(f'select avg(time_finished-time_started) val from subscription_checks where status <> \'ok\' and time_started > {time.time()}-7*86400').fetchone()['val']
+    median_check_time_all_7d = c.execute(f'with checks(len) as (select time_finished-time_started from subscription_checks where time_started > {time.time()}-7*86400)'+calc_median_query).fetchone()['val']
+    median_check_time_good_7d = c.execute(f'with checks(len) as (select time_finished-time_started from subscription_checks where status = \'ok\' and time_started > {time.time()}-7*86400)'+calc_median_query).fetchone()['val']
+    median_check_time_bad_7d = c.execute(f'with checks(len) as (select time_finished-time_started from subscription_checks where status <> \'ok\' and time_started > {time.time()}-7*86400)'+calc_median_query).fetchone()['val']
+    longest_check = c.execute('select max(time_finished-time_started) val from subscription_checks').fetchone()['val']
+    longest_check_30d = c.execute(f'select max(time_finished-time_started) val from subscription_checks where time_started > {time.time()}-30*86400').fetchone()['val']
+    longest_check_7d = c.execute(f'select max(time_finished-time_started) val from subscription_checks where time_started > {time.time()}-7*86400').fetchone()['val']
+
+    def seconds_to_str(seconds: int):
+        days = seconds // 86400
+        seconds = seconds % 86400
+        hours = seconds // 3600
+        seconds = seconds % 3600
+        minutes = seconds // 60
+        seconds = seconds % 60
+        return f'{days} days {hours} hours {minutes} minutes {seconds} seconds'
+
+    def seconds_to_str_short(seconds: int):
+        minutes = seconds // 60
+        seconds = seconds % 60
+        return f'{minutes} minutes {seconds} seconds'
 
     def print_url_entries(entries: list[dict]) -> None:
         for url in entries:
@@ -830,6 +872,37 @@ def report(verbose: bool, urls: bool = True, archived: bool = False, paused: boo
     if verbose and subs_no_recent_files:
         log.info('hydownloader-report', 'These are the following:')
         print_sub_entries(subs_no_recent_files_entries)
+
+    log.info('hydownloader-report', 'Time spent checking subs (all time): '+seconds_to_str(int(time_spent_checking_all)))
+    log.info('hydownloader-report', 'Time spent checking subs (all time, successful checks): '+seconds_to_str(int(time_spent_checking_all-time_spent_checking_bad)))
+    log.info('hydownloader-report', 'Time spent checking subs (all time, failed checks): '+seconds_to_str(int(time_spent_checking_bad)))
+    log.info('hydownloader-report', 'Time spent checking subs (past month): '+seconds_to_str(int(time_spent_checking_all_30d)))
+    log.info('hydownloader-report', 'Time spent checking subs (past month, successful checks): '+seconds_to_str(int(time_spent_checking_all_30d-time_spent_checking_bad_30d)))
+    log.info('hydownloader-report', 'Time spent checking subs (past month, failed checks): '+seconds_to_str(int(time_spent_checking_bad_30d)))
+    log.info('hydownloader-report', 'Time spent checking subs (past week): '+seconds_to_str(int(time_spent_checking_all_7d)))
+    log.info('hydownloader-report', 'Time spent checking subs (past week, successful checks): '+seconds_to_str(int(time_spent_checking_all_7d-time_spent_checking_bad_7d)))
+    log.info('hydownloader-report', 'Time spent checking subs (past week, failed checks): '+seconds_to_str(int(time_spent_checking_bad_7d)))
+    log.info('hydownloader-report', 'Average subscription check time (all time): '+seconds_to_str_short(int(avg_check_time_all)))
+    log.info('hydownloader-report', 'Average subscription check time (all time, successful checks): '+seconds_to_str_short(int(avg_check_time_good)))
+    log.info('hydownloader-report', 'Average subscription check time (all time, failed checks): '+seconds_to_str_short(int(avg_check_time_bad)))
+    log.info('hydownloader-report', 'Average subscription check time (past month): '+seconds_to_str_short(int(avg_check_time_all_30d)))
+    log.info('hydownloader-report', 'Average subscription check time (past month, successful checks): '+seconds_to_str_short(int(avg_check_time_good_30d)))
+    log.info('hydownloader-report', 'Average subscription check time (past month, failed checks): '+seconds_to_str_short(int(avg_check_time_bad_30d)))
+    log.info('hydownloader-report', 'Average subscription check time (past week): '+seconds_to_str_short(int(avg_check_time_all_7d)))
+    log.info('hydownloader-report', 'Average subscription check time (past week, successful checks): '+seconds_to_str_short(int(avg_check_time_good_7d)))
+    log.info('hydownloader-report', 'Average subscription check time (past week, failed checks): '+seconds_to_str_short(int(avg_check_time_bad_7d)))
+    log.info('hydownloader-report', 'Median subscription check time (all time): '+seconds_to_str_short(int(median_check_time_all)))
+    log.info('hydownloader-report', 'Median subscription check time (all time, successful checks): '+seconds_to_str_short(int(median_check_time_good)))
+    log.info('hydownloader-report', 'Median subscription check time (all time, failed checks): '+seconds_to_str_short(int(median_check_time_bad)))
+    log.info('hydownloader-report', 'Median subscription check time (past month): '+seconds_to_str_short(int(median_check_time_all_30d)))
+    log.info('hydownloader-report', 'Median subscription check time (past month, successful checks): '+seconds_to_str_short(int(median_check_time_good_30d)))
+    log.info('hydownloader-report', 'Median subscription check time (past month, failed checks): '+seconds_to_str_short(int(median_check_time_bad_30d)))
+    log.info('hydownloader-report', 'Median subscription check time (past week): '+seconds_to_str_short(int(median_check_time_all_7d)))
+    log.info('hydownloader-report', 'Median subscription check time (past week, successful checks): '+seconds_to_str_short(int(median_check_time_good_7d)))
+    log.info('hydownloader-report', 'Median subscription check time (past week, failed checks): '+seconds_to_str_short(int(median_check_time_bad_7d)))
+    log.info('hydownloader-report', 'Longest subscription check (all time): '+seconds_to_str(int(longest_check)))
+    log.info('hydownloader-report', 'Longest subscription check (past month): '+seconds_to_str(int(longest_check_30d)))
+    log.info('hydownloader-report', 'Longest subscription check (past week): '+seconds_to_str(int(longest_check_7d)))
 
     log.info('hydownloader-report', 'Report finished')
 
