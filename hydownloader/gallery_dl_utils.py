@@ -108,7 +108,7 @@ def run_gallery_dl_with_custom_args(args: list[str], capture_output: bool = Fals
     result = subprocess.run(run_args, capture_output = capture_output, text = capture_output, check = False)
     return result
 
-def run_gallery_dl(url: str, subscription_mode: bool, ignore_anchor: bool, metadata_only: bool, log_file: str, console_output_file: str, unsupported_urls_file: str, overwrite_existing: bool, filter_: Optional[str] = None, chapter_filter: Optional[str] = None, abort_after: Optional[int] = None, test_mode: bool = False, old_log_file: Optional[str] = None, old_unsupported_urls_file: Optional[str] = None, max_file_count: Optional[int] = None, process_id: Optional[str] = None, write_pages: Optional[bool] = False, gallerydl_config: Optional[str] = None) -> str:
+def run_gallery_dl(url: str, subscription_mode: bool, ignore_anchor: bool, metadata_only: bool, log_file: str, console_output_file: str, unsupported_urls_file: str, overwrite_existing: bool, filter_: Optional[str] = None, chapter_filter: Optional[str] = None, abort_after: Optional[int] = None, test_mode: bool = False, old_log_file: Optional[str] = None, old_unsupported_urls_file: Optional[str] = None, max_file_count: Optional[int] = None, process_id: Optional[str] = None, write_pages: Optional[bool] = False, gallerydl_config: Optional[str] = None, url_metadata_key_name: Optional[str] = None) -> str:
     """
     Downloads a URL with gallery-dl using the current hydownloader environment.
     """
@@ -158,6 +158,8 @@ def run_gallery_dl(url: str, subscription_mode: bool, ignore_anchor: bool, metad
         run_args += ['-A', f'{abort_after}']
     if max_file_count:
         run_args += ['-o', f'image-range="1-{max_file_count}"']
+    if url_metadata_key_name:
+        run_args += ['-o', f'url-metadata="{url_metadata_key_name}"']
 
     run_args += ['-o', 'cache.file='+db.get_rootpath()+'/gallery-dl-cache.db']
     run_args += [url]
