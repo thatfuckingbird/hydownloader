@@ -1018,6 +1018,7 @@ CREATE TABLE "single_url_queue" (
 	"already_seen_files"	INTEGER,
 	"paused"	INTEGER NOT NULL DEFAULT 0,
 	"comment"	TEXT,
+	"reverse_lookup_id"	INTEGER,
 	"archived"	INTEGER NOT NULL DEFAULT 0,
 	PRIMARY KEY("id" AUTOINCREMENT)
 )

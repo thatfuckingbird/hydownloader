@@ -442,6 +442,19 @@ def check_and_update_db() -> None:
                     log.info("hydownloader", "Updating version number...")
                     cur.execute('update version set version = \'0.15.0\'')
                 log.info("hydownloader", "Upgraded database to version 0.15.0")
+            elif version == "0.15.0" and False: # 0.15.0 -> 0.16.0
+                log.info("hydownloader", "Starting database upgrade to version 0.16.0")
+                with sqlite3.connect(_path+"/hydownloader.db") as connection:
+                    cur = connection.cursor()
+                    cur.execute('begin exclusive transaction')
+                    log.warning("hydownloader", "!!BREAKING CHANGE!! hydownloader now manages the value of the `\"url-metadata\"` configuration option (in order to store the subscription/URL ID in the name of the metadata key).")
+                    log.warning("hydownloader", "!!BREAKING CHANGE!! The old key name was always \"gallerydl_file_url\". This is now either \"gallerydl_file_url_sub_ID\" or \"gallerydl_file_url_singleurl_ID\" where ID is the integer ID of the subscription/single URL.")
+                    log.warning("hydownloader", "!!BREAKING CHANGE!! If you have any custom importer configuration or custom scripts that use this key, you have to adjust them. If you don't, then this change does not affect you.")
+                    log.info("hydownloader", "Adding reverse_lookup_id to single_url_queue...")
+                    cur.execute('alter table "single_url_queue" add "reverse_lookup_id" integer')
+                    log.info("hydownloader", "Updating version number...")
+                    cur.execute('update version set version = \'0.16.0\'')
+                log.info("hydownloader", "Upgraded database to version 0.16.0")
             else:
                 log.fatal("hydownloader", "Unsupported hydownloader database version found")
 

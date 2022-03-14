@@ -298,3 +298,12 @@ def anchor_patterns_from_url(url: str) -> list[str]:
         return [f"pawoo{m.group('id')}", f"pawoo{m.group('id')}_%"]
 
     return []
+
+def suitable_for_reverse_lookup_db(url: str) -> Optional[str]
+    """
+    This function takes a URL and decides whether it is suitable for inclusion into the reverse lookup database.
+    It might also clean/normalize the URL.
+    """
+    if subscription_data_from_url(url) != []:
+        return uri_normalizer.normalizes(url)
+    return None

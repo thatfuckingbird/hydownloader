@@ -57,14 +57,18 @@ _status_lock = threading.Lock()
 _end_threads_flag = False
 _sub_worker_ended_flag = True
 _url_worker_ended_flag = True
+_reverse_lookup_worker_ended_flag = True
 _sub_worker_paused_flag = False
 _url_worker_paused_flag = False
+_reverse_lookup_worker_paused_flag = False
 _shutdown_started = False
 _shutdown_requested_by_api_thread = False
 _url_worker_last_status = "no information"
 _sub_worker_last_status = "no information"
+_reverse_lookup_worker_last_status = "no information"
 _url_worker_last_update_time : float = 0
 _sub_worker_last_update_time : float = 0
+_reverse_lookup_worker_last_update_time : float = 0
 _srv = None
 
 def capitalize_first_char(text: str) -> str:
@@ -84,11 +88,17 @@ def set_subscription_worker_status(text: str) -> None:
         _sub_worker_last_status = text
         _sub_worker_last_update_time = time.time()
 
+def set_reverse_lookup_worker_status(text: str) -> None:
+    global _reverse_lookup_worker_last_status, _reverse_lookup_worker_last_update_time
+    with _status_lock:
+        _reverse_lookup_worker_last_status = text
+        _reverse_lookup_worker_last_update_time = time.time()
+
 def end_downloader_threads() -> None:
     global _end_threads_flag
     with _worker_lock:
         _end_threads_flag = True
-    while not (_sub_worker_ended_flag and _url_worker_ended_flag):
+    while not (_sub_worker_ended_flag and _url_worker_ended_flag and _reverse_lookup_worker_ended_flag):
         time.sleep(1)
 
 def subscription_worker() -> None:
@@ -268,6 +278,58 @@ def url_queue_worker() -> None:
         log.error("hydownloader", "Uncaught exception in URL worker thread", e)
         with _worker_lock:
             _url_worker_ended_flag = True
+        db.close_thread_connections()
+        shutdown()
+
+def reverse_lookup_worker() -> None:
+    global _reverse_lookup_worker_ended_flag
+    proc_id = 'rev worker'
+    try:
+        log.info("hydownloader", "Starting reverse lookup worker thread...")
+        with _worker_lock:
+            _reverse_lookup_worker_ended_flag = False
+        while True:
+            time.sleep(2)
+            with _worker_lock:
+                if _end_threads_flag:
+                    break
+            #TODO: get outstanding work here
+            if True:#if no work to do
+                with _worker_lock:
+                    if _reverse_lookup_worker_paused_flag:
+                        set_reverse_lookup_worker_status("paused")
+                    else:
+                        set_reverse_lookup_worker_status("nothing to do: checked for reverse lookup jobs, found none")
+            while False: #TODO while there are jobs to do
+                with _worker_lock:
+                    if _end_threads_flag:
+                        break
+                    if _reverse_lookup_worker_paused_flag:
+                        set_reverse_lookup_worker_status("paused")
+                        break
+                check_time = time.time()
+                #status_msg = f"downloading URL: {urlinfo['url']}"
+                #set_url_worker_status(status_msg)
+                #log.info("single url downloader", capitalize_first_char(status_msg))
+                #TODO: do work here
+                #status_msg = f"finished checking URL: {urlinfo['url']}, new files: {new_files}, skipped: {skipped_files}"
+                #set_url_worker_status(status_msg)
+                #log.info("single url downloader", capitalize_first_char(status_msg))
+                #urls_to_dl = db.get_urls_to_download()
+                #urlinfo = urls_to_dl[0] if urls_to_dl else None
+            with _worker_lock:
+                if _end_threads_flag:
+                    break
+        with _worker_lock:
+            if _end_threads_flag:
+                log.info("hydownloader", "Stopping reverse lookup worker thread")
+                _reverse_lookup_worker_ended_flag = True
+                db.close_thread_connections()
+        set_reverse_lookup_worker_status('shut down')
+    except Exception as e:
+        log.error("hydownloader", "Uncaught exception in reverse lookup worker thread", e)
+        with _worker_lock:
+            _reverse_lookup_worker_ended_flag = True
         db.close_thread_connections()
         shutdown()
 
@@ -547,7 +609,8 @@ def api_worker(path: str, debug: bool) -> None:
 @click.option('--debug', type=bool, default=False, show_default=True, is_flag=True, help='Enable additional debug logging.')
 @click.option('--no-sub-worker', type=bool, default=False, show_default=True, is_flag=True, help='Do not start subscription worker thread.')
 @click.option('--no-url-worker', type=bool, default=False, show_default=True, is_flag=True, help='Do not start single URL queue worker thread.')
-def start(path : str, debug : bool, no_sub_worker: bool, no_url_worker: bool) -> None:
+@click.option('--no-reverse-lookup-worker', type=bool, default=False, show_default=True, is_flag=True, help='Do not start reverse lookup worker thread.')
+def start(path : str, debug : bool, no_sub_worker: bool, no_url_worker: bool, no_reverse_lookup_worker: bool) -> None:
     log.init(path, debug)
     db.init(path)
 
@@ -561,6 +624,10 @@ def start(path : str, debug : bool, no_sub_worker: bool, no_url_worker: bool) ->
     if not no_url_worker:
         url_thread = threading.Thread(target=url_queue_worker, name='Single URL queue worker', daemon=True)
         url_thread.start()
+
+    if not no_reverse_lookup_worker:
+        lookup_thread = threading.Thread(target=reverse_lookup_worker, name='Reverse lookup worker', daemon=True)
+        lookup_thread.start()
 
     api_thread = threading.Thread(target=api_worker, args=(path, debug))
     api_thread.start()

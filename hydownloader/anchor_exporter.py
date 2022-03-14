@@ -28,6 +28,95 @@ from hydownloader import db, log, urls
 def cli() -> None:
     pass
 
+@cli.command(help='Extract data from a Hydrus database that can be used later for reverse lookup queries. Only recognized URL types and the hashes/phashes/pixel hashes associated with them are extracted. The Hydrus database is opened in read-only mode. This command can be used standalone, without a hydownloader database.')
+@click.option('--hydrus-db-folder', type=str, required=True, help='Hydrus database directory (where the .db files are located).')
+@click.option('--save-folder', type=str, required=True, help='The newly created database file will be saved into this folder.')
+def extract_reverse_lookup_data(hydrus_db_folder: str, save_folder: str):
+    save_db = "reverse_lookup_data.db"
+    if not os.path.isdir(save_folder):
+        print(f"Error: not a folder: {save_folder}.")
+        sys.exit(0)
+    if os.path.exists(save_folder+"/"+save_db):
+        print(f"Error: {save_db} already exists in the save folder!")
+        sys.exit(0)
+    if not os.path.isfile(hydrus_db_folder+"/client.master.db") or not os.path.isfile(hydrus_db_folder+"/client.db"):
+        print(f"Error: some Hydrus database files are not present in the folder: {hydrus_db_folder}")
+        sys.exit(0)
+    client_db = sqlite3.connect("file:"+db_folder+"/client.master.db?mode=ro", uri=True)
+    client_db.row_factory = sqlite3.Row
+    cur = client_db.cursor()
+    cur.execute('attach database ? as client', ("file:"+db_folder+"/client.db?mode=ro",))
+    result_db = sqlite3.connect(save_folder+"/"+save_db)
+    res_cur = result_db.cursor()
+    res_cur.execute('create table phashes(phash, url)')
+    res_cur.execute('create table hashes(sha256, sha1, md5, sha512, url)')
+
+    print("Querying URLs and phashes...")
+    cur.execute('select phash, url from shape_perceptual_hashes natural join shape_perceptual_hash_map natural join client.url_map natural join urls')
+    data = cur.fetchall()
+    print(f"Found {len(data)} entries")
+
+    print("Filtering...")
+    results = []
+    counter = 0
+    percent = max(1,len(data)//100)
+    curr_percent = 0
+    for idx in range(len(data)):
+        counter += 1
+        if counter % percent == 0:
+            curr_percent += 1
+            print(f"{curr_percent}%")
+        if final_url := urls.suitable_for_reverse_lookup_db(data[idx]['url']):
+            data[idx]['url'] = final_url
+            results.append(idx)
+    print(f"Found {len(results)} matching entries")
+
+    print("Saving results...")
+    for idx in results:
+        res_cur.execute('insert into phashes(phash,url) values (?,?)',(data[idx]['phash'], data[idx]['url']))
+    results = []
+
+    print("Committing...")
+    result_db.commit()
+
+    print("Querying and saving pixel hashes...")
+    cur.execute('create table pixel_hashes as select j1.hash pixel_hash, hashes.hash hash from (client.pixel_hash_map phm natural join hashes hsh) j1 inner join hashes on j1.pixel_hash_id = hashes.hash_id;')
+    print("Committing...")
+    result_db.commit()
+
+    print("Querying URLs and hashes...")
+    cur.execute('select url, hash sha256, md5, sha1, sha512 from client.url_map natural join urls natural join hashes natural join local_hashes;')
+    data = cur.fetchall()
+    print(f"Found {len(data)} entries")
+
+    print("Filtering...")
+    counter = 0
+    percent = max(1,len(data)//100)
+    curr_percent = 0
+    for idx in range(len(data)):
+        counter += 1
+        if counter % percent == 0:
+            curr_percent += 1
+            print(f"{curr_percent}%")
+        if final_url := urls.suitable_for_reverse_lookup_db(data[idx]['url']):
+            data[idx]['url'] = final_url
+            results.append(idx)
+    print(f"Found {len(results)} matching entries")
+
+    print("Saving results...")
+    for idx in results:
+        res_cur.execute('insert into hashes(sha256, sha1, md5, sha512, url) values (?,?,?,?,?)',(data[idx]['sha256'], data[idx]['sha1'], data[idx]['md5'], data[idx]['sha512'], data[idx]['url']))
+    results = []
+
+    print("Committing...")
+    result_db.commit()
+
+    client_db.close()
+    result_db.close()
+
+    print("Done")
+    client.master local_hashes:hash_id, sha1,md5,sha512
+
 @cli.command(help='Add entries to an anchor database based on the URLs stored in a Hydrus database.')
 @click.option('--path', type=str, required=True, help='hydownloader database path.')
 @click.option('--hydrus-db-folder', type=str, required=True, help='Hydrus database directory (where the .db files are located).')
