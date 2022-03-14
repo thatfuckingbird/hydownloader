@@ -16,6 +16,7 @@
 
 import re
 import urllib.parse
+from typing import Optional
 from hydownloader import log, uri_normalizer
 
 known_url_replacements = (
@@ -299,7 +300,7 @@ def anchor_patterns_from_url(url: str) -> list[str]:
 
     return []
 
-def suitable_for_reverse_lookup_db(url: str) -> Optional[str]
+def suitable_for_reverse_lookup_db(url: str) -> Optional[str]:
     """
     This function takes a URL and decides whether it is suitable for inclusion into the reverse lookup database.
     It might also clean/normalize the URL.

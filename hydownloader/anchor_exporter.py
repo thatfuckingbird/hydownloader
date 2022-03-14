@@ -42,14 +42,15 @@ def extract_reverse_lookup_data(hydrus_db_folder: str, save_folder: str):
     if not os.path.isfile(hydrus_db_folder+"/client.master.db") or not os.path.isfile(hydrus_db_folder+"/client.db"):
         print(f"Error: some Hydrus database files are not present in the folder: {hydrus_db_folder}")
         sys.exit(0)
-    client_db = sqlite3.connect("file:"+db_folder+"/client.master.db?mode=ro", uri=True)
-    client_db.row_factory = sqlite3.Row
+    client_db = sqlite3.connect("file:"+hydrus_db_folder+"/client.master.db?mode=ro", uri=True)
+    client_db.row_factory = lambda c, r: dict([(col[0], r[idx]) for idx, col in enumerate(c.description)])
     cur = client_db.cursor()
-    cur.execute('attach database ? as client', ("file:"+db_folder+"/client.db?mode=ro",))
+    cur.execute('attach database ? as client', ("file:"+hydrus_db_folder+"/client.db?mode=ro",))
     result_db = sqlite3.connect(save_folder+"/"+save_db)
     res_cur = result_db.cursor()
     res_cur.execute('create table phashes(phash, url)')
     res_cur.execute('create table hashes(sha256, sha1, md5, sha512, url)')
+    res_cur.execute('create table pixel_hashes(hash, pixel_hash)')
 
     print("Querying URLs and phashes...")
     cur.execute('select phash, url from shape_perceptual_hashes natural join shape_perceptual_hash_map natural join client.url_map natural join urls')
@@ -58,14 +59,10 @@ def extract_reverse_lookup_data(hydrus_db_folder: str, save_folder: str):
 
     print("Filtering...")
     results = []
-    counter = 0
     percent = max(1,len(data)//100)
-    curr_percent = 0
     for idx in range(len(data)):
-        counter += 1
-        if counter % percent == 0:
-            curr_percent += 1
-            print(f"{curr_percent}%")
+        if idx % percent == 0:
+            print(f"{100*idx//len(data)}%")
         if final_url := urls.suitable_for_reverse_lookup_db(data[idx]['url']):
             data[idx]['url'] = final_url
             results.append(idx)
@@ -75,12 +72,20 @@ def extract_reverse_lookup_data(hydrus_db_folder: str, save_folder: str):
     for idx in results:
         res_cur.execute('insert into phashes(phash,url) values (?,?)',(data[idx]['phash'], data[idx]['url']))
     results = []
+    data = []
 
     print("Committing...")
     result_db.commit()
 
-    print("Querying and saving pixel hashes...")
-    cur.execute('create table pixel_hashes as select j1.hash pixel_hash, hashes.hash hash from (client.pixel_hash_map phm natural join hashes hsh) j1 inner join hashes on j1.pixel_hash_id = hashes.hash_id;')
+    print("Querying pixel hashes...")
+    cur.execute('select j1.hash pixel_hash, hashes.hash hash from (client.pixel_hash_map phm natural join hashes hsh) j1 inner join hashes on j1.pixel_hash_id = hashes.hash_id;')
+    data = cur.fetchall()
+    print(f"Found {len(data)} entries")
+    print("Saving results...")
+    for idx in results:
+        res_cur.execute('insert into pixel_hashes(hash,pixel_hash) values (?,?)',(data[idx]['hash'], data[idx]['pixel_hash']))
+    data = []
+
     print("Committing...")
     result_db.commit()
 
@@ -90,14 +95,10 @@ def extract_reverse_lookup_data(hydrus_db_folder: str, save_folder: str):
     print(f"Found {len(data)} entries")
 
     print("Filtering...")
-    counter = 0
     percent = max(1,len(data)//100)
-    curr_percent = 0
     for idx in range(len(data)):
-        counter += 1
-        if counter % percent == 0:
-            curr_percent += 1
-            print(f"{curr_percent}%")
+        if idx % percent == 0:
+            print(f"{100*idx//len(data)}%")
         if final_url := urls.suitable_for_reverse_lookup_db(data[idx]['url']):
             data[idx]['url'] = final_url
             results.append(idx)
@@ -115,7 +116,6 @@ def extract_reverse_lookup_data(hydrus_db_folder: str, save_folder: str):
     result_db.close()
 
     print("Done")
-    client.master local_hashes:hash_id, sha1,md5,sha512
 
 @cli.command(help='Add entries to an anchor database based on the URLs stored in a Hydrus database.')
 @click.option('--path', type=str, required=True, help='hydownloader database path.')
