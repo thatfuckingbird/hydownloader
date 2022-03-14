@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "hydownloader"
-version = "0.15.0"
+version = "0.16.0"
 description = "Download stuff like Hydrus does."
 authors = ["thatfuckingbird"]
 license = "AGPL-3.0-or-later"
@@ -13,12 +13,12 @@ hydownloader-tools = "hydownloader.tools:main"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-click = "^8.0.1"
+click = "^8.0.4"
 bottle = "^0.12.19"
-gallery-dl = "^1.20.5"
+gallery-dl = "^1.21.0"
 youtube_dl = "^2021.12.17"
-yt-dlp = "^2022.2.4"
-hydrus-api = "^3.22.5"
+yt-dlp = "^2022.3.8"
+hydrus-api = "^3.22.6"
 python-dateutil = "^2.8.2"
 
 [tool.poetry.dev-dependencies]

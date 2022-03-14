@@ -1,6 +1,11 @@
-# 0.16.0 (?)
+# 0.16.0 (2022-03-14)
 
 * Added subscription check time statistics to the report
+* Started implementation of reverse lookup features (can't be used yet)
+* The value of the "url-metadata" gallery-dl option is now managed by hydownloader (for most users this shouldn't matter, see the upgrade message in the log for details)
+* Upgraded gallery-dl to 1.21.0
+* Upgraded yt-dlp to latest version
+* Some other minor dependency upgrades
 
 # 0.15.0 (2022-02-17)
 
