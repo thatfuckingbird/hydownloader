@@ -314,6 +314,11 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                         json_data = json.load(open(json_path,encoding='utf-8-sig'))
                     except json.decoder.JSONDecodeError:
                         printerr(f"Failed to parse JSON: {json_path}", not no_abort_on_error)
+                # add back the old "gallerydl_file_url" key if it does not already exist
+                if json_data and not "gallerydl_file_url" in json_data:
+                    potential_fileurl_keys= list(filter(lambda x: isinstance(x, str) and x.startswith("gallerydl_file_url_"), json_data.keys()))
+                    if potential_fileurl_keys:
+                        json_data["gallerydl_file_url"] = json_data[potential_fileurl_keys[0]]
                 if not should_process:
                     continue
                 if not metadata_only:
