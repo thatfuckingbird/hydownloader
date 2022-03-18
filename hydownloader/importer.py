@@ -240,9 +240,9 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
         if order_folder_contents == "name":
             files = sorted(files)
         elif order_folder_contents == "mtime":
-            files = sorted(files, key=lambda t: os.stat(t).st_mtime)
+            files = sorted(files, key=lambda t: os.stat(root+'/'+t).st_mtime)
         elif order_folder_contents == "ctime":
-            files = sorted(files, key=lambda t: os.stat(t).st_ctime)
+            files = sorted(files, key=lambda t: os.stat(root+'/'+t).st_ctime)
         elif order_folder_contents != "default":
             printerr("The value of the orderFolderContents option is invalid", True)
 
