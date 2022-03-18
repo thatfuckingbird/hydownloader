@@ -1,3 +1,8 @@
+# 0.17.0 (?)
+
+* Importer now generates a "gallerydl_file_url" value if possible, so that importer configurations do not need to be modified due to the changes in 0.16.0
+* Importer: fixed error when sorting files by ctime or mtime
+
 # 0.16.0 (2022-03-14)
 
 * Added subscription check time statistics to the report
