@@ -654,7 +654,8 @@ def shutdown() -> None:
 
 def main() -> None:
     atexit.register(shutdown)
-    signal.signal(signal.SIGTTOU, signal.SIG_IGN)
+    if hasattr(signal, 'SIGTTOU'):
+        signal.signal(signal.SIGTTOU, signal.SIG_IGN)
     signal.signal(signal.SIGINT, lambda signum, frame: shutdown())
     signal.signal(signal.SIGTERM, lambda signum, frame: shutdown())
 
