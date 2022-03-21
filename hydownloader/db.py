@@ -171,6 +171,7 @@ def create_db() -> None:
     c.execute(C.CREATE_URL_ID_INDEX_STATEMENT)
     c.execute(C.CREATE_SUBSCRIPTION_ID_INDEX_STATEMENT)
     c.execute(C.CREATE_MISSED_SUBSCRIPTION_CHECKS_STATEMENT)
+    c.execute(C.CREATE_REVERSE_LOOKUP_JOBS_STATEMENT)
     c.execute('insert into version(version) values (?)', (__version__,))
     get_conn().commit()
 
@@ -455,6 +456,16 @@ def check_and_update_db() -> None:
                     log.info("hydownloader", "Updating version number...")
                     cur.execute('update version set version = \'0.16.0\'')
                 log.info("hydownloader", "Upgraded database to version 0.16.0")
+            elif version == "0.16.0": # 0.16.0 -> 0.17.0
+                log.info("hydownloader", "Starting database upgrade to version 0.17.0")
+                with sqlite3.connect(_path+"/hydownloader.db") as connection:
+                    cur = connection.cursor()
+                    cur.execute('begin exclusive transaction')
+                    log.info("hydownloader", "Creating reverse_lookup_jobs table...")
+                    cur.execute(C.CREATE_REVERSE_LOOKUP_JOBS_STATEMENT)
+                    log.info("hydownloader", "Updating version number...")
+                    cur.execute('update version set version = \'0.17.0\'')
+                log.info("hydownloader", "Upgraded database to version 0.17.0")
             else:
                 log.fatal("hydownloader", "Unsupported hydownloader database version found")
 
@@ -1024,3 +1035,67 @@ def add_or_update_import_entry(path: str, import_time: float, creation_time: flo
         c.execute("update imported_files set import_time = ?, creation_time = ?, modification_time = ?, metadata = ?, hash = ? where filename = ?", (import_time, creation_time, modification_time, metadata, hexdigest, path))
     else:
         c.execute("insert into imported_files(filename,import_time,creation_time,modification_time,metadata,hash) values (?,?,?,?,?,?)", (path,import_time,creation_time,modification_time,metadata,hexdigest))
+
+def get_unprocessed_reverse_lookup_jobs() -> list[dict]:
+    check_init()
+    c = get_conn().cursor()
+    c.execute('select * from reverse_lookup_jobs where status = -1 and paused <> 1 order by priority desc, time_added desc')
+    return c.fetchall()
+
+def add_or_update_reverse_lookup_jobs(jobs: list[dict]) -> bool:
+    check_init()
+    for item in jobs:
+        add = "id" not in item
+        if add and not "file_url" in item and not "file_path" in item: continue
+        if add: item["time_added"] = time.time()
+        if 'file_url' in item: item['file_url'] = uri_normalizer.normalizes(item['file_url'])
+        if add:
+            defaults = get_conf('reverse-lookup-defaults', True)
+            if defaults:
+                for key in defaults:
+                    if not key in item: item[key] = defaults[key]
+        upsert_dict("reverse_lookup_jobs", item, no_commit = True)
+        if add:
+            log.info("hydownloader", f"Added reverse lookup job with file {item['file_path']} and URL {item['file_url']}")
+        else:
+            log.info("hydownloader", f"Updated reverse lookup job with ID {item['id']}")
+    get_conn().commit()
+    return True
+
+def delete_reverse_lookup_jobs(job_ids: list[int]) -> bool:
+    check_init()
+    c = get_conn().cursor()
+    for i in job_ids:
+        c.execute('delete from reverse_lookup_jobs where id = ?', (i,))
+    get_conn().commit()
+    log.info("hydownloader", f"Deleted reverse lookup jobs with IDs: {', '.join(map(str, job_ids))}")
+    return True
+
+def get_reverse_lookup_jobs_by_range(archived: bool, range_: Optional[tuple[int, int]] = None) -> list[dict]:
+    check_init()
+    c = get_conn().cursor()
+    c.arraysize = 1000
+    if range_ is None:
+        if archived:
+            c.execute('select * from reverse_lookup_jobs order by id asc')
+        else:
+            c.execute('select * from reverse_lookup_jobs where archived <> 1 order by id asc')
+    else:
+        if archived:
+            c.execute('select * from reverse_lookup_jobs where id >= ? and id <= ? order by id asc', range_)
+        else:
+            c.execute('select * from reverse_lookup_jobs where id >= ? and id <= ? and archived <> 1 order by id asc', range_)
+    return list(c.fetchall())
+
+def get_reverse_lookup_jobs_by_id(job_ids: list[int], archived: bool) -> list[dict]:
+    check_init()
+    c = get_conn().cursor()
+    result = []
+    for i in job_ids:
+        if archived:
+            c.execute('select * from reverse_lookup_jobs where id = ?', (i,))
+        else:
+            c.execute('select * from reverse_lookup_jobs where id = ? and archived <> 1', (i,))
+        for row in c.fetchall():
+            result.append(row)
+    return result

@@ -29,7 +29,7 @@ import ssl
 import click
 import bottle
 from bottle import route, hook
-from hydownloader import db, log, gallery_dl_utils, urls, __version__, tools, constants, output_postprocessors
+from hydownloader import db, log, gallery_dl_utils, urls, __version__, tools, constants, output_postprocessors, reverse_lookup
 
 class SSLWSGIRefServer(bottle.ServerAdapter):
     def __init__(self, ssl_cert : str, **kwargs):
@@ -293,14 +293,15 @@ def reverse_lookup_worker() -> None:
             with _worker_lock:
                 if _end_threads_flag:
                     break
-            #TODO: get outstanding work here
-            if True:#if no work to do
+            rev_jobs = db.get_unprocessed_reverse_lookup_jobs()
+            if not rev_jobs:
                 with _worker_lock:
                     if _reverse_lookup_worker_paused_flag:
                         set_reverse_lookup_worker_status("paused")
                     else:
                         set_reverse_lookup_worker_status("nothing to do: checked for reverse lookup jobs, found none")
-            while False: #TODO while there are jobs to do
+            lookupjob = rev_jobs[0] if rev_jobs else None
+            while lookupjob:
                 with _worker_lock:
                     if _end_threads_flag:
                         break
@@ -308,15 +309,21 @@ def reverse_lookup_worker() -> None:
                         set_reverse_lookup_worker_status("paused")
                         break
                 check_time = time.time()
-                #status_msg = f"downloading URL: {urlinfo['url']}"
-                #set_url_worker_status(status_msg)
-                #log.info("single url downloader", capitalize_first_char(status_msg))
-                #TODO: do work here
-                #status_msg = f"finished checking URL: {urlinfo['url']}, new files: {new_files}, skipped: {skipped_files}"
-                #set_url_worker_status(status_msg)
-                #log.info("single url downloader", capitalize_first_char(status_msg))
-                #urls_to_dl = db.get_urls_to_download()
-                #urlinfo = urls_to_dl[0] if urls_to_dl else None
+                status_msg = f"processing reverse lookup job with ID {lookupjob['id']}, file path {lookupjob['file_path']} and URL {lookupjob['file_url']}"
+                set_reverse_lookup_worker_status(status_msg)
+                log.info("reverse lookup worker", capitalize_first_char(status_msg))
+                status, num_new_urls = reverse_lookup.process_job(lookupjob)
+                new_job_data = {
+                    'id': lookupjob['id']
+                }
+                new_job_data['time_processed'] = check_time
+                new_job_data['result_count'] = num_new_urls
+                db.add_or_update_reverse_lookup_jobs([new_job_data])
+                status_msg = f"finished processing reverse lookup job with ID {lookupjob['id']}"
+                set_url_worker_status(status_msg)
+                log.info("reverse lookup worker", capitalize_first_char(status_msg))
+                rev_jobs = db.get_unprocessed_reverse_lookup_jobs()
+                lookupjob = rev_jobs[0] if rev_jobs else None
             with _worker_lock:
                 if _end_threads_flag:
                     break
@@ -394,6 +401,16 @@ def route_get_queued_urls() -> str:
         return json.dumps(db.get_queued_urls_by_id(bottle.request.json['ids'], archived = bottle.request.json.get("archived", False)))
     return json.dumps(db.get_queued_urls_by_range(bottle.request.json.get("archived", False)))
 
+@route('/add_or_update_reverse_lookup_jobs', method='POST')
+def route_add_reverse_lookup_jobs() -> dict:
+    check_access()
+    return {'status': db.add_or_update_reverse_lookup_jobs(bottle.request.json)}
+
+@route('/delete_reverse_lookup_jobs', method='POST')
+def route_delete_urls() -> dict:
+    check_access()
+    return {'status': db.delete_reverse_lookup_jobs(bottle.request.json['ids'])}
+
 @route('/add_or_update_subscriptions', method='POST')
 def route_add_or_update_subscriptions() -> dict:
     check_access()
@@ -422,6 +439,20 @@ def route_get_subscriptions() -> str:
     if 'ids' in bottle.request.json:
         return json.dumps(db.get_subs_by_id(bottle.request.json['ids']))
     return json.dumps(db.get_subs_by_range())
+
+@route('/get_reverse_lookup_jobs', method='POST')
+def route_get_reverse_lookup_jobs() -> str:
+    check_access()
+    if 'from' in bottle.request.json and 'to' in bottle.request.json:
+        try:
+            range_from = int(bottle.request.json['from'])
+            range_to = int(bottle.request.json['to'])
+        except ValueError:
+            return json.dumps([])
+        return json.dumps(db.get_reverse_lookup_jobs_by_range((range_from, range_to)))
+    if 'ids' in bottle.request.json:
+        return json.dumps(db.get_reverse_lookup_jobs_by_id(bottle.request.json['ids']))
+    return json.dumps(db.get_reverse_lookup_jobs_by_range())
 
 @route('/get_subscription_checks', method='POST')
 def route_get_subscription_checks() -> str:
@@ -462,10 +493,10 @@ def route_urls_last_files() -> str:
 def route_get_status_info() -> dict:
     check_access()
     with _status_lock:
-        return {'subscriptions_due': len(db.get_due_subscriptions()), 'urls_queued': len(db.get_urls_to_download()),
-                'subscriptions_paused': _sub_worker_paused_flag, 'urls_paused': _url_worker_paused_flag,
-                'subscription_worker_status': _sub_worker_last_status, 'url_worker_status': _url_worker_last_status,
-                'subscription_worker_last_update_time': _sub_worker_last_update_time, "url_worker_last_update_time": _url_worker_last_update_time}
+        return {'subscriptions_due': len(db.get_due_subscriptions()), 'urls_queued': len(db.get_urls_to_download()), 'reverse_lookup_jobs_due': len(db.get_unprocessed_reverse_lookup_jobs()),
+                'subscriptions_paused': _sub_worker_paused_flag, 'urls_paused': _url_worker_paused_flag, 'reverse_lookup_jobs_paused': _reverse_lookup_worker_paused_flag,
+                'subscription_worker_status': _sub_worker_last_status, 'url_worker_status': _url_worker_last_status, 'reverse_lookup_worker_status': _reverse_lookup_worker_last_status,
+                'subscription_worker_last_update_time': _sub_worker_last_update_time, "url_worker_last_update_time": _url_worker_last_update_time, "reverse_lookup_worker_last_update_time": _reverse_lookup_worker_last_update_time}
 
 @route('/set_cookies', method='POST')
 def route_set_cookies() -> dict:
@@ -515,6 +546,22 @@ def route_resume_single_urls() -> dict:
     check_access()
     with _worker_lock:
         _url_worker_paused_flag = False
+    return {'status': True}
+
+@route('/pause_reverse_lookups', method='POST')
+def route_pause_reverse_lookups() -> dict:
+    global _reverse_lookup_worker_paused_flag
+    check_access()
+    with _worker_lock:
+        _reverse_lookup_worker_paused_flag = True
+    return {'status': True}
+
+@route('/resume_reserve_lookups', method='POST')
+def route_resume_reverse_lookups() -> dict:
+    global _reverse_lookup_worker_paused_flag
+    check_access()
+    with _worker_lock:
+        _reverse_lookup_worker_paused_flag = False
     return {'status': True}
 
 @route('/run_tests', method='POST')

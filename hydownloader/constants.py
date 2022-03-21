@@ -1115,6 +1115,24 @@ CREATE INDEX "file_index" ON "additional_data" (
 )
 """
 
+CREATE_REVERSE_LOOKUP_JOBS_STATEMENT = """
+CREATE TABLE "reverse_lookup_jobs" (
+	"id"	INTEGER NOT NULL UNIQUE,
+	"file_path"	TEXT,
+	"file_url"	TEXT,
+	"config"	TEXT NOT NULL,
+	"status"	INTEGER NOT NULL,
+	"time_added"	INTEGER NOT NULL,
+	"paused"	INTEGER NOT NULL DEFAULT 0,
+	"urls_paused"	INTEGER NOT NULL DEFAULT 1,
+	"priority"	INTEGER NOT NULL DEFAULT 0,
+	"result_count"	INTEGER,
+	"time_processed"	INTEGER,
+	"additional_results"	TEXT,
+	PRIMARY KEY("id")
+)
+"""
+
 SHARED_CREATE_KNOWN_URLS_STATEMENT = """
 CREATE TABLE "known_urls" (
 	"url"	TEXT,
