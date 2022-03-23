@@ -16,7 +16,11 @@ are stored in a database and are known as "anchors" in hydownloader.
 
 The daemon provides a JSON-based API, which is the primary means of controlling it and querying information from it.
 
-**Important: there is also a GUI application to manage hydownloader, called hydownloader-systray. It has its own separate repository.**
+## WARNING: GUI not included
+
+hydownloader is a server/command line application. There is no graphical interface included. It provides a HTTP API, but this is not meant to be directly used by humans.
+**There is a separate GUI application to manage hydownloader, called hydownloader-systray. [It has its own separate repository here](https://github.com/thatfuckingbird/hydownloader-systray).
+This is the recommended way to manage your hydownloader instances.**
 
 ## How does it compare to the Hydrus downloader system?
 
