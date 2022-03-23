@@ -1565,7 +1565,7 @@ DEFAULT_GALLERY_DL_CONFIG = R"""{
         },
 
         "kemonoparty": {
-            "filename": "{id}_{title}_{filename}_{type[0]}_{num}.{extension}",
+            "filename": "{id}_{hash}_{type[0]}_{num}.{extension}",
             "archive-format": "{service}_{user}_{id}_{filename}_{type[0]}.{extension}"
         },
 
