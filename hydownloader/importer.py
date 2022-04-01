@@ -76,9 +76,12 @@ def get_namespaces_tags(data: dict[str, Any], key_prefix : str = 'tags_', separa
 def clean_url(url: str) -> str:
     return re.sub(r'(?<!:)//', '/', url)
 
-def is_valid_url(url: str) -> str:
-    result = urllib.parse.urlsplit(url.strip())
-    return result.netloc and result.scheme
+def is_valid_url(url: str) -> bool:
+    try:
+        result = urllib.parse.urlsplit(url.strip())
+        return bool(result.netloc and result.scheme)
+    except ValueError:
+        return False
 
 def convdate(date: str) -> str:
     return dateutil.parser.parse(date).strftime("%Y-%m-%d")
