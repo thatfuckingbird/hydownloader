@@ -141,6 +141,8 @@ def subscription_data_to_url(downloader: str, keywords: str, allow_fail: bool = 
         return f"https://www.hentai-foundry.com/user/{keywords}/profile"
     if downloader == "yandere":
         return f"https://yande.re/post?tags={keywords}"
+    if downloader == "rule34":
+        return f"https://rule34.xxx/index.php?page=post&s=list&tags={keywords}"
 
     if not allow_fail:
         log.fatal("hydownloader", f"Invalid downloader: {downloader}")
@@ -211,6 +213,8 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
         return ('yandere', m.group('query').lower())
     if m := re.match(r"(?:https?://)?seiso\.party/artists/(?P<site>[^/]+)/(?P<id>.+)", u):
         return ('seisoparty', m.group('site')+"/"+m.group('id'))
+    if m := re.match(r"https?://rule34\.xxx/index.php\?page=post&s=list&tags=(?P<keywords>[^&]+)(&.*)?", u):
+        return ('rule34', m.group('keywords').lower())
 
     return ('','')
 
@@ -240,6 +244,7 @@ def anchor_patterns_from_url(url: str) -> list[str]:
     tumblr: tumblr188243485974
     fantia: {post_id}_{file_id}
     fanbox: {id}_{num} (num starts at 1)
+    rule34.xxx: rule344085100
     See also gallery-dl-config.json.
     """
     u = uri_normalizer.normalizes(url)
@@ -297,6 +302,8 @@ def anchor_patterns_from_url(url: str) -> list[str]:
         return [f"baraag{m.group('id')}", f"baraag{m.group('id')}_%"]
     if m := re.match(r"https?://pawoo\.net/@[^/]+/(?P<id>[0-9]+)", u):
         return [f"pawoo{m.group('id')}", f"pawoo{m.group('id')}_%"]
+    if m := re.match(r"https?://rule34\.xxx/index\.php\?(page=post&)?(s=view&)?id=(?P<id>[0-9]+)(&.*)?", u):
+        return [f"rule34{m.group('id')}"]
 
     return []
 
