@@ -100,7 +100,7 @@ def check_results_of_post_url(data: dict, sitename: str) -> bool:
 
 @cli.command(help='Test downloading from a list of sites.')
 @click.option('--path', type=str, required=True, help='Database path.')
-@click.option('--sites', type=str, required=True, help='A comma-separated list of sites to test downloading from. Currently supported: environment, gelbooru, pixiv, lolibooru, patreon, danbooru, 3dbooru, nijie, sankaku, idolcomplex, artstation, twitter, deviantart, webtoons, baraag, pawoo, yandere, hentaifoundry. WARNING: this will attempt to download "sensitive" content.')
+@click.option('--sites', type=str, required=True, help='A comma-separated list of sites to test downloading from. Currently supported: environment, gelbooru, pixiv, lolibooru, patreon, danbooru, 3dbooru, nijie, sankaku, idolcomplex, artstation, twitter, deviantart, webtoons, baraag, pawoo, yandere, hentaifoundry, rule34. WARNING: this will attempt to download "sensitive" content.')
 def test(path: str, sites: str) -> None:
     log.init(path, True)
     db.init(path)
@@ -265,6 +265,14 @@ def test_internal(sites: str) -> bool:
                 'yandere/yandere_619304_449a208b7a42f917498a00386e173118.jpg': [],
                 'yandere/yandere_619304_449a208b7a42f917498a00386e173118.jpg.json': ['"tags_artist": "zuima"']
             }
+        },
+        'rule34': {
+            'url': "https://rule34.xxx/index.php?page=post&s=view&id=4085100",
+            'anchors': ["rule344085100"],
+            'filenames': {
+                'rule34/rule34_4085100_230c488b6784beb15f0278f6a6ce2a93.jpg': [],
+                'rule34/rule34_4085100_230c488b6784beb15f0278f6a6ce2a93.jpg.json': ['"tags_artist": "methados"']
+            }
         }
     }
 
@@ -396,6 +404,9 @@ def test_internal(sites: str) -> bool:
         elif site == "yandere":
             log.info("hydownloader-test", "Testing yande.re...")
             should_break = not check_results_of_post_url(post_url_data['yandere'], site) or should_break
+        elif site == "rule34":
+            log.info("hydownloader-test", "Testing rule34.xxx...")
+            should_break = not check_results_of_post_url(post_url_data['rule34'], site) or should_break
         else:
             log.error("hydownloader-test", f"Site name not recognized: {site}, no testing done")
             return False
