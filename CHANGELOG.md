@@ -1,3 +1,12 @@
+# 0.18.0 (2022-04-09)
+
+* Updated gallery-dl (1.21.1), yt-dlp and other dependencies
+* Twitter age-gate is now circumvented (thanks to gallery-dl)
+* Importer: catch a previously uncaught error in URL validity checking
+* Filename format for kemono.party was updated to avoid excessively long filenames causing errors
+* Support added for rule34.xxx
+* The default values for multiple configuration files changed this release. Make sure to read the update message in the log, and update your configuration files accordingly.
+
 # 0.17.0 (2022-03-23)
 
 * Importer now generates a "gallerydl_file_url" value if possible, so that importer configurations do not need to be modified due to the changes in 0.16.0

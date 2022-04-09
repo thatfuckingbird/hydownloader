@@ -466,6 +466,24 @@ def check_and_update_db() -> None:
                     log.info("hydownloader", "Updating version number...")
                     cur.execute('update version set version = \'0.17.0\'')
                 log.info("hydownloader", "Upgraded database to version 0.17.0")
+            elif version == "0.17.0": # 0.17.0 -> 0.18.0
+                log.info("hydownloader", "Starting database upgrade to version 0.18.0")
+                with sqlite3.connect(_path+"/hydownloader.db") as connection:
+                    cur = connection.cursor()
+                    cur.execute('begin exclusive transaction')
+                    write_new_config(["hydownloader-import-jobs.json", "gallery-dl-user-config.json", "gallery-dl-config.json"])
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! The default content of gallery-dl-user-config.json changed.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! The \"duplicates\" key was added and set to true for \"kemonoparty\". This change is optional.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! The default content of gallery-dl-config.json changed.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! The \"syndication\" key was added and set to true for \"twitter\". This change is optional, but highly recommended because it is required to access age-gated tweets if not logged in to Twitter.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! The value of the \"filename\" key was updated for \"kemonoparty\". This change is optional, but highly recommended because the old value generated too long filenames which sometimes caused download errors.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! The \"rule34\" group was added. This change is optional, but highly recommended because it is needed to correctly handle downloads from rule34.xxx.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! See the newly written default configuration files (name ending in .NEW) in your database folder.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! The default content of hydownloader-import-jobs.json changed: rules for rule34.xxx were added.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! See the newly written default importer configuration file (name ending in .NEW) in your database folder.")
+                    log.info("hydownloader", "Updating version number...")
+                    cur.execute('update version set version = \'0.18.0\'')
+                log.info("hydownloader", "Upgraded database to version 0.18.0")
             else:
                 log.fatal("hydownloader", "Unsupported hydownloader database version found")
 

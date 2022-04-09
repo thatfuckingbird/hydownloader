@@ -1492,7 +1492,8 @@ DEFAULT_GALLERY_DL_USER_CONFIG = R"""{
         {
             "metadata": true,
             "comments": true,
-            "dms": true
+            "dms": true,
+            "duplicates": true
         }
     },
 
@@ -1578,7 +1579,8 @@ DEFAULT_GALLERY_DL_CONFIG = R"""{
             "archive-format": "{tweet_id}_{num}",
             "image": {
               "archive-format": "image{filename}"
-            }
+            },
+            "syndication": true
         },
 
         "deviantart": {
