@@ -20,12 +20,15 @@ import shutil
 import os
 import sys
 import random
+import datetime
 import sqlite3
 import time
 import signal
 import subprocess
 import re
 import urllib.parse
+import requests
+from http.cookiejar import MozillaCookieJar
 from typing import Optional
 import click
 from hydownloader import db, log, gallery_dl_utils, output_postprocessors
@@ -532,6 +535,50 @@ def mass_add_subscriptions(path: str, file_: str, downloader: str, additional_da
                     continue
             db.add_or_update_subscriptions([new_sub])
             log.info("hydownloader-tools", f"Added subscription {line} with downloader {downloader}")
+
+@cli.command(help='Download Pixiv user profile data for subscribed users (data will be saved to the logs folder).')
+@click.option('--path', type=str, required=True, help='Database path.')
+@click.option('--cookies', type=str, required=True, help='The cookies.txt file with your Pixiv cookies (to access R18 content).')
+def download_pixiv_user_profiles(path: str, cookies: str):
+    log.init(path, True)
+    db.init(path)
+
+    jar = MozillaCookieJar(cookies)
+    jar.load(ignore_discard=True, ignore_expires=True)
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.92 Safari/537.36'
+    }
+
+    # check if R18 content is visible, otherwise we will miss a lot of data
+    log.info("hydownloader-tools", "Testing access to R18 Pixiv content...")
+    test_response = requests.get('https://www.pixiv.net/ajax/user/17282018/profile/all', cookies=jar, headers=headers)
+    if test_response.status_code != 200 or not "97831730" in test_response.text:
+        log.error("hydownloader-tools", f"Pixiv profile downloader: R18 content is not visible (wrong/missing cookies), aborting")
+        log.error("hydownloader-tools", f"Response status: {test_response.status_code}, text: {test_response.text}")
+        return
+    log.info("hydownloader-tools", "R18 Pixiv content is accessible")
+
+    subs = db.get_subs_by_range()
+    pixiv_ids = []
+    for sub in subs:
+        if sub['downloader'] == 'pixivuser':
+            pixiv_ids.append(str(sub['keywords']))
+
+    log.info("hydownloader-tools", f"Found {len(pixiv_ids)} Pixiv user subscriptions. Starting download...")
+    counter = 1
+    for pid in pixiv_ids:
+        log.info("hydownloader-tools", f"Getting profile of Pixiv user {pid} ({counter}/{len(pixiv_ids)})")
+        resp = requests.get(f'https://www.pixiv.net/ajax/user/{pid}/profile/all', cookies=jar, headers=headers)
+        if resp.status_code != 200:
+            log.error("hydownloader-tools", f"Error {resp.status_code} while getting profile for Pixiv user {pid}")
+        timestamp = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+        outfile = open(db.get_rootpath()+f"/logs/pixiv-profile-{pid}-{timestamp}.json", "w")
+        outfile.write(resp.text)
+        outfile.close()
+        time.sleep(random.randint(3, 5)+0.12345)
+        counter += 1
+    log.info("hydownloader-tools", "Finished downloading Pixiv profile data")
 
 @cli.command(help='Force a reparsing of all logfiles.')
 @click.option('--path', type=str, required=True, help='Database path.')

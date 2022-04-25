@@ -327,7 +327,7 @@ websockets = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "c22849ab6268cc0ebcb0f8ff05f7f1d0785e96f35fa15905d7f24a8ba438ef7f"
+content-hash = "9240ab00b444624892646f2d63fd4e9c9c1c8335c64024f4ad4579b8a872157e"
 
 [metadata.files]
 astroid = [

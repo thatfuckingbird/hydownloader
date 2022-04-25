@@ -20,6 +20,7 @@ youtube_dl = "^2021.12.17"
 yt-dlp = "^2022.4.8"
 hydrus-api = "^3.22.6"
 python-dateutil = "^2.8.2"
+requests = "^2.27.1"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.8.2"
