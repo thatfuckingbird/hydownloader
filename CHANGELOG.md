@@ -1,6 +1,7 @@
-# 0.19.0 (?)
+# 0.19.0 (2022-04-28)
 
 * Added command to hydownloader-tools for downloading Pixiv user profile data
+* Updated gallery-dl (1.21.2)
 
 # 0.18.0 (2022-04-09)
 
