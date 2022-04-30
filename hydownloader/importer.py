@@ -213,7 +213,8 @@ def clear_imported(path: str, action: str, do_it: bool, no_skip_on_differing_tim
 @click.option('--no-abort-on-error', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort on errors. Useful to check for any potential errors before actually importing files.')
 @click.option('--no-force-add-metadata', type=bool, default=False, show_default=True, is_flag=True, help='Do not add metadata for files already in Hydrus.')
 @click.option('--force-add-files', type=bool, default=False, show_default=True, is_flag=True, help='Send files to Hydrus even if they are already in Hydrus.')
-def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differing_times: bool, config: Optional[str], verbose: bool, do_it: bool, no_abort_on_missing_metadata: bool, filename_regex: Optional[str], no_abort_on_error: bool, no_force_add_metadata: bool, force_add_files: bool) -> None:
+@click.option('--subdir', type=str, default=None, show_default=True, help='Only scan a subdirectory within the database\'s \'gallery-dl\' folder to target specific files, e.g. \'gelbooru/tag\' to import a specific gelbooru tag.')
+def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differing_times: bool, config: Optional[str], verbose: bool, do_it: bool, no_abort_on_missing_metadata: bool, filename_regex: Optional[str], no_abort_on_error: bool, no_force_add_metadata: bool, force_add_files: bool, subdir: Optional[str]) -> None:
     log.init(path, True)
     db.init(path)
 
@@ -233,12 +234,17 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
     order_folder_contents = jd.get('orderFolderContents', 'default')
     non_url_source_namespace = jd.get('nonUrlSourceNamespace', '')
 
+    effective_path = data_path
+    if subdir is not None:
+        # replace is to convert windows paths
+        effective_path = effective_path + '/gallery-dl/' + unfuck_path_separator(subdir)
+
     client = hydrus_api.Client(jd['apiKey'], jd['apiURL'], session=get_session(5, 1))
 
     log.info("hydownloader-importer", f"Starting import job: {job}")
 
     # iterate over all files in the data directory
-    for root, _, files in os.walk(data_path):
+    for root, _, files in os.walk(effective_path):
         # sort files before iterating over them
         if order_folder_contents == "name":
             files = sorted(files)
