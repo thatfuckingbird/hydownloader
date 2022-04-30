@@ -237,7 +237,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
     effective_path = data_path
     if subdir is not None:
         # replace is to convert windows paths
-        effective_path = effective_path + '/' + unfuck_path_separator(subdir)
+        effective_path = effective_path + '/gallery-dl/' + unfuck_path_separator(subdir)
 
     client = hydrus_api.Client(jd['apiKey'], jd['apiURL'], session=get_session(5, 1))
 
