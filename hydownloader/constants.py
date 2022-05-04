@@ -1007,6 +1007,50 @@ DEFAULT_IMPORT_JOBS = """{
             ]
           }
         ]
+      },
+      {
+        "filter": "pstartswith(path, 'gallery-dl/e621/')",
+        "tagReposForNonUrlSources": ["my tags"],
+        "tags": [
+          {
+            "name": "e621 generated tags",
+            "allowEmpty": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'e621 id:' + str(json_data['id'])",
+              "'booru:e621'",
+              "'rating:' + json_data['rating']"
+            ]
+          },
+          {
+            "name": "e621 tags",
+            "allowTagsEndingWithColon": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": "get_nested_tags_e621(json_data['tags'])"
+          },
+          {
+            "name": "e621 post tags",
+            "allowTagsEndingWithColon": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": "get_nested_tags_e621(json_data['tags'])"
+          }
+        ],
+        "urls": [
+          {
+            "name": "e621 urls",
+            "allowEmpty": true,
+            "values": [
+              "json_data['gallerydl_file_url']",
+              "'https://e621.net/posts/' + str(json_data['id'])"
+            ]
+          }
+        ]
       }
     ]
   }
@@ -1625,6 +1669,10 @@ DEFAULT_GALLERY_DL_CONFIG = R"""{
         },
         
         "rule34": {
+            "archive-format": "{id}"
+        },
+        
+        "e621": {
             "archive-format": "{id}"
         }
     }
