@@ -143,6 +143,8 @@ def subscription_data_to_url(downloader: str, keywords: str, allow_fail: bool = 
         return f"https://yande.re/post?tags={keywords}"
     if downloader == "rule34":
         return f"https://rule34.xxx/index.php?page=post&s=list&tags={keywords}"
+    if downloader == "furaffinity":
+        return f"https://www.furaffinity.net/user/{keywords}/"
 
     if not allow_fail:
         log.fatal("hydownloader", f"Invalid downloader: {downloader}")
@@ -215,6 +217,8 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
         return ('seisoparty', m.group('site')+"/"+m.group('id'))
     if m := re.match(r"https?://rule34\.xxx/index.php\?page=post&s=list&tags=(?P<keywords>[^&]+)(&.*)?", u):
         return ('rule34', m.group('keywords').lower())
+    if m := re.match(r"https?://www\.furaffinity\.net/user/(?P<username>[^&]+)(&.*)?/", u):
+        return ('furaffinity', m.group('username').lower())
 
     return ('','')
 
@@ -245,6 +249,7 @@ def anchor_patterns_from_url(url: str) -> list[str]:
     fantia: {post_id}_{file_id}
     fanbox: {id}_{num} (num starts at 1)
     rule34.xxx: rule344085100
+    furaffinity: furaffinity45398142
     See also gallery-dl-config.json.
     """
     u = uri_normalizer.normalizes(url)
@@ -304,6 +309,8 @@ def anchor_patterns_from_url(url: str) -> list[str]:
         return [f"pawoo{m.group('id')}", f"pawoo{m.group('id')}_%"]
     if m := re.match(r"https?://rule34\.xxx/index\.php\?(page=post&)?(s=view&)?id=(?P<id>[0-9]+)(&.*)?", u):
         return [f"rule34{m.group('id')}"]
+    if m := re.match(r"https?://www\.furaffinity\.net/view/(?P<id>[^&]+)(&.*)?/", u):
+        return [f"furaffinity{m.group('id')}"]
 
     return []
 
