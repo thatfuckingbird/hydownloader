@@ -103,7 +103,7 @@ def check_results_of_post_url(data: dict, sitename: str) -> bool:
 
 @cli.command(help='Test downloading from a list of sites.')
 @click.option('--path', type=str, required=True, help='Database path.')
-@click.option('--sites', type=str, required=True, help='A comma-separated list of sites to test downloading from. Currently supported: environment, gelbooru, pixiv, lolibooru, patreon, danbooru, 3dbooru, nijie, sankaku, idolcomplex, artstation, twitter, deviantart, webtoons, baraag, pawoo, yandere, hentaifoundry, rule34, e621. WARNING: this will attempt to download "sensitive" content.')
+@click.option('--sites', type=str, required=True, help='A comma-separated list of sites to test downloading from. Currently supported: environment, gelbooru, pixiv, lolibooru, patreon, danbooru, 3dbooru, nijie, sankaku, idolcomplex, artstation, twitter, deviantart, webtoons, baraag, pawoo, yandere, hentaifoundry, rule34, e621, furaffinity. WARNING: this will attempt to download "sensitive" content.')
 def test(path: str, sites: str) -> None:
     log.init(path, True)
     db.init(path)
@@ -284,6 +284,14 @@ def test_internal(sites: str) -> bool:
                 'e621/e621_1766367_441725945326e0fa7a3f21978cb38ded.jpg': [],
                 'e621/e621_1766367_441725945326e0fa7a3f21978cb38ded.jpg.json': ['"id": 1766367'],
             }
+        },
+        'furaffinity': {
+            'url': "https://www.furaffinity.net/view/45398142/",
+            'anchors': ["furaffinity45398142"],
+            'filenames': {
+                'furaffinity/bermasin/45398142.jpg': [],
+                'furaffinity/bermasin/45398142.jpg.json': ['"artist": "bermasin"']
+            }
         }
     }
 
@@ -421,6 +429,9 @@ def test_internal(sites: str) -> bool:
         elif site == "e621":
             log.info("hydownloader-test", "Testing e621.net...")
             should_break = not check_results_of_post_url(post_url_data['e621'], site) or should_break
+        elif site == "furaffinity":
+            log.info("hydownloader-test", "Testing furaffinity.net...")
+            should_break = not check_results_of_post_url(post_url_data['furaffinity'], site) or should_break
         else:
             log.error("hydownloader-test", f"Site name not recognized: {site}, no testing done")
             return False

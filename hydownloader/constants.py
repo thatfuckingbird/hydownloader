@@ -1051,6 +1051,48 @@ DEFAULT_IMPORT_JOBS = """{
             ]
           }
         ]
+      },
+      {
+        "filter": "pstartswith(path, 'gallery-dl/furaffinity/')",
+        "tagReposForNonUrlSources": ["my tags"],
+        "tags": [
+          {
+            "name": "furaffinity generated tags",
+            "allowEmpty": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'furaffinity id:'+str(json_data['id'])",
+              "'booru:furaffinity'",
+              "'rating:'+json_data['rating']",
+              "'creator:'+json_data['artist']",
+              "'title:'+json_data['title']",
+              "('gender:'+json_data['gender']) if json_data['gender'] != 'Any' else ''",
+              "('species:'+json_data['species']) if json_data['species'] != 'Unspecified / Any' else ''"
+            ]
+          },
+          {
+            "name": "furaffinity tags",
+            "allowTagsEndingWithColon": true,
+            "allowEmpty": true,
+            "allowNoResult": true,
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": "[tag.replace('_', ' ') for tag in json_data['tags']]"
+          }
+        ],
+        "urls": [
+          {
+            "name": "furaffinity urls",
+            "allowEmpty": true,
+            "values": [
+              "json_data['url']",
+              "'https://www.furaffinity.net/view/'+str(json_data['id'])+'/'"
+            ]
+          }
+        ]
       }
     ]
   }
@@ -1673,6 +1715,12 @@ DEFAULT_GALLERY_DL_CONFIG = R"""{
         },
         
         "e621": {
+            "archive-format": "{id}"
+        },
+        
+        "furaffinity": {
+            "external": false,
+            "filename": "{id}.{extension}",
             "archive-format": "{id}"
         }
     }

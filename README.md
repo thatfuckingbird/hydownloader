@@ -125,6 +125,7 @@ leave the test environment untouched so you can investigate the error.
 | yande.re | yes | yes | yes |
 | rule34.xxx | yes | yes | yes |
 | e621.net | yes | yes | yes |
+| furaffinity.net | yes | yes | yes |
 | any other site that gallery-dl supports | no | mostly* | no |
 
 *Downloading works, automatically getting subscription info from URLs and checking file download status through API from the anchor database does not.
