@@ -89,7 +89,7 @@ def get_namespaces_tags(data: dict[str, Any], key_prefix : str = 'tags_', separa
 # }
 # data should be the tags entry like "json_data['tags']
 def get_nested_tags_e621(data: dict[str, Any]) -> list[str]:
-    tags = list[str]()
+    tags: list[str] = []
     for namespace in data.items():
         ns = namespace[0]
         if ns == 'invalid':
