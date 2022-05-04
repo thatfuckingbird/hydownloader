@@ -31,6 +31,7 @@ known_url_replacements = (
     ("&name=medium", "&name=orig"),
     ("&name=large", "&name=orig"),
     (r"(.*kemono\.party/.*)\?.*", "\\1"),
+    (r"(.*coomer\.party/.*)\?.*", "\\1"),
     (r"behoimi.org/post/show/([0-9]+)/.+", "behoimi.org/post/show/\\1"),
     (r"img[0-9].gelbooru.com", "img1.gelbooru.com"),
     (r"img[0-9].gelbooru.com", "img2.gelbooru.com"),
@@ -131,6 +132,11 @@ def subscription_data_to_url(downloader: str, keywords: str, allow_fail: bool = 
         return f"https://webtoons.com/{keywords}"
     if downloader == "kemonoparty":
         return f"https://kemono.party/{keywords}"
+    if downloader == "coomerparty":
+        # While coomer only supports onlyfans and this could be `/onlyfans/user/{keywords}`
+        # instead, it will be a massive pain for end users to edit their existing subs later
+        # if coomer adds other services.
+        return f"https://coomer.party/{keywords}"
     if downloader == "baraag":
         return f"https://baraag.net/@{keywords}"
     if downloader == "pawoo":
@@ -207,6 +213,8 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
         return ('webtoons', m.group('path'))
     if m := re.match(r"(?:https?://)?kemono\.party/(?P<service>[^/?#]+)/user/(?P<user>[^/?#]+)/?(?:$|[?#])", u):
         return ('kemonoparty', m.group('service')+"/user/"+m.group('user'))
+    if m := re.match(r"(?:https?://)?coomer\.party/(?P<service>[^/?#]+)/user/(?P<user>[^/?#]+)/?(?:$|[?#])", u):
+        return ('coomerparty', m.group('service')+"/user/"+m.group('user'))
     if m := re.match(r"https://baraag.net/@(?P<user>[^/?#]+)(?:/media)?/?$", u):
         return ('baraag', m.group('user'))
     if m := re.match(r"https://pawoo.net/@(?P<user>[^/?#]+)(?:/media)?/?$", u):
