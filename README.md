@@ -99,32 +99,32 @@ leave the test environment untouched so you can investigate the error.
 
 ## Site support
 
-| Site                                    | Anchor exporter | Subscriptions, single URL downloads | Test |
-|-----------------------------------------| --------------- | ----------------------------------- | ---- |
-| pixiv                                   | yes | yes | yes |
-| gelbooru                                | yes | yes | yes |
-| danbooru                                | yes | yes | yes |
-| lolibooru.moe                           | yes | yes | yes |
-| 3dbooru                                 | yes | yes | yes |
-| artstation                              | yes | yes | yes |
-| sankaku                                 | yes | yes | yes |
-| idolcomplex                             | yes | yes | yes |
-| twitter                                 | yes | yes | yes |
-| deviantart                              | yes | yes | yes |
-| patreon                                 | no | yes | yes |
-| nijie                                   | yes | yes | yes |
-| tumblr                                  | yes | yes | no |
-| fantia                                  | no | yes | no |
-| fanbox                                  | no | yes | no |
-| webtoons                                | no | yes | yes |
-| kemono.party                            | no | yes | no |
-| seiso.party                             | no | yes | no |
-| baraag                                  | no | yes | yes |
-| pawoo                                   | no | yes | yes |
-| hentaifoundry                           | yes | yes | yes |
-| yande.re                                | yes | yes | yes |
-| rule34.xxx                              | yes | yes | yes |
- | furaffinity.net                         | yes | yes | yes |
+| Site | Anchor exporter | Subscriptions, single URL downloads | Test |
+| ---- | --------------- | ----------------------------------- | ---- |
+| pixiv | yes | yes | yes |
+| gelbooru | yes | yes | yes |
+| danbooru | yes | yes | yes |
+| lolibooru.moe | yes | yes | yes |
+| 3dbooru | yes | yes | yes |
+| artstation | yes | yes | yes |
+| sankaku | yes | yes | yes |
+| idolcomplex | yes | yes | yes |
+| twitter | yes | yes | yes |
+| deviantart | yes | yes | yes |
+| patreon | no | yes | yes |
+| nijie | yes | yes | yes |
+| tumblr | yes | yes | no |
+| fantia | no | yes | no |
+| fanbox | no | yes | no |
+| webtoons | no | yes | yes |
+| kemono.party | no | yes | no |
+| seiso.party | no | yes | no |
+| baraag | no | yes | yes |
+| pawoo | no | yes | yes |
+| hentaifoundry | yes | yes | yes |
+| yande.re | yes | yes | yes |
+| rule34.xxx | yes | yes | yes |
+ | furaffinity.net | yes | yes | yes |
 | any other site that gallery-dl supports | no | mostly* | no |
 
 *Downloading works, automatically getting subscription info from URLs and checking file download status through API from the anchor database does not.
