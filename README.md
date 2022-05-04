@@ -118,6 +118,7 @@ leave the test environment untouched so you can investigate the error.
 | fanbox | no | yes | no |
 | webtoons | no | yes | yes |
 | kemono.party | no | yes | no |
+| coomer.party | no | yes | no |
 | seiso.party | no | yes | no |
 | baraag | no | yes | yes |
 | pawoo | no | yes | yes |

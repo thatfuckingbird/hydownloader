@@ -625,6 +625,25 @@ DEFAULT_IMPORT_JOBS = """{
         ]
       },
       {
+        "filter": "pstartswith(path, 'gallery-dl/coomerparty/')",
+        "tagReposForNonUrlSources": ["my tags"],
+        "tags": [
+          {
+            "name": "coomerparty generated tags",
+            "tagRepos": [
+              "my tags"
+            ],
+            "values": [
+              "'title:'+json_data['title']",
+              "'person:'+json_data['username']",
+              "'coomer.party service:'+json_data['service']",
+              "'coomer.party id:'+json_data['id']",
+              "'coomer.party user id:'+json_data['user']"
+            ]
+          }
+        ]
+      },
+      {
         "filter": "pstartswith(path, 'gallery-dl/directlink/')",
         "tagReposForNonUrlSources": ["my tags"],
         "urls": [
@@ -1604,6 +1623,11 @@ DEFAULT_GALLERY_DL_CONFIG = R"""{
         },
 
         "kemonoparty": {
+            "filename": "{id}_{hash}_{type[0]}_{num}.{extension}",
+            "archive-format": "{service}_{user}_{id}_{filename}_{type[0]}.{extension}"
+        },
+        
+        "coomerparty": {
             "filename": "{id}_{hash}_{type[0]}_{num}.{extension}",
             "archive-format": "{service}_{user}_{id}_{filename}_{type[0]}.{extension}"
         },
