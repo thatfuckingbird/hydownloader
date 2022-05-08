@@ -273,9 +273,9 @@ def anchor_patterns_from_url(url: str) -> list[str]:
         return [f"pixiv{m.group('id')}", f"pixiv{m.group('id')}_%"]
     if m := re.match(r"https?://(www\.|touch.)?pixiv\.(net|com)/member_illust\.php\?illust_id=(?P<id>[0-9]+)(&.*)?", u):
         return [f"pixiv{m.group('id')}", f"pixiv{m.group('id')}_%"]
-    if m := re.match(r"https?://(i(mg)?[0-9]+)\.pixiv\.(net|com)/img[0-9]*(/img)?/[^/]+/(?P<id>[0-9]+)((_|\.).*)?", u):
+    if m := re.match(r"https?://(i(mg)?[0-9]*)\.pixiv\.(net|com)/img[0-9]*(/img)?/[^/]+/(?P<id>[0-9]+)((_|\.).*)?", u):
         return [f"pixiv{m.group('id')}", f"pixiv{m.group('id')}_%"]
-    if m := re.match(r"https?://(i[0-9]+)\.pixiv\.(net|com)/(img-original|c/1200x1200/img-master)/img/([0-9]+/)+(?P<id>[0-9]+)((_|\.).*)?", u):
+    if m := re.match(r"https?://(i[0-9]*)(-f)?\.(pixiv|pximg)\.(net|com)/(img-original|c/1200x1200/img-master)/img/([0-9]+/)+(?P<id>[0-9]+)((_|\.).*)?", u):
         return [f"pixiv{m.group('id')}", f"pixiv{m.group('id')}_%"]
     if m := re.match(r"https?://(www\.|sp.)?nijie\.info/view(_popup)?\.php\?id=(?P<id>[0-9]+)(&.*)?", u):
         return [f"nijie{m.group('id')}", f"nijie{m.group('id')}_%"]

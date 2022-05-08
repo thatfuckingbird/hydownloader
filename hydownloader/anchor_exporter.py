@@ -192,7 +192,7 @@ def update_anchor(path: str, hydrus_db_folder: str, sites: str, unrecognized_url
         db.delete_all_hydrus_known_urls()
 
     sites_to_keywords : dict[str, Tuple[list[str], list[str]]] = {
-        'pixiv': (["pixi"],[]),
+        'pixiv': (["pixi", "pximg"],[]),
         'gelbooru': (["gelbooru"],[]),
         'nijie': (["nijie"],[]),
         'lolibooru': (['lolibooru'],[]),
