@@ -407,7 +407,7 @@ DEFAULT_IMPORT_JOBS = """{
               "my tags"
             ],
             "values": [
-              "'gelbooru id:'+json_data['id']",
+              "'gelbooru id:'+str(json_data['id'])",
               "'booru:gelbooru'",
               "'rating:'+json_data['rating']",
               "('title:'+json_data['title']) if json_data['title'] and json_data['title'].strip() else ''"
@@ -428,7 +428,7 @@ DEFAULT_IMPORT_JOBS = """{
             "allowEmpty": true,
             "values": [
               "json_data['file_url']",
-              "'https://gelbooru.com/index.php?page=post&s=view&id='+json_data['id']",
+              "'https://gelbooru.com/index.php?page=post&s=view&id='+str(json_data['id'])",
               "json_data['source']"
             ]
           }
