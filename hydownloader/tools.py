@@ -136,14 +136,14 @@ def test_internal(sites: str) -> bool:
             'anchors': ["danbooru4455434"]
         },
         'pixiv': {
-            'url': "https://www.pixiv.net/en/artworks/94515594",
+            'url': "https://www.pixiv.net/en/artworks/98309573",
             'filenames': {
-                "pixiv/5382985 bluetom1/94515594_p1.jpg.json": [],
-                "pixiv/5382985 bluetom1/94515594_p0.jpg.json": ['"name": "無職転生"'],
-                "pixiv/5382985 bluetom1/94515594_p1.jpg": [],
-                "pixiv/5382985 bluetom1/94515594_p0.jpg": []
+                "pixiv/39123643 zurimoku/98309573_p1.jpg.json": [],
+                "pixiv/39123643 zurimoku/98309573_p0.jpg.json": ['"name": "Belko"'],
+                "pixiv/39123643 zurimoku/98309573_p1.jpg": [],
+                "pixiv/39123643 zurimoku/98309573_p0.jpg": []
             },
-            'anchors': ["pixiv94515594_p00","pixiv94515594_p01"]
+            'anchors': ["pixiv98309573_p00","pixiv98309573_p01"]
         },
         'pixiv_ugoira': {
             'url': "https://www.pixiv.net/en/artworks/88748768",
