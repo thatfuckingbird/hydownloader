@@ -229,7 +229,7 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
         return ('rule34', m.group('keywords').lower())
     if m := re.match(r"https?://e621\.net/posts\?tags=(?P<keywords>[^&]+)(&.*)?", u):
         return ('e621', m.group('keywords').lower())
-    if m := re.match(r"https?://www\.furaffinity\.net/user/(?P<username>[^&]+)(&.*)?/", u):
+    if m := re.match(r"https?://www\.furaffinity\.net/(user|gallery|scraps|favorites|journal)/(?P<username>[^&]+)(&.*)?/?", u):
         return ('furaffinity', m.group('username').lower())
 
     return ('','')
@@ -324,7 +324,7 @@ def anchor_patterns_from_url(url: str) -> list[str]:
         return [f"rule34{m.group('id')}"]
     if m := re.match(r"https?://e621.net/posts/(?P<id>[0-9]+)(&.*)?", u):
         return [f"e621{m.group('id')}"]
-    if m := re.match(r"https?://www\.furaffinity\.net/view/(?P<id>[^&]+)(&.*)?/", u):
+    if m := re.match(r"https?://www\.furaffinity\.net/view/(?P<id>[^&]+)(&.*)?/?", u):
         return [f"furaffinity{m.group('id')}"]
 
     return []
