@@ -270,10 +270,16 @@ DEFAULT_IMPORT_JOBS = """{
         ],
         "urls": [
           {
-            "name": "newgrounds urls",
+            "name": "newgrounds url",
             "values": [
-              "json_data['url']",
-              "'https://www.newgrounds.com/portal/view/'+str(json_data['index'])"
+              "json_data['url']"
+            ]
+          },
+          {
+            "name": "newgrounds post url",
+            "skipOnError": true,
+            "values": [
+              "json_data['post_url']"
             ]
           }
         ]
@@ -1712,7 +1718,7 @@ DEFAULT_GALLERY_DL_CONFIG = R"""{
             "filename": "{id}_{hash}_{type[0]}_{num}.{extension}",
             "archive-format": "{service}_{user}_{id}_{filename}_{type[0]}.{extension}"
         },
-        
+
         "coomerparty": {
             "filename": "{id}_{hash}_{type[0]}_{num}.{extension}",
             "archive-format": "{service}_{user}_{id}_{filename}_{type[0]}.{extension}"
@@ -1733,15 +1739,15 @@ DEFAULT_GALLERY_DL_CONFIG = R"""{
         "ytdl": {
             "module": "yt_dlp"
         },
-        
+
         "rule34": {
             "archive-format": "{id}"
         },
-        
+
         "e621": {
             "archive-format": "{id}"
         },
-        
+
         "furaffinity": {
             "external": false,
             "filename": "{id}.{extension}",
