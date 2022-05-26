@@ -1492,6 +1492,7 @@ DEFAULT_GALLERY_DL_USER_CONFIG = R"""{
             "tags": "original",
             "ugoira": true,
             "metadata": true,
+            "include": "avatar,background,artworks",
             "ranking": {
                 "max-posts": 100
             }
