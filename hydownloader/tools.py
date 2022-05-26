@@ -561,7 +561,8 @@ def mass_add_subscriptions(path: str, file_: str, downloader: str, additional_da
 @cli.command(help='Download Pixiv user profile data for subscribed users (data will be saved to the logs folder).')
 @click.option('--path', type=str, required=True, help='Database path.')
 @click.option('--cookies', type=str, required=True, help='The cookies.txt file with your Pixiv cookies (to access R18 content).')
-def download_pixiv_user_profiles(path: str, cookies: str):
+@click.option('--user-agent', type=str, required=True, help='User agent (use the same one as the browser you exported the cookies from).')
+def download_pixiv_user_profiles(path: str, cookies: str, user_agent: str):
     log.init(path, True)
     db.init(path)
 
@@ -569,7 +570,7 @@ def download_pixiv_user_profiles(path: str, cookies: str):
     jar.load(ignore_discard=True, ignore_expires=True)
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.92 Safari/537.36'
+        'User-Agent': user_agent
     }
 
     # check if R18 content is visible, otherwise we will miss a lot of data
