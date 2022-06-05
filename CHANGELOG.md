@@ -1,3 +1,8 @@
+# 0.21.0 (2022-06-05)
+
+* Updated gallery-dl to 1.22.1
+* Instagram support
+
 # 0.20.0 (2022-05-26)
 
 * Updated dependencies (including gallery-dl update to 1.22.0)

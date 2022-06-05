@@ -100,7 +100,7 @@ graph = ["objgraph (>=1.7.2)"]
 
 [[package]]
 name = "gallery-dl"
-version = "1.22.0"
+version = "1.22.1"
 description = "Command-line program to download image galleries and collections from several image hosting sites"
 category = "main"
 optional = false
@@ -327,7 +327,7 @@ websockets = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "2f115978e7f0e24fe83575f8ae0d78c6da49d2dd9390f5a997bf2939122eb4c1"
+content-hash = "6cefab44b5568a2f6b554d298dce68cb1cfb77d9cea17752e02364e6952ec471"
 
 [metadata.files]
 astroid = [
@@ -507,8 +507,8 @@ dill = [
     {file = "dill-0.3.4.zip", hash = "sha256:9f9734205146b2b353ab3fec9af0070237b6ddae78452af83d2fca84d739e675"},
 ]
 gallery-dl = [
-    {file = "gallery_dl-1.22.0-py3-none-any.whl", hash = "sha256:ea339bfbad74ee947b45feb632ddfe290720bdf41e34bcb1135f654b0e7c0d02"},
-    {file = "gallery_dl-1.22.0.tar.gz", hash = "sha256:ee0b259ed6008c7da74b254a8e87c2daeb63a73428dda3550f5c394ad1e4dbcf"},
+    {file = "gallery_dl-1.22.1-py3-none-any.whl", hash = "sha256:d2c054e7a7a52e319b35242e716ec4c4ff2b8943f61ec700774aa9fc43b097b6"},
+    {file = "gallery_dl-1.22.1.tar.gz", hash = "sha256:1811b8d841fc531e6770b3e8d3bae3c87c999caf3ffaf7790630029781fe9301"},
 ]
 hydrus-api = [
     {file = "hydrus-api-3.22.7.tar.gz", hash = "sha256:0357911ebf5fafc99178587caf9e629585aea7349d42b24878b1d5d50a5b9b4e"},
