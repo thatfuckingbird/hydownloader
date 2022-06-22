@@ -291,6 +291,13 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
 
     log.info("hydownloader-importer", f"Starting import job: {job}")
 
+    # Counts for scanned files
+    existing = 0
+    imported = 0
+    deleted = 0
+    skipped = 0
+    ignored = 0
+
     # iterate over all files in the data directory
     for root, _, files in os.walk(effective_path):
         # sort files before iterating over them
@@ -305,6 +312,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
 
         for fname in files:
             if skip_file(fname):
+                ignored = ignored + 1
                 continue
 
             abspath = root + "/" + fname
@@ -368,6 +376,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                     if potential_fileurl_keys:
                         json_data["gallerydl_file_url"] = json_data[potential_fileurl_keys[0]]
                 if not should_process:
+                    skipped = skipped + 1
                     continue
                 if not metadata_only:
                     matched = True
@@ -516,16 +525,28 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                     hexdigest = hasher.hexdigest()
                     if any(map(lambda x: x.get("is_local", False), client.get_file_metadata(hashes=[hexdigest]))):
                         printerr("File is already in Hydrus", False)
+                        existing = existing + 1
                         already_added = True
                 if verbose: printerr(f'Hash: {hexdigest}', False)
                 # send file, tags, metadata to Hydrus as needed
                 if not already_added or force_add_files:
                     if verbose: printerr("Sending file to Hydrus...", False)
                     if do_it:
+                        response: dict
+                        # import the file, get the response
                         if path_based_import:
-                            client.add_file(abspath)
+                            response = client.add_file(abspath)
                         else:
-                            client.add_file(io.BytesIO(open(abspath, 'rb').read()))
+                            response = client.add_file(io.BytesIO(open(abspath, 'rb').read()))
+
+                        # update counts based on result, existing is checked for previously
+                        if response['status'] == 1:
+                            imported = imported + 1
+                        elif response['status'] == 3:
+                            printerr(f'Failed to import, file is deleted!', False)
+                            deleted = deleted + 1
+                        elif response['status'] > 3:
+                            printerr(f'Failed to import, status is ' + str(response['status']), True)
                 if not already_added or not no_force_add_metadata:
                     if verbose: printerr("Associating URLs...", False)
                     if do_it and generated_urls_filtered: client.associate_url(hashes=[hexdigest],urls_to_add=generated_urls_filtered)
@@ -544,6 +565,15 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                 if verbose: printerr(f"Skipping due to no matching filter: {path}", False)
 
     log.info("hydownloader-importer", f"Finished import job: {job}")
+    total = existing + imported + deleted
+    log.info("hydownloader-importer", f"imported: {imported}")
+    log.info("hydownloader-importer", f"existing: {existing}")
+    log.info("hydownloader-importer", f" deleted: {deleted}")
+    log.info("hydownloader-importer", f"   total: {total}")
+    log.info("hydownloader-importer",  "---------------")
+    log.info("hydownloader-importer", f" skipped: {skipped}")
+    log.info("hydownloader-importer", f" ignored: {ignored}")
+    log.info("hydownloader-importer", f"     all: {total + skipped + ignored}")
     db.shutdown()
 
 def main() -> None:
