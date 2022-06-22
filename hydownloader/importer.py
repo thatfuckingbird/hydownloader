@@ -298,6 +298,10 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
     skipped = 0
     ignored = 0
 
+    # Set of files which failed to import
+    # Using a set to prevent duplicate entries when doing a dry run
+    import_errors = set()
+
     # iterate over all files in the data directory
     for root, _, files in os.walk(effective_path):
         # sort files before iterating over them
@@ -346,6 +350,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
             raw_metadata = None
             if not os.path.isfile(json_path):
                 json_exists = False
+                import_errors.add(path)
                 printerr(f"Warning: no metadata file found for {path}", not no_abort_on_missing_metadata)
             else:
                 raw_metadata = open(json_path, "rb").read()
@@ -366,11 +371,13 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                 try:
                     should_process = eval(group['filter'])
                 except:
+                    import_errors.add(path)
                     printerr(f"Failed to evaluate filter: {group['filter']}", not no_abort_on_error)
                 if not json_data and json_exists:
                     try:
                         json_data = json.load(open(json_path,encoding='utf-8-sig'))
                     except json.decoder.JSONDecodeError:
+                        import_errors.add(path)
                         printerr(f"Failed to parse JSON: {json_path}", not no_abort_on_error)
                 # add back the old "gallerydl_file_url" key if it does not already exist
                 if json_data and not "gallerydl_file_url" in json_data:
@@ -429,10 +436,12 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                             else:
                                 for eval_res_str in eval_res:
                                     if not isinstance(eval_res_str, str):
+                                        import_errors.add(path)
                                         printerr(f"Invalid result type ({str(type(eval_res_str))}) while evaluating expression: {d['values']}", not no_abort_on_error)
                                     else:
                                         generated_results.append(eval_res_str)
                         except Exception as e:
+                            import_errors.add(path)
                             if verbose and not skip_on_error:
                                 printerr(f"Failed to evaluate expression: {d['values']}", False)
                                 print(e)
@@ -447,10 +456,12 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                                 else:
                                     for eval_res_str in eval_res:
                                         if not isinstance(eval_res_str, str):
+                                            import_errors.add(path)
                                             printerr(f"Invalid result type ({str(type(eval_res_str))}) while evaluating expression: {eval_expr}", not no_abort_on_error)
                                         else:
                                             generated_results.append(eval_res_str)
                             except Exception as e:
+                                import_errors.add(path)
                                 if verbose and not skip_on_error:
                                     printerr(f"Failed to evaluate expression: {eval_expr}", False)
                                     printerr(e, not no_abort_on_error)
@@ -458,15 +469,19 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
 
                     # check for empty results or failed evaluation, as necessary
                     if not generated_results and not allow_no_result and not has_error:
+                        import_errors.add(path)
                         printerr(f"Error: the rule named {rule_name} yielded no results but this is not allowed", not no_abort_on_error)
                     if '' in generated_results and not allow_empty and not has_error:
+                        import_errors.add(path)
                         printerr(f"Error: the rule named {rule_name} yielded an empty result but this is not allowed", not no_abort_on_error)
                     if dtype == 'tag' and not allow_tags_ending_with_colon:
                         for gentag in generated_results:
                             if gentag.strip().endswith(':'):
+                                import_errors.add(path)
                                 printerr(f"Error: the rule named {rule_name} yielded a tag ending with ':' ({gentag})", not no_abort_on_error)
                     if has_error:
                         if not skip_on_error:
+                            import_errors.add(path)
                             printerr(f"Error: an expression failed to evaluate in the rule named {rule_name}", not no_abort_on_error)
 
                     # save results of the currently evaluated expressions
@@ -479,6 +494,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                         else: # tag repos should be extracted from the tags
                             for tag in generated_results:
                                 if not ":" in tag:
+                                    import_errors.add(path)
                                     printerr(f"The generated tag '{tag}' must start with a tag repo name. In rule: {rule_name}.", not no_abort_on_error)
                                 else:
                                     repo = tag.split(":")[0]
@@ -488,6 +504,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                 printerr(f"File matched: {path}...", False)
 
                 if not os.path.getsize(abspath):
+                    import_errors.add(path)
                     printerr(f"Found truncated file, won't be imported: {abspath}", not no_abort_on_error)
                     continue
 
@@ -548,7 +565,8 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                             printerr(f'Failed to import, file is deleted!', False)
                             deleted = deleted + 1
                         elif response['status'] > 3:
-                            printerr(f'Failed to import, status is ' + str(response['status']), True)
+                            import_errors.add(path)
+                            printerr(f'Failed to import, status is ' + str(response['status']), False)
                 if not already_added or not no_force_add_metadata:
                     if verbose: printerr("Associating URLs...", False)
                     if do_it and generated_urls_filtered: client.associate_url(hashes=[hexdigest],urls_to_add=generated_urls_filtered)
@@ -577,6 +595,11 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
     log.info("hydownloader-importer", f" skipped: {skipped}")
     log.info("hydownloader-importer", f" ignored: {ignored}")
     log.info("hydownloader-importer", f"     all: {total + skipped + ignored}")
+    log.info("hydownloader-importer", "---------------")
+    log.info("hydownloader-importer", f"{len(import_errors)} File(s) Failed to Import")
+    for fname in import_errors:
+        log.warning("hydownloader-importer", fname)
+
     db.shutdown()
 
 def main() -> None:
