@@ -318,6 +318,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
             abspath = root + "/" + fname
             path = os.path.relpath(abspath, start = data_path)
             if filename_regex and not re.match(filename_regex, path):
+                skipped = skipped + 1
                 continue
 
             # set up some variables
@@ -332,6 +333,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
             if skip_already_imported and is_file_in_import_db:
                 if not (no_skip_on_differing_times and (db_mtime != mtime or db_ctime != ctime)):
                     if verbose: printerr(f"Already imported, skipping: {path}...", False)
+                    skipped = skipped + 1
                     continue
 
             # find the path of the associated json metadata file, check if it exists
@@ -562,6 +564,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                     db.sync()
 
             else:
+                skipped = skipped + 1
                 if verbose: printerr(f"Skipping due to no matching filter: {path}", False)
 
     log.info("hydownloader-importer", f"Finished import job: {job}")
