@@ -153,7 +153,8 @@ def subscription_data_to_url(downloader: str, keywords: str, allow_fail: bool = 
         return f"https://e621.net/posts?tags={keywords}"
     if downloader == "furaffinity":
         return f"https://www.furaffinity.net/user/{keywords}/"
-
+    if downloader == "instagram":
+                return f"https://instagram.com/{keywords}"
     if not allow_fail:
         log.fatal("hydownloader", f"Invalid downloader: {downloader}")
     else:
@@ -231,7 +232,12 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
         return ('e621', m.group('keywords').lower())
     if m := re.match(r"https?://www\.furaffinity\.net/(user|gallery|scraps|favorites|journal)/(?P<username>[^&]+)(&.*)?/?", u):
         return ('furaffinity', m.group('username').lower())
-
+    if m := re.match(r"https?://(www\.)instagram\.com/p/(?P<shortcode>[^/]+)/?", u):
+        return ('instagram', m.group('shortcode'))
+    if m := re.match(r"https?://(www\.)instagram\.com/stories/highlights/(?P<storyid>[^/]+)?", u):
+        return ('instagram', m.group('storyid').lower())
+    if (m := re.match(r"https?://(www\.)instagram\.com/(?P<username>[^/]+)/?", u)) and not m.group('username') in ['p', 'stories', 'tv', 'reel']:
+        return ('instagram', m.group('username').lower())
     return ('','')
 
 def anchor_patterns_from_url(url: str) -> list[str]:

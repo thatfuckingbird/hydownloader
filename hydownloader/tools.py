@@ -103,7 +103,7 @@ def check_results_of_post_url(data: dict, sitename: str) -> bool:
 
 @cli.command(help='Test downloading from a list of sites.')
 @click.option('--path', type=str, required=True, help='Database path.')
-@click.option('--sites', type=str, required=True, help='A comma-separated list of sites to test downloading from. Currently supported: environment, gelbooru, pixiv, lolibooru, patreon, danbooru, 3dbooru, nijie, sankaku, idolcomplex, artstation, twitter, deviantart, webtoons, baraag, pawoo, yandere, hentaifoundry, rule34, e621, furaffinity. WARNING: this will attempt to download "sensitive" content.')
+@click.option('--sites', type=str, required=True, help='A comma-separated list of sites to test downloading from. Currently supported: environment, gelbooru, pixiv, lolibooru, patreon, danbooru, 3dbooru, nijie, sankaku, idolcomplex, artstation, twitter, deviantart, webtoons, baraag, pawoo, yandere, hentaifoundry, rule34, e621, furaffinity, instagram. WARNING: this will attempt to download "sensitive" content.')
 def test(path: str, sites: str) -> None:
     log.init(path, True)
     db.init(path)
@@ -292,6 +292,14 @@ def test_internal(sites: str) -> bool:
                 'furaffinity/bermasin/45398142.jpg': [],
                 'furaffinity/bermasin/45398142.jpg.json': ['"artist": "bermasin"']
             }
+        },
+        'instagram': {
+            'url': "https://www.instagram.com/p/CdYF0WmuDnm/",
+            'filenames': {
+                "instagram/gigihadid/2835041553347000806_2835041547869314463.jpg": [],
+                "instagram/gigihadid/2835041553347000806_2835041547869314463.jpg.json": ['"username": "gigihadid",']
+            },
+            'anchors': ["instagram2835041547869314463"]
         }
     }
 
@@ -311,8 +319,8 @@ def test_internal(sites: str) -> bool:
             try:
                 if version_str.endswith("-dev"): version_str = version_str[:-4]
                 major, minor, patch = tuple(map(int, version_str.split('.')))
-                if major != 1 or minor < 21 or minor == 21 and patch < 2:
-                    log.error('hydownloader-test', f"Bad gallery-dl version: {version_str}, need 1.21.2 or newer")
+                if major != 1 or minor < 22 or minor == 22 and patch < 1:
+                    log.error('hydownloader-test', f"Bad gallery-dl version: {version_str}, need 1.22.1 or newer")
                     should_break = True
                 else:
                     log.info('hydownloader-test', f"Found gallery-dl version: {version_str}, this is OK")
@@ -432,6 +440,9 @@ def test_internal(sites: str) -> bool:
         elif site == "furaffinity":
             log.info("hydownloader-test", "Testing furaffinity.net...")
             should_break = not check_results_of_post_url(post_url_data['furaffinity'], site) or should_break
+        elif site == "instagram":
+            log.info("hydownloader-test", "Testing instagram...")
+            should_break = not check_results_of_post_url(post_url_data['instagram'], site) or should_break
         else:
             log.error("hydownloader-test", f"Site name not recognized: {site}, no testing done")
             return False
@@ -561,7 +572,8 @@ def mass_add_subscriptions(path: str, file_: str, downloader: str, additional_da
 @cli.command(help='Download Pixiv user profile data for subscribed users (data will be saved to the logs folder).')
 @click.option('--path', type=str, required=True, help='Database path.')
 @click.option('--cookies', type=str, required=True, help='The cookies.txt file with your Pixiv cookies (to access R18 content).')
-def download_pixiv_user_profiles(path: str, cookies: str):
+@click.option('--user-agent', type=str, required=True, help='User agent (use the same one as the browser you exported the cookies from).')
+def download_pixiv_user_profiles(path: str, cookies: str, user_agent: str):
     log.init(path, True)
     db.init(path)
 
@@ -569,7 +581,7 @@ def download_pixiv_user_profiles(path: str, cookies: str):
     jar.load(ignore_discard=True, ignore_expires=True)
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.92 Safari/537.36'
+        'User-Agent': user_agent
     }
 
     # check if R18 content is visible, otherwise we will miss a lot of data

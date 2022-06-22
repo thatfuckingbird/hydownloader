@@ -1,3 +1,18 @@
+# 0.21.0 (2022-06-05)
+
+* Updated gallery-dl to 1.22.1
+* Instagram support
+
+# 0.20.0 (2022-05-26)
+
+* Updated dependencies (including gallery-dl update to 1.22.0)
+* Added the `--subdir` command line argument to hydownloader-importer
+* Added support for coomer.party, Furaffinity and e621
+* Some more pixiv direct file URLs are recognized now
+* Default importer rules: update rules for newgrounds URLs
+* Default importer rules: fix gelbooru ID tags and URLs
+* Default gallery-dl configuration: Pixiv artist profile backgrounds and avatars are also downloaded now (in addition to artworks)
+
 # 0.19.0 (2022-04-28)
 
 * Added command to hydownloader-tools for downloading Pixiv user profile data
