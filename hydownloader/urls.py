@@ -330,7 +330,7 @@ def anchor_patterns_from_url(url: str) -> list[str]:
         return [f"rule34{m.group('id')}"]
     if m := re.match(r"https?://e621.net/posts/(?P<id>[0-9]+)(&.*)?", u):
         return [f"e621{m.group('id')}"]
-    if m := re.match(r"https?://www\.furaffinity\.net/view/(?P<id>[^&]+)(&.*)?/?", u):
+    if m := re.match(r"https?://www\.furaffinity\.net/view/(?P<id>[^&]+)(&.*)?/", u):
         return [f"furaffinity{m.group('id')}"]
 
     return []
