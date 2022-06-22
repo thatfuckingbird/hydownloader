@@ -259,10 +259,12 @@ def clear_imported(path: str, action: str, do_it: bool, no_skip_on_differing_tim
 @click.option('--no-abort-on-missing-metadata', type=bool, is_flag=True, show_default=True, default=False, help='Do not stop importing when a metadata file is not found.')
 @click.option('--filename-regex', type=str, default=None, show_default=True, help='Only run the importer on files whose filepath matches the regex given here. This is an additional restriction on top of the filters defined in the import job.')
 @click.option('--no-abort-on-error', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort on errors. Useful to check for any potential errors before actually importing files.')
+@click.option('--no-abort-when-truncated', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort when a file is truncated. Subset of errors covered wtih \'--no-abort-on-error\'')
+@click.option('--no-abort-on-hydrus-import-failure', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort when hydrus fails to import a file due to corruption, truncation, or being veto\'d. Subset of errors covered wtih \'--no-abort-on-error\'')
 @click.option('--no-force-add-metadata', type=bool, default=False, show_default=True, is_flag=True, help='Do not add metadata for files already in Hydrus.')
 @click.option('--force-add-files', type=bool, default=False, show_default=True, is_flag=True, help='Send files to Hydrus even if they are already in Hydrus.')
 @click.option('--subdir', type=str, default=None, show_default=True, help='Only scan a subdirectory within the database\'s \'gallery-dl\' folder to target specific files, e.g. \'gelbooru/tag\' to import a specific gelbooru tag.')
-def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differing_times: bool, config: Optional[str], verbose: bool, do_it: bool, no_abort_on_missing_metadata: bool, filename_regex: Optional[str], no_abort_on_error: bool, no_force_add_metadata: bool, force_add_files: bool, subdir: Optional[str]) -> None:
+def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differing_times: bool, config: Optional[str], verbose: bool, do_it: bool, no_abort_on_missing_metadata: bool, filename_regex: Optional[str], no_abort_on_error: bool, no_abort_when_truncated: bool, no_abort_on_hydrus_import_failure: bool, no_force_add_metadata: bool, force_add_files: bool, subdir: Optional[str]) -> None:
     log.init(path, True)
     db.init(path)
 
@@ -505,7 +507,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
 
                 if not os.path.getsize(abspath):
                     import_errors.add(path)
-                    printerr(f"Found truncated file, won't be imported: {abspath}", not no_abort_on_error)
+                    printerr(f"Found truncated file, won't be imported: {abspath}", not (no_abort_on_error or no_abort_when_truncated))
                     continue
 
                 generated_urls_filtered : list[str] = []
@@ -566,7 +568,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                             deleted = deleted + 1
                         elif response['status'] > 3:
                             import_errors.add(path)
-                            printerr(f'Failed to import, status is ' + str(response['status']), False)
+                            printerr(f'Failed to import, status is ' + str(response['status']), not (no_abort_on_error or no_abort_on_hydrus_import_failure))
                 if not already_added or not no_force_add_metadata:
                     if verbose: printerr("Associating URLs...", False)
                     if do_it and generated_urls_filtered: client.associate_url(hashes=[hexdigest],urls_to_add=generated_urls_filtered)
