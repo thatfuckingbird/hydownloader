@@ -130,6 +130,25 @@ def convtime(time: str) -> str:
 def convdatetime(datetime: str) -> str:
     return dateutil.parser.parse(datetime).strftime("%Y-%m-%d %H:%M:%S")
 
+def skip_file(fname: str) -> bool:
+    # json files hold metadata, don't import them to Hydrus
+    if fname.endswith('.json'):
+        return True
+
+    # skip files still being downloaded
+    if fname.endswith('.part'):
+        return True
+
+    # already imported file
+    if fname.endswith('.HYDL-IMPORTED'):
+        return True
+
+    # Skip windows 'Thumbs.db` file
+    if fname == 'Thumbs.db':
+        return True
+
+    return False
+
 @click.group()
 def cli() -> None:
     pass
@@ -190,16 +209,7 @@ def clear_imported(path: str, action: str, do_it: bool, no_skip_on_differing_tim
     data_path = db.get_datapath()
     for root, _, files in os.walk(data_path):
         for fname in files:
-            # json files hold metadata, don't import them to Hydrus
-            if fname.endswith('.json'):
-                continue
-
-            # skip files still being downloaded
-            if fname.endswith('.part'):
-                continue
-
-            # already imported file
-            if fname.endswith('.HYDL-IMPORTED'):
+            if skip_file(fname):
                 continue
 
             abspath = root + "/" + fname
@@ -294,16 +304,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
             printerr("The value of the orderFolderContents option is invalid", True)
 
         for fname in files:
-            # json files hold metadata, don't import them to Hydrus
-            if fname.endswith('.json'):
-                continue
-
-            # skip files still being downloaded
-            if fname.endswith('.part'):
-                continue
-
-            # already imported file
-            if fname.endswith('.HYDL-IMPORTED'):
+            if skip_file(fname):
                 continue
 
             abspath = root + "/" + fname
