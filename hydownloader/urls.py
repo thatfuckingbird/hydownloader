@@ -230,7 +230,7 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
         return ('rule34', m.group('keywords').lower())
     if m := re.match(r"https?://e621\.net/posts\?tags=(?P<keywords>[^&]+)(&.*)?", u):
         return ('e621', m.group('keywords').lower())
-    if m := re.match(r"https?://www\.furaffinity\.net/user/(?P<username>[^&]+)(&.*)?/", u):
+    if m := re.match(r"https?://www\.furaffinity\.net/(user|gallery|scraps|favorites|journal)/(?P<username>[^&]+)(&.*)?/", u):
         return ('furaffinity', m.group('username').lower())
     if m := re.match(r"https?://(www\.)instagram\.com/p/(?P<shortcode>[^/]+)/?", u):
         return ('instagram', m.group('shortcode'))
