@@ -446,9 +446,9 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                                         generated_results.append(eval_res_str)
                         except Exception as e:
                             import_errors.add(path)
-                            if verbose and not (skip_on_error or no_abort_on_job_error):
+                            if verbose and not skip_on_error:
                                 printerr(f"Failed to evaluate expression: {d['values']}", False)
-                                print(e)
+                                print(e, True)
                             has_error = True
                     else: # multiple expressions (array of strings)
                         for eval_expr in d["values"]:
@@ -466,7 +466,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                                             generated_results.append(eval_res_str)
                             except Exception as e:
                                 import_errors.add(path)
-                                if verbose and not (skip_on_error or no_abort_on_job_error):
+                                if verbose and not skip_on_error:
                                     printerr(f"Failed to evaluate expression: {eval_expr}", False)
                                     printerr(e, not no_abort_on_error)
                                 has_error = True
