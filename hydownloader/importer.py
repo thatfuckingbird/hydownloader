@@ -324,6 +324,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
             abspath = root + "/" + fname
             path = os.path.relpath(abspath, start = data_path)
             if filename_regex and not re.match(filename_regex, path):
+                if verbose: printerr(f"Skipping due regex mismatch: {path}", False)
                 skipped = skipped + 1
                 continue
 
@@ -387,7 +388,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                     if potential_fileurl_keys:
                         json_data["gallerydl_file_url"] = json_data[potential_fileurl_keys[0]]
                 if not should_process:
-                    skipped = skipped + 1
+                    # Don't count skipped here, this logic goes over all filter groups
                     continue
                 if not metadata_only:
                     matched = True
