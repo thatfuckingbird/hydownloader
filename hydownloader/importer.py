@@ -256,15 +256,16 @@ def clear_imported(path: str, action: str, do_it: bool, no_skip_on_differing_tim
 @click.option('--config', type=str, required=False, default=None, show_default=True, help='Import job configuration filepath override.')
 @click.option('--verbose', type=bool, is_flag=True, default=False, show_default=True, help='Print generated metadata and other information.')
 @click.option('--do-it', type=bool, is_flag=True, default=False, show_default=True, help='Actually do the importing. Off by default.')
-@click.option('--no-abort-on-missing-metadata', type=bool, is_flag=True, show_default=True, default=False, help='Do not stop importing when a metadata file is not found.')
 @click.option('--filename-regex', type=str, default=None, show_default=True, help='Only run the importer on files whose filepath matches the regex given here. This is an additional restriction on top of the filters defined in the import job.')
-@click.option('--no-abort-on-error', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort on errors. Useful to check for any potential errors before actually importing files.')
+@click.option('--no-abort-on-error', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort on any error. Useful to check for any potential errors before actually importing files.')
+@click.option('--no-abort-on-missing-metadata', type=bool, default=False, show_default=True, is_flag=True, help='Do not stop importing when a metadata file is not found.')
+@click.option('--no-abort-on-job-error', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort on erros with job rules.')
 @click.option('--no-abort-when-truncated', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort when a file is truncated. Subset of errors covered wtih \'--no-abort-on-error\'')
 @click.option('--no-abort-on-hydrus-import-failure', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort when hydrus fails to import a file due to corruption, truncation, or being veto\'d. Subset of errors covered wtih \'--no-abort-on-error\'')
 @click.option('--no-force-add-metadata', type=bool, default=False, show_default=True, is_flag=True, help='Do not add metadata for files already in Hydrus.')
 @click.option('--force-add-files', type=bool, default=False, show_default=True, is_flag=True, help='Send files to Hydrus even if they are already in Hydrus.')
 @click.option('--subdir', type=str, default=None, show_default=True, help='Only scan a subdirectory within the database\'s \'gallery-dl\' folder to target specific files, e.g. \'gelbooru/tag\' to import a specific gelbooru tag.')
-def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differing_times: bool, config: Optional[str], verbose: bool, do_it: bool, no_abort_on_missing_metadata: bool, filename_regex: Optional[str], no_abort_on_error: bool, no_abort_when_truncated: bool, no_abort_on_hydrus_import_failure: bool, no_force_add_metadata: bool, force_add_files: bool, subdir: Optional[str]) -> None:
+def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differing_times: bool, config: Optional[str], verbose: bool, do_it: bool, filename_regex: Optional[str], no_abort_on_error: bool, no_abort_on_missing_metadata: bool, no_abort_on_job_error: bool, no_abort_when_truncated: bool, no_abort_on_hydrus_import_failure: bool, no_force_add_metadata: bool, force_add_files: bool, subdir: Optional[str]) -> None:
     log.init(path, True)
     db.init(path)
 
@@ -354,7 +355,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
             if not os.path.isfile(json_path):
                 json_exists = False
                 import_errors.add(path)
-                printerr(f"Warning: no metadata file found for {path}", not no_abort_on_missing_metadata)
+                printerr(f"Warning: no metadata file found for {path}", not (no_abort_on_error or no_abort_on_missing_metadata))
             else:
                 raw_metadata = open(json_path, "rb").read()
 
@@ -375,7 +376,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                     should_process = eval(group['filter'])
                 except:
                     import_errors.add(path)
-                    printerr(f"Failed to evaluate filter: {group['filter']}", not no_abort_on_error)
+                    printerr(f"Failed to evaluate filter: {group['filter']}", not (no_abort_on_error or no_abort_on_job_error))
                 if not json_data and json_exists:
                     try:
                         json_data = json.load(open(json_path,encoding='utf-8-sig'))
@@ -440,12 +441,12 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                                 for eval_res_str in eval_res:
                                     if not isinstance(eval_res_str, str):
                                         import_errors.add(path)
-                                        printerr(f"Invalid result type ({str(type(eval_res_str))}) while evaluating expression: {d['values']}", not no_abort_on_error)
+                                        printerr(f"Invalid result type ({str(type(eval_res_str))}) while evaluating expression: {d['values']}", not (no_abort_on_error or no_abort_on_job_error))
                                     else:
                                         generated_results.append(eval_res_str)
                         except Exception as e:
                             import_errors.add(path)
-                            if verbose and not skip_on_error:
+                            if verbose and not (skip_on_error or no_abort_on_job_error):
                                 printerr(f"Failed to evaluate expression: {d['values']}", False)
                                 print(e)
                             has_error = True
@@ -460,12 +461,12 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                                     for eval_res_str in eval_res:
                                         if not isinstance(eval_res_str, str):
                                             import_errors.add(path)
-                                            printerr(f"Invalid result type ({str(type(eval_res_str))}) while evaluating expression: {eval_expr}", not no_abort_on_error)
+                                            printerr(f"Invalid result type ({str(type(eval_res_str))}) while evaluating expression: {eval_expr}", not (no_abort_on_error or no_abort_on_job_error))
                                         else:
                                             generated_results.append(eval_res_str)
                             except Exception as e:
                                 import_errors.add(path)
-                                if verbose and not skip_on_error:
+                                if verbose and not (skip_on_error or no_abort_on_job_error):
                                     printerr(f"Failed to evaluate expression: {eval_expr}", False)
                                     printerr(e, not no_abort_on_error)
                                 has_error = True
@@ -473,19 +474,19 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                     # check for empty results or failed evaluation, as necessary
                     if not generated_results and not allow_no_result and not has_error:
                         import_errors.add(path)
-                        printerr(f"Error: the rule named {rule_name} yielded no results but this is not allowed", not no_abort_on_error)
+                        printerr(f"Error: the rule named {rule_name} yielded no results but this is not allowed", not (no_abort_on_error or no_abort_on_job_error))
                     if '' in generated_results and not allow_empty and not has_error:
                         import_errors.add(path)
-                        printerr(f"Error: the rule named {rule_name} yielded an empty result but this is not allowed", not no_abort_on_error)
+                        printerr(f"Error: the rule named {rule_name} yielded an empty result but this is not allowed", not (no_abort_on_error or no_abort_on_job_error))
                     if dtype == 'tag' and not allow_tags_ending_with_colon:
                         for gentag in generated_results:
                             if gentag.strip().endswith(':'):
                                 import_errors.add(path)
-                                printerr(f"Error: the rule named {rule_name} yielded a tag ending with ':' ({gentag})", not no_abort_on_error)
+                                printerr(f"Error: the rule named {rule_name} yielded a tag ending with ':' ({gentag})", not (no_abort_on_error or no_abort_on_job_error))
                     if has_error:
                         if not skip_on_error:
                             import_errors.add(path)
-                            printerr(f"Error: an expression failed to evaluate in the rule named {rule_name}", not no_abort_on_error)
+                            printerr(f"Error: an expression failed to evaluate in the rule named {rule_name}", not (no_abort_on_error or no_abort_on_job_error))
 
                     # save results of the currently evaluated expressions
                     if dtype == 'url':
@@ -498,7 +499,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                             for tag in generated_results:
                                 if not ":" in tag:
                                     import_errors.add(path)
-                                    printerr(f"The generated tag '{tag}' must start with a tag repo name. In rule: {rule_name}.", not no_abort_on_error)
+                                    printerr(f"The generated tag '{tag}' must start with a tag repo name. In rule: {rule_name}.", not (no_abort_on_error or no_abort_on_job_error))
                                 else:
                                     repo = tag.split(":")[0]
                                     actual_tag = ":".join(tag.split(":")[1:])
