@@ -324,7 +324,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
             abspath = root + "/" + fname
             path = os.path.relpath(abspath, start = data_path)
             if filename_regex and not re.match(filename_regex, path):
-                if verbose: printerr(f"Skipping due regex mismatch: {path}", False)
+                if verbose: printerr(f"Skipping due to regex mismatch: {path}", False)
                 skipped = skipped + 1
                 continue
 
