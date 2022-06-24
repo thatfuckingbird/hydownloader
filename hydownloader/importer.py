@@ -601,7 +601,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
     log.info("hydownloader-importer", f"     all: {total + skipped + ignored}")
     log.info("hydownloader-importer", "---------------")
     if len(import_errors) == 0:
-        log.info("hydownloader-importer", f"{len(import_errors)} Files Failed to Import")
+        log.info("hydownloader-importer", f"{len(import_errors)} files failed to import")
     else:
         log.warning("hydownloader-importer", f"{len(import_errors)} File(s) Failed to Import")
     for fname in import_errors:
