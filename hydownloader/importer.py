@@ -261,7 +261,7 @@ def clear_imported(path: str, action: str, do_it: bool, no_skip_on_differing_tim
 @click.option('--no-abort-on-missing-metadata', type=bool, default=False, show_default=True, is_flag=True, help='Do not stop importing when a metadata file is not found.')
 @click.option('--no-abort-on-job-error', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort on erros with job rules.')
 @click.option('--no-abort-when-truncated', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort when a file is truncated. Subset of errors covered with \'--no-abort-on-error\'')
-@click.option('--no-abort-on-hydrus-import-failure', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort when hydrus fails to import a file due to corruption, truncation, or being veto\'d. Subset of errors covered wtih \'--no-abort-on-error\'')
+@click.option('--no-abort-on-hydrus-import-failure', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort when hydrus fails to import a file due to corruption, truncation, or being vetoed. Subset of errors covered with \'--no-abort-on-error\'')
 @click.option('--no-force-add-metadata', type=bool, default=False, show_default=True, is_flag=True, help='Do not add metadata for files already in Hydrus.')
 @click.option('--force-add-files', type=bool, default=False, show_default=True, is_flag=True, help='Send files to Hydrus even if they are already in Hydrus.')
 @click.option('--subdir', type=str, default=None, show_default=True, help='Only scan a subdirectory within the database\'s \'gallery-dl\' folder to target specific files, e.g. \'gelbooru/tag\' to import a specific gelbooru tag.')
