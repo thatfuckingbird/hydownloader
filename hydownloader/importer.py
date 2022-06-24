@@ -257,7 +257,7 @@ def clear_imported(path: str, action: str, do_it: bool, no_skip_on_differing_tim
 @click.option('--verbose', type=bool, is_flag=True, default=False, show_default=True, help='Print generated metadata and other information.')
 @click.option('--do-it', type=bool, is_flag=True, default=False, show_default=True, help='Actually do the importing. Off by default.')
 @click.option('--filename-regex', type=str, default=None, show_default=True, help='Only run the importer on files whose filepath matches the regex given here. This is an additional restriction on top of the filters defined in the import job.')
-@click.option('--no-abort-on-error', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort on any error. Useful to check for any potential errors before actually importing files.')
+@click.option('--no-abort-on-error', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort on any error. Includes some unique errors not covered with other flags. Useful to check for any potential errors before actually importing files.')
 @click.option('--no-abort-on-missing-metadata', type=bool, default=False, show_default=True, is_flag=True, help='Do not stop importing when a metadata file is not found.')
 @click.option('--no-abort-on-job-error', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort on erros with job rules.')
 @click.option('--no-abort-when-truncated', type=bool, default=False, show_default=True, is_flag=True, help='Do not abort when a file is truncated. Subset of errors covered with \'--no-abort-on-error\'')
@@ -293,6 +293,13 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
     client = hydrus_api.Client(jd['apiKey'], jd['apiURL'], session=get_session(5, 1))
 
     log.info("hydownloader-importer", f"Starting import job: {job}")
+
+    # Reduce boolean check complexity, abort_on_error should have no unique usages
+    # abort_on_error = not no_abort_on_error
+    abort_on_missing_metadata = not (no_abort_on_error or no_abort_on_missing_metadata)
+    abort_on_job_error = not (no_abort_on_error or no_abort_on_job_error)
+    abort_when_truncated = not (no_abort_on_error or no_abort_when_truncated)
+    abort_on_hydrus_import_failure = not (no_abort_on_error or no_abort_on_hydrus_import_failure)
 
     # Counts for scanned files
     existing = 0
@@ -355,7 +362,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
             if not os.path.isfile(json_path):
                 json_exists = False
                 import_errors.add(path)
-                printerr(f"Warning: no metadata file found for {path}", not (no_abort_on_error or no_abort_on_missing_metadata))
+                printerr(f"Warning: no metadata file found for {path}", abort_on_missing_metadata)
             else:
                 raw_metadata = open(json_path, "rb").read()
 
@@ -376,13 +383,13 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                     should_process = eval(group['filter'])
                 except:
                     import_errors.add(path)
-                    printerr(f"Failed to evaluate filter: {group['filter']}", not (no_abort_on_error or no_abort_on_job_error))
+                    printerr(f"Failed to evaluate filter: {group['filter']}", abort_on_job_error)
                 if not json_data and json_exists:
                     try:
                         json_data = json.load(open(json_path,encoding='utf-8-sig'))
                     except json.decoder.JSONDecodeError:
                         import_errors.add(path)
-                        printerr(f"Failed to parse JSON: {json_path}", not no_abort_on_error)
+                        printerr(f"Failed to parse JSON: {json_path}", abort_on_job_error)
                 # add back the old "gallerydl_file_url" key if it does not already exist
                 if json_data and not "gallerydl_file_url" in json_data:
                     potential_fileurl_keys= list(filter(lambda x: isinstance(x, str) and x.startswith("gallerydl_file_url_"), json_data.keys()))
@@ -441,14 +448,15 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                                 for eval_res_str in eval_res:
                                     if not isinstance(eval_res_str, str):
                                         import_errors.add(path)
-                                        printerr(f"Invalid result type ({str(type(eval_res_str))}) while evaluating expression: {d['values']}", not (no_abort_on_error or no_abort_on_job_error))
+                                        printerr(f"Invalid result type ({str(type(eval_res_str))}) while evaluating expression: {d['values']}", abort_on_job_error)
                                     else:
                                         generated_results.append(eval_res_str)
                         except Exception as e:
                             import_errors.add(path)
+                            # Don't override job config
                             if verbose and not skip_on_error:
                                 printerr(f"Failed to evaluate expression: {d['values']}", False)
-                                print(e, True)
+                                print(e, not skip_on_error)
                             has_error = True
                     else: # multiple expressions (array of strings)
                         for eval_expr in d["values"]:
@@ -461,32 +469,33 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                                     for eval_res_str in eval_res:
                                         if not isinstance(eval_res_str, str):
                                             import_errors.add(path)
-                                            printerr(f"Invalid result type ({str(type(eval_res_str))}) while evaluating expression: {eval_expr}", not (no_abort_on_error or no_abort_on_job_error))
+                                            printerr(f"Invalid result type ({str(type(eval_res_str))}) while evaluating expression: {eval_expr}", abort_on_job_error)
                                         else:
                                             generated_results.append(eval_res_str)
                             except Exception as e:
                                 import_errors.add(path)
+                                # Don't override job config
                                 if verbose and not skip_on_error:
                                     printerr(f"Failed to evaluate expression: {eval_expr}", False)
-                                    printerr(e, not no_abort_on_error)
+                                    printerr(e, not skip_on_error)
                                 has_error = True
 
                     # check for empty results or failed evaluation, as necessary
                     if not generated_results and not allow_no_result and not has_error:
                         import_errors.add(path)
-                        printerr(f"Error: the rule named {rule_name} yielded no results but this is not allowed", not (no_abort_on_error or no_abort_on_job_error))
+                        printerr(f"Error: the rule named {rule_name} yielded no results but this is not allowed", abort_on_job_error)
                     if '' in generated_results and not allow_empty and not has_error:
                         import_errors.add(path)
-                        printerr(f"Error: the rule named {rule_name} yielded an empty result but this is not allowed", not (no_abort_on_error or no_abort_on_job_error))
+                        printerr(f"Error: the rule named {rule_name} yielded an empty result but this is not allowed", abort_on_job_error)
                     if dtype == 'tag' and not allow_tags_ending_with_colon:
                         for gentag in generated_results:
                             if gentag.strip().endswith(':'):
                                 import_errors.add(path)
-                                printerr(f"Error: the rule named {rule_name} yielded a tag ending with ':' ({gentag})", not (no_abort_on_error or no_abort_on_job_error))
+                                printerr(f"Error: the rule named {rule_name} yielded a tag ending with ':' ({gentag})", abort_on_job_error)
                     if has_error:
                         if not skip_on_error:
                             import_errors.add(path)
-                            printerr(f"Error: an expression failed to evaluate in the rule named {rule_name}", not (no_abort_on_error or no_abort_on_job_error))
+                            printerr(f"Error: an expression failed to evaluate in the rule named {rule_name}", abort_on_job_error)
 
                     # save results of the currently evaluated expressions
                     if dtype == 'url':
@@ -499,7 +508,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                             for tag in generated_results:
                                 if not ":" in tag:
                                     import_errors.add(path)
-                                    printerr(f"The generated tag '{tag}' must start with a tag repo name. In rule: {rule_name}.", not (no_abort_on_error or no_abort_on_job_error))
+                                    printerr(f"The generated tag '{tag}' must start with a tag repo name. In rule: {rule_name}.", abort_on_job_error)
                                 else:
                                     repo = tag.split(":")[0]
                                     actual_tag = ":".join(tag.split(":")[1:])
@@ -509,7 +518,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
 
                 if not os.path.getsize(abspath):
                     import_errors.add(path)
-                    printerr(f"Found truncated file, won't be imported: {abspath}", not (no_abort_on_error or no_abort_when_truncated))
+                    printerr(f"Found truncated file, won't be imported: {abspath}", abort_when_truncated)
                     continue
 
                 generated_urls_filtered : list[str] = []
@@ -570,7 +579,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                             deleted = deleted + 1
                         elif response['status'] > 3:
                             import_errors.add(path)
-                            printerr(f'Failed to import, status is ' + str(response['status']), not (no_abort_on_error or no_abort_on_hydrus_import_failure))
+                            printerr(f'Failed to import, status is ' + str(response['status']), abort_on_hydrus_import_failure)
                 if not already_added or not no_force_add_metadata:
                     if verbose: printerr("Associating URLs...", False)
                     if do_it and generated_urls_filtered: client.associate_url(hashes=[hexdigest],urls_to_add=generated_urls_filtered)
