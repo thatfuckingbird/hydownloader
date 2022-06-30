@@ -319,8 +319,8 @@ def test_internal(sites: str) -> bool:
             try:
                 if version_str.endswith("-dev"): version_str = version_str[:-4]
                 major, minor, patch = tuple(map(int, version_str.split('.')))
-                if major != 1 or minor < 22 or minor == 22 and patch < 1:
-                    log.error('hydownloader-test', f"Bad gallery-dl version: {version_str}, need 1.22.1 or newer")
+                if major != 1 or minor < 22 or minor == 22 and patch < 3:
+                    log.error('hydownloader-test', f"Bad gallery-dl version: {version_str}, need 1.22.3 or newer")
                     should_break = True
                 else:
                     log.info('hydownloader-test', f"Found gallery-dl version: {version_str}, this is OK")

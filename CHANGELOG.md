@@ -1,3 +1,9 @@
+# 0.22.0 (2022-06-30)
+
+* Updated gallery-dl to 1.22.3
+* Updated yt-dlp and other dependencies
+* New command line flags for better error handling and various other improvements in the importer
+
 # 0.21.0 (2022-06-05)
 
 * Updated gallery-dl to 1.22.1
