@@ -112,15 +112,28 @@ def init(path : str) -> None:
     os.environ["PYTHONIOENCODING"] = "utf-8"
     global _inited, _path, _config
     _path = path
+
     if not os.path.isdir(path):
         log.info("hydownloader", f"Initializing new database folder at {path}")
         os.makedirs(path)
+    if not os.access(path, os.W_OK):
+        log.fatal("hydownloader", f"Database path not writable: {path}")
+
     if not os.path.isdir(path + "/logs"):
         os.makedirs(path + "/logs")
-    if not os.path.isdir(path + "/logs"):
+    if not os.access(path + "/logs", os.W_OK):
+        log.fatal("hydownloader", f"Log path not writable: {path}/logs")
+
+    if not os.path.isdir(path + "/data"):
         os.makedirs(path + "/data")
+    if not os.access(path + "/data", os.W_OK):
+        log.fatal("hydownloader", f"Data path not writable: {path}/data")
+
     if not os.path.isdir(path + "/temp"):
         os.makedirs(path + "/temp")
+    if not os.access(path + "/temp", os.W_OK):
+        log.fatal("hydownloader", f"Temp path not writable: {path}/temp")
+
     needs_db_init = False
     if not os.path.isfile(path+"/hydownloader.db"):
         needs_db_init = True
@@ -190,8 +203,11 @@ def get_rootpath() -> str:
 def get_datapath() -> str:
     check_init()
     if override := str(get_conf("gallery-dl.data-override")):
+        if not os.access(override, os.W_OK): log.fatal("hydownloader", f"Data path not writable: {override}")
         return override
-    return get_rootpath()+'/data'
+    datapath = get_rootpath()+'/data'
+    if not os.access(datapath, os.W_OK): log.fatal("hydownloader", f"Data path not writable: {datapath}")
+    return datapath
 
 def associate_additional_data(filename: str, subscription_id: Optional[int] = None, url_id: Optional[int] = None, no_commit: bool = False) -> None:
     check_init()
