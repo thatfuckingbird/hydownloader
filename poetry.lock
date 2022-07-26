@@ -100,7 +100,7 @@ graph = ["objgraph (>=1.7.2)"]
 
 [[package]]
 name = "gallery-dl"
-version = "1.22.3"
+version = "1.22.4"
 description = "Command-line program to download image galleries and collections from several image hosting sites"
 category = "main"
 optional = false
@@ -310,7 +310,7 @@ python-versions = "*"
 
 [[package]]
 name = "yt-dlp"
-version = "2022.6.29"
+version = "2022.7.18"
 description = "A youtube-dl fork with additional features and patches"
 category = "main"
 optional = false
@@ -327,7 +327,7 @@ websockets = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "6a60f81c001e1e3f340a83ba7300d73aaa019bdf5ecfc7faad765d69f093f87a"
+content-hash = "266e677e8749788011181a9ef475c195bdcf445c38d588c79cc7a1af7034cd05"
 
 [metadata.files]
 astroid = [
@@ -506,10 +506,7 @@ dill = [
     {file = "dill-0.3.4-py2.py3-none-any.whl", hash = "sha256:7e40e4a70304fd9ceab3535d36e58791d9c4a776b38ec7f7ec9afc8d3dca4d4f"},
     {file = "dill-0.3.4.zip", hash = "sha256:9f9734205146b2b353ab3fec9af0070237b6ddae78452af83d2fca84d739e675"},
 ]
-gallery-dl = [
-    {file = "gallery_dl-1.22.3-py3-none-any.whl", hash = "sha256:830d25fcc3c331218c05470a808c12b31ce1c13b4468283ec8ccdf8e26c3f9d9"},
-    {file = "gallery_dl-1.22.3.tar.gz", hash = "sha256:ea7bde484a62e5f7657faa2851716b5f559a5433908ba9af8031801a0c22d737"},
-]
+gallery-dl = []
 hydrus-api = [
     {file = "hydrus-api-3.22.7.tar.gz", hash = "sha256:0357911ebf5fafc99178587caf9e629585aea7349d42b24878b1d5d50a5b9b4e"},
     {file = "hydrus_api-3.22.7-py3-none-any.whl", hash = "sha256:a8f28cb3418bd90b6b892661f6871df2ef990efceed9690a06c30203c21efea4"},
@@ -754,7 +751,4 @@ youtube-dl = [
     {file = "youtube_dl-2021.12.17-py2.py3-none-any.whl", hash = "sha256:f1336d5de68647e0364a47b3c0712578e59ec76f02048ff5c50ef1c69d79cd55"},
     {file = "youtube_dl-2021.12.17.tar.gz", hash = "sha256:bc59e86c5d15d887ac590454511f08ce2c47698d5a82c27bfe27b5d814bbaed2"},
 ]
-yt-dlp = [
-    {file = "yt-dlp-2022.6.29.tar.gz", hash = "sha256:5fbfac72fd035d11bc2693e5d1cd6933b1bc0712f742f5082a261703810bb5c9"},
-    {file = "yt_dlp-2022.6.29-py2.py3-none-any.whl", hash = "sha256:a688f5cbc4a824456983774ccdd4a12befd379f6c92e25074fa85e7b8ce31704"},
-]
+yt-dlp = []

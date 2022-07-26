@@ -1358,6 +1358,11 @@ DEFAULT_GALLERY_DL_USER_CONFIG = R"""{
             "ugoira": false,
             "metadata": true
         },
+        "gelbooru":
+        {
+            "api-key": null,
+            "user-id": null
+        },
         "derpibooru":
         {
             "api-key": null,

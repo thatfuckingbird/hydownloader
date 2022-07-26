@@ -540,6 +540,17 @@ def check_and_update_db() -> None:
                     log.info("hydownloader", "Updating version number...")
                     cur.execute('update version set version = \'0.22.0\'')
                 log.info("hydownloader", "Upgraded database to version 0.22.0")
+            elif version == "0.22.0": # 0.22.0 -> 0.23.0
+                log.info("hydownloader", "Starting database upgrade to version 0.23.0")
+                with sqlite3.connect(_path+"/hydownloader.db") as connection:
+                    cur = connection.cursor()
+                    cur.execute('begin exclusive transaction')
+                    write_new_config(["gallery-dl-user-config.json"])
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! The default content of gallery-dl-user-config.json changed.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! User ID and API key fields were added for gelbooru, as these are now required for downloading (see also the gallery-dl docs).")
+                    log.info("hydownloader", "Updating version number...")
+                    cur.execute('update version set version = \'0.23.0\'')
+                log.info("hydownloader", "Upgraded database to version 0.23.0")
             else:
                 log.fatal("hydownloader", "Unsupported hydownloader database version found")
 
