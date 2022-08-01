@@ -334,10 +334,10 @@ def test_internal(sites: str) -> bool:
                 log.error('hydownloader-test', "Could not find ffmpeg", e)
                 should_break = True
             try:
-                yt_result = subprocess.run(['youtube-dl', '--version'], capture_output = True, text = True, check = False).stdout.strip()
-                log.info('hydownloader-test', f"Found youtube-dl version: {yt_result}")
+                yt_result = subprocess.run(['yt-dlp', '--version'], capture_output = True, text = True, check = False).stdout.strip()
+                log.info('hydownloader-test', f"Found yt-dlp version: {yt_result}")
             except FileNotFoundError as e:
-                log.error('hydownloader-test', "Could not find youtube-dl", e)
+                log.error('hydownloader-test', "Could not find yt-dlp", e)
                 should_break = True
         elif site == "gelbooru":
             log.info("hydownloader-test", "Testing gelbooru...")
