@@ -65,6 +65,8 @@ _shutdown_started = False
 _shutdown_requested_by_api_thread = False
 _url_worker_last_status = "no information"
 _sub_worker_last_status = "no information"
+_sub_worker_current_sub_id = -1
+_sub_worker_current_sub_start_time = 0
 _reverse_lookup_worker_last_status = "no information"
 _url_worker_last_update_time : float = 0
 _sub_worker_last_update_time : float = 0
@@ -82,17 +84,41 @@ def set_url_worker_status(text: str) -> None:
         _url_worker_last_status = text
         _url_worker_last_update_time = time.time()
 
-def set_subscription_worker_status(text: str) -> None:
-    global _sub_worker_last_status, _sub_worker_last_update_time
+def set_subscription_worker_status(text: str, sub_id: int = -1) -> None:
+    global _sub_worker_last_status, _sub_worker_last_update_time, _sub_worker_current_sub_start_time, _sub_worker_current_sub_id
     with _status_lock:
         _sub_worker_last_status = text
         _sub_worker_last_update_time = time.time()
+        if _sub_worker_current_sub_id != sub_id:
+            _sub_worker_current_sub_id = sub_id
+            _sub_worker_current_sub_start_time = time.monotonic()
 
 def set_reverse_lookup_worker_status(text: str) -> None:
     global _reverse_lookup_worker_last_status, _reverse_lookup_worker_last_update_time
     with _status_lock:
         _reverse_lookup_worker_last_status = text
         _reverse_lookup_worker_last_update_time = time.time()
+
+def calculate_est_remaining_sub_time(sub_id):
+    if sub_id < 0: return -1
+    checks = db.get_subscription_checks([sub_id], archived=True)
+    current_sub_id = _sub_worker_current_sub_id
+    current_check_start = _sub_worker_current_sub_start_time
+    current_time_spent = time.monotonic() - current_check_start
+    time_spent = 0
+    count = 0
+    for check in checks:
+        if check['status'] == 'ok':
+            if current_sub_id != sub_id or check['time_finished'] - check['time_started'] >= current_time_spent:
+                time_spent += check['time_finished'] - check['time_started']
+                count += 1
+    if count == 0:
+        return -1
+    avg_check_time = time_spent / count
+    if current_sub_id == sub_id:
+        return avg_check_time - current_time_spent
+    else:
+        return avg_check_time
 
 def end_downloader_threads() -> None:
     global _end_threads_flag
@@ -132,7 +158,7 @@ def subscription_worker() -> None:
                 url = urls.subscription_data_to_url(sub['downloader'], sub['keywords'])
                 check_started_time = time.time()
                 status_msg = f"checking subscription: {sub['id']} (downloader: {sub['downloader']}, keywords: {sub['keywords']})"
-                set_subscription_worker_status(status_msg)
+                set_subscription_worker_status(status_msg, sub['id'])
                 missed_sub_check_rowid = db.add_missed_subscription_check(sub['id'], 0, None)
                 if sub['last_check'] and sub['last_check'] + 2*sub['check_interval'] <= time.time():
                     db.add_missed_subscription_check(sub['id'], 1, str(time.time()-sub['last_check']))
@@ -492,11 +518,13 @@ def route_urls_last_files() -> str:
 @route('/get_status_info', method='POST')
 def route_get_status_info() -> dict:
     check_access()
+    est_remaining_from_curr_sub = calculate_est_remaining_sub_time(_sub_worker_current_sub_id)
     with _status_lock:
         return {'subscriptions_due': len(db.get_due_subscriptions()), 'urls_queued': len(db.get_urls_to_download()), 'reverse_lookup_jobs_due': len(db.get_unprocessed_reverse_lookup_jobs()),
                 'subscriptions_paused': _sub_worker_paused_flag, 'urls_paused': _url_worker_paused_flag, 'reverse_lookup_jobs_paused': _reverse_lookup_worker_paused_flag,
                 'subscription_worker_status': _sub_worker_last_status, 'url_worker_status': _url_worker_last_status, 'reverse_lookup_worker_status': _reverse_lookup_worker_last_status,
-                'subscription_worker_last_update_time': _sub_worker_last_update_time, "url_worker_last_update_time": _url_worker_last_update_time, "reverse_lookup_worker_last_update_time": _reverse_lookup_worker_last_update_time}
+                'subscription_worker_last_update_time': _sub_worker_last_update_time, "url_worker_last_update_time": _url_worker_last_update_time, "reverse_lookup_worker_last_update_time": _reverse_lookup_worker_last_update_time,
+                'estimated_remaining_from_current_sub': est_remaining_from_curr_sub}
 
 @route('/set_cookies', method='POST')
 def route_set_cookies() -> dict:
