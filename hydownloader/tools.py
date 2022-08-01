@@ -229,7 +229,7 @@ def test_internal(sites: str) -> bool:
         },
         'webtoons': {
             'url': "https://www.webtoons.com/en/challenge/crawling-dreams/ep-1-nyarla-ghast/viewer?title_no=141539&episode_no=81",
-            'anchors': ['webtoons141539_81_1','webtoons141539_81_2','webtoons141539_81_3','webtoons141539_81_4'],
+            'anchors': ['webtoons141539_1_1','webtoons141539_1_2','webtoons141539_1_3','webtoons141539_1_4'],
             'filenames': {
                 "webtoons/crawling-dreams/81-01.jpg": [],
                 "webtoons/crawling-dreams/81-01.jpg.json": ['"comic": "crawling-dreams"']
