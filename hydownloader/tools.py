@@ -31,7 +31,7 @@ import requests
 from http.cookiejar import MozillaCookieJar
 from typing import Optional
 import click
-from hydownloader import db, log, gallery_dl_utils, output_postprocessors
+from hydownloader import db, log, gallery_dl_utils, output_postprocessors, urls
 
 @click.group()
 def cli() -> None:
@@ -100,6 +100,26 @@ def check_results_of_post_url(data: dict, sitename: str) -> bool:
             log.error("hydownloader-test", "Error while trying to query anchor database - download failed?", e)
             result = False
     return result
+
+@cli.command(help='Print information about subscriptions with missed subscription checks.')
+@click.option('--path', type=str, required=True, help='Database path.')
+@click.option('--reason', type=int, required=True, help='Filter missed subscription checks by reason (0-2, see the docs).')
+@click.option('--only-urls', type=bool, is_flag=True, required=False, default=False, show_default=True, help='Only print URLs.')
+def subs_with_missed_checks(path: str, reason: int, only_urls: bool):
+    log.init(path, True)
+    db.init(path)
+    checks = db.get_missed_subscription_checks([], False)
+    sub_ids = set()
+    for check in checks:
+        if check['reason'] == reason: sub_ids.add(check['subscription_id'])
+    subs = db.get_subs_by_id(list(sub_ids))
+    log.info("hydownloader-tools", f"List of subscriptions with missed checks (reason={reason}, count={len(sub_ids)}):")
+    for sub in subs:
+        url = urls.subscription_data_to_url(sub['downloader'], sub['keywords'])
+        if only_urls:
+            log.info("hydownloader-tools", url)
+        else:
+            log.info("hydownloader-tools", f"{sub['id']} {sub['downloader']} {sub['keywords']} {url}")
 
 @cli.command(help='Test downloading from a list of sites.')
 @click.option('--path', type=str, required=True, help='Database path.')
