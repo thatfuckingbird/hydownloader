@@ -338,10 +338,12 @@ def reverse_lookup_worker() -> None:
                 status_msg = f"processing reverse lookup job with ID {lookupjob['id']}, file path {lookupjob['file_path']} and URL {lookupjob['file_url']}"
                 set_reverse_lookup_worker_status(status_msg)
                 log.info("reverse lookup worker", capitalize_first_char(status_msg))
-                status, num_new_urls = reverse_lookup.process_job(lookupjob)
+                status, num_new_urls, additional_results = reverse_lookup.process_job(lookupjob)
                 new_job_data = {
                     'id': lookupjob['id']
                 }
+                if additional_results:
+                    new_job_data['additional_results'] = additional_results
                 new_job_data['time_processed'] = check_time
                 new_job_data['result_count'] = num_new_urls
                 db.add_or_update_reverse_lookup_jobs([new_job_data])
