@@ -32,7 +32,10 @@ DEFAULT_CONFIG : dict[str, Union[str, int, bool]] = {
     "gallery-dl.archive-override": "",
     "gallery-dl.data-override": "",
     "shared-db-override": "",
-    "disable-wal": False
+    "disable-wal": False,
+    "reverse-lookup-presets": {
+        'default': {}
+    }
 }
 
 DEFAULT_IMPORT_JOBS = """{
@@ -1268,7 +1271,7 @@ CREATE TABLE "reverse_lookup_jobs" (
 	"id"	INTEGER NOT NULL UNIQUE,
 	"file_path"	TEXT,
 	"file_url"	TEXT,
-	"config"	TEXT NOT NULL,
+	"config"	TEXT,
 	"status"	INTEGER NOT NULL,
 	"time_added"	INTEGER NOT NULL,
 	"paused"	INTEGER NOT NULL DEFAULT 0,

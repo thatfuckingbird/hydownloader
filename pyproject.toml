@@ -22,6 +22,7 @@ hydrus-api = "^3.22.7"
 python-dateutil = "^2.8.2"
 requests = "^2.27.1"
 Brotli = "^1.0.9"
+SauceNAO = "^1.1.0"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.8.2"

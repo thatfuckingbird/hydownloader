@@ -106,6 +106,14 @@ def validate_json_syntax(path: str) -> None:
         except json.decoder.JSONDecodeError as e:
             log.fatal("hydownloader", f"The file {file} contains invalid JSON syntax.", e)
 
+def _load_config():
+    global _config
+    _config = json.load(open(_path+"/hydownloader-config.json", "r", encoding="utf-8-sig"))
+
+def reload_config():
+    check_init()
+    _load_config()
+
 def init(path : str) -> None:
     sys.stderr.reconfigure(encoding='utf-8')
     sys.stdout.reconfigure(encoding='utf-8')
@@ -155,7 +163,7 @@ def init(path : str) -> None:
         hydl_cfg.close()
     if not os.path.isfile(path+"/cookies.txt"):
         open(path+"/cookies.txt", "w", encoding="utf-8").close()
-    _config = json.load(open(path+"/hydownloader-config.json", "r", encoding="utf-8-sig"))
+    _load_config()
     get_conn()
     if needs_db_init: create_db()
 
