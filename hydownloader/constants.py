@@ -20,6 +20,7 @@ These are mostly used when initializing a new hydownloader database.
 """
 
 from typing import Union
+from secrets import token_urlsafe
 
 API_VERSION = 1
 
@@ -28,7 +29,7 @@ DEFAULT_CONFIG : dict[str, Union[str, int, bool]] = {
     "daemon.port": 53211,
     "daemon.host": "localhost",
     "daemon.ssl": True,
-    "daemon.access_key": "change me you retard or get hacked",
+    "daemon.access_key": ' '.join(["change me you retard or get hacked", token_urlsafe()]),
     "gallery-dl.archive-override": "",
     "gallery-dl.data-override": "",
     "shared-db-override": "",
