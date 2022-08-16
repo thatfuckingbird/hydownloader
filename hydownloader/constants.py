@@ -29,7 +29,7 @@ DEFAULT_CONFIG : dict[str, Union[str, int, bool]] = {
     "daemon.port": 53211,
     "daemon.host": "localhost",
     "daemon.ssl": True,
-    "daemon.access_key": ' '.join(["change me you retard or get hacked", token_urlsafe()]),
+    "daemon.access_key": token_urlsafe(),
     "gallery-dl.archive-override": "",
     "gallery-dl.data-override": "",
     "shared-db-override": "",
