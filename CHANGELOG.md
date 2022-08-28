@@ -1,3 +1,16 @@
+# 0.23.0 (2022-08-28)
+
+* Updated gallery-dl to 1.23.0
+* Updated yt-dlp
+* Access key in the default configuration is now random instead of a fixed default
+* hydownloader-tools gained a command to list subs with missed checks
+* Implement remaining time estimation for subscription checks (hydownloader-systray will display this in the tray icon tooltip)
+* Fix: check if database & data paths exists and are writeable and shut down if they aren't
+* Fix: check for yt-dlp instead of youtube-dl in environment test
+* Misc. fixes in tests
+* Some work on reverse lookup mode (not yet usable)
+* Misc. dependency updates
+
 # 0.22.0 (2022-06-30)
 
 * Updated gallery-dl to 1.22.3
