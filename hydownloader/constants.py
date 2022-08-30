@@ -530,7 +530,7 @@ DEFAULT_IMPORT_JOBS = """{
             ],
             "values": [
               "'title:'+json_data['title']",
-              "'medium:'+json_data['media']"
+              "'medium:'+json_data['media'] if 'media' in json_data else []"
             ]
           },
           {
@@ -539,7 +539,7 @@ DEFAULT_IMPORT_JOBS = """{
               "my tags"
             ],
             "values": [
-              "[tag.replace('_',' ') for tag in json_data['tags']]",
+              "[tag.replace('_',' ') for tag in json_data['tags']] if 'tags' in json_data else []",
               "json_data['ratings']"
             ]
           }
