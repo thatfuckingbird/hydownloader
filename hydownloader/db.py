@@ -102,7 +102,7 @@ def validate_json_syntax(path: str) -> None:
     for file in files_to_check:
         try:
             log.info("hydownloader", f"Checking file for syntax errors: {file}")
-            json.load(open(path+"/"+file, 'r'))
+            json.load(open(path+"/"+file, 'r', encoding="utf-8-sig"))
         except json.decoder.JSONDecodeError as e:
             log.fatal("hydownloader", f"The file {file} contains invalid JSON syntax.", e)
 
