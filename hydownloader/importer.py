@@ -33,6 +33,7 @@ from typing import Optional, Union, Any
 import click
 import hydrus_api
 import dateutil.parser
+from datetime import datetime
 from hydownloader import db, log
 
 def unfuck_path_separator(path: str) -> str:
@@ -311,6 +312,9 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
     # Set of files which failed to import
     # Using a set to prevent duplicate entries when doing a dry run
     import_errors = set()
+
+    # Set job start time
+    start = datetime.now()
 
     # iterate over all files in the data directory
     for root, _, files in os.walk(effective_path):
@@ -599,6 +603,7 @@ def run_job(path: str, job: str, skip_already_imported: bool, no_skip_on_differi
                 if verbose: printerr(f"Skipping due to no matching filter: {path}", False)
 
     log.info("hydownloader-importer", f"Finished import job: {job}")
+    log.info("hydownloader-importer", f"Time elapsed: {datetime.now() - start}")
     total = existing + imported + deleted
     log.info("hydownloader-importer", f"imported: {imported}")
     log.info("hydownloader-importer", f"existing: {existing}")
