@@ -207,6 +207,8 @@ def clear_imported(path: str, action: str, do_it: bool, no_skip_on_differing_tim
 
     collected_files : list[tuple[str, str]] = []
 
+    seen_json_paths = set()
+
     data_path = db.get_datapath()
     for root, _, files in os.walk(data_path):
         for fname in files:
@@ -235,7 +237,8 @@ def clear_imported(path: str, action: str, do_it: bool, no_skip_on_differing_tim
             json_relpath = os.path.relpath(json_path, start = data_path)
 
             collected_files.append((path,abspath))
-            if json_exists and not no_include_metadata:
+            if json_exists and not no_include_metadata and not json_path in seen_json_paths:
+                seen_json_paths.add(json_path)
                 collected_files.append((json_relpath,json_path))
 
     log.info("hydownloader-importer", f"Executing action: {action}")
