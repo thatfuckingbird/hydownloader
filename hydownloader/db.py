@@ -559,6 +559,17 @@ def check_and_update_db() -> None:
                     log.info("hydownloader", "Updating version number...")
                     cur.execute('update version set version = \'0.23.0\'')
                 log.info("hydownloader", "Upgraded database to version 0.23.0")
+            elif version == "0.23.0": # 0.23.0 -> 0.24.0
+                log.info("hydownloader", "Starting database upgrade to version 0.24.0")
+                with sqlite3.connect(_path+"/hydownloader.db") as connection:
+                    cur = connection.cursor()
+                    cur.execute('begin exclusive transaction')
+                    write_new_config(["hydownloader-import-jobs.json"])
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! The default content of hydownloader-import-jobs.json changed.")
+                    log.warning("hydownloader", "!!MANUAL INTERVENTION REQUIRED!! A bug was fixed in the hentaifoundry importer configuration, where it could previously fail when tryin to import \"stories\". Applying this change is optional, but recommended.")
+                    log.info("hydownloader", "Updating version number...")
+                    cur.execute('update version set version = \'0.24.0\'')
+                log.info("hydownloader", "Upgraded database to version 0.24.0")
             else:
                 log.fatal("hydownloader", "Unsupported hydownloader database version found")
 

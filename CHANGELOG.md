@@ -1,3 +1,12 @@
+# 0.24.0 (2022-09-18)
+
+* Updated gallery-dl to 1.23.1
+* Updated yt-dlp and other dependencies to latest versions
+* Fix a bug in the importer where it tried to remove some JSON files twice
+* Log elapsed time in the importer
+* Fix a bug where config files were not always opened with UTF-8 encoding on Windows
+* Fix a bug in the hentaifoundry importer configuration that could lead to errors when trying to import "stories"
+
 # 0.23.0 (2022-08-28)
 
 * Updated gallery-dl to 1.23.0
