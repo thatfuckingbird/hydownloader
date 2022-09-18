@@ -1,6 +1,6 @@
 [[package]]
 name = "astroid"
-version = "2.12.4"
+version = "2.12.10"
 description = "An abstract syntax tree for Python with inference support."
 category = "dev"
 optional = false
@@ -69,7 +69,7 @@ beautifulsoup4 = "*"
 
 [[package]]
 name = "certifi"
-version = "2022.6.15"
+version = "2022.9.14"
 description = "Python package for providing Mozilla's CA Bundle."
 category = "main"
 optional = false
@@ -129,7 +129,7 @@ graph = ["objgraph (>=1.7.2)"]
 
 [[package]]
 name = "gallery-dl"
-version = "1.23.0"
+version = "1.23.1"
 description = "Command-line program to download image galleries and collections from several image hosting sites"
 category = "main"
 optional = false
@@ -154,7 +154,7 @@ requests = ">=2.26.0,<3.0.0"
 
 [[package]]
 name = "idna"
-version = "3.3"
+version = "3.4"
 description = "Internationalized Domain Names in Applications (IDNA)"
 category = "main"
 optional = false
@@ -228,14 +228,14 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "pylint"
-version = "2.15.0"
+version = "2.15.2"
 description = "python code static checker"
 category = "dev"
 optional = false
 python-versions = ">=3.7.2"
 
 [package.dependencies]
-astroid = ">=2.12.4,<=2.14.0-dev0"
+astroid = ">=2.12.9,<=2.14.0-dev0"
 colorama = {version = ">=0.4.5", markers = "sys_platform == \"win32\""}
 dill = ">=0.2"
 isort = ">=4.2.5,<6"
@@ -373,7 +373,7 @@ python-versions = "*"
 
 [[package]]
 name = "yt-dlp"
-version = "2022.8.19"
+version = "2022.9.1"
 description = "A youtube-dl fork with additional features and patches"
 category = "main"
 optional = false
@@ -390,7 +390,7 @@ websockets = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "16bedb21f23caa0d167f22937e24b0a16eb4c46f4b46a9ceb9101a3905293e49"
+content-hash = "cc4e06b2a61b09d0f48e234cd5646c29f3ae8c8b306e573a82bab16b0bde49c4"
 
 [metadata.files]
 astroid = []
@@ -507,10 +507,7 @@ hydrus-api = [
     {file = "hydrus-api-3.22.7.tar.gz", hash = "sha256:0357911ebf5fafc99178587caf9e629585aea7349d42b24878b1d5d50a5b9b4e"},
     {file = "hydrus_api-3.22.7-py3-none-any.whl", hash = "sha256:a8f28cb3418bd90b6b892661f6871df2ef990efceed9690a06c30203c21efea4"},
 ]
-idna = [
-    {file = "idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
-    {file = "idna-3.3.tar.gz", hash = "sha256:9d643ff0a55b762d5cdb124b8eaa99c66322e2157b69160bc32796e824360e6d"},
-]
+idna = []
 isort = [
     {file = "isort-5.10.1-py3-none-any.whl", hash = "sha256:6f62d78e2f89b4500b080fe3a81690850cd254227f27f75c3a0c491a1f351ba7"},
     {file = "isort-5.10.1.tar.gz", hash = "sha256:e8443a5e7a020e9d7f97f1d7d9cd17c88bcb3bc7e218bf9cf5095fe550be2951"},
