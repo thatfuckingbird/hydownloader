@@ -9,3 +9,7 @@ You can get one on the danbooru website somewhere under your account settings.
 
 Set the "abort after" value to a larger value than the overall amount of files for your subscription query. Then it won't stop until it has completely gone through all files for that query.
 Don't forget to change it back later.
+
+### What do I write in the "downloader" and "keywords" fields when adding subscriptions?
+
+Use the "downloaders" command of hydownloader-tools to list available downloaders and their URL patterns.

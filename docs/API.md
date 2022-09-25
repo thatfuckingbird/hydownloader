@@ -167,6 +167,10 @@ Returns a JSON object with a boolean "status" field.
 Force aborts the currently running subscription check (if there is any).
 Returns a JSON object with a boolean "status" field.
 
+### POST /downloaders
+
+Returns a JSON object of supported downloaders (for subscriptions) and their associated URL patterns.
+
 ## Downloading files
 
 You can download any file from the hydownloader root path by sending a GET request where the path is the same

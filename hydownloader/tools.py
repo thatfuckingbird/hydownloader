@@ -641,6 +641,13 @@ def reparse_all_logfiles(path: str) -> None:
     db.init(path)
     output_postprocessors.parse_log_files(True)
 
+@cli.command(help='List information about available downloaders. Use this command to find out what to write in the "downloader" and "keywords" fields when adding subscriptions.')
+def downloaders() -> None:
+    print("Downloader".ljust(24)+"URL pattern (will be passed to gallery-dl after filling in {keywords})")
+    print("==========".ljust(24)+"======================================================================")
+    for downloader in sorted(urls.downloaders.keys()):
+        print(downloader.ljust(24)+urls.downloaders[downloader])
+
 def main() -> None:
     if hasattr(signal, 'SIGTTOU'):
         signal.signal(signal.SIGTTOU, signal.SIG_IGN)

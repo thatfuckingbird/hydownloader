@@ -86,75 +86,50 @@ def urls_for_known_url_lookup(url: str) -> set[str]:
 
     return result
 
+downloaders = {
+    "gelbooru": "https://gelbooru.com/index.php?page=post&s=list&tags={keywords}",
+    "pixivuser":"https://www.pixiv.net/en/users/{keywords}",
+    "pixivranking": "https://www.pixiv.net/ranking.php?mode={keywords}",
+    "pixivtagsearch": "https://www.pixiv.net/en/tags/{keywords}/artworks?s_mode=s_tag",
+    "raw": "{keywords}",
+    "nijieuser": "https://nijie.info/members.php?id={keywords}",
+    "lolibooru": "https://lolibooru.moe/post?tags={keywords}",
+    "patreon": "https://www.patreon.com/{keywords}/posts",
+    "danbooru": "https://danbooru.donmai.us/posts?tags={keywords}",
+    "3dbooru": "http://behoimi.org/post/index?tags={keywords}",
+    "sankaku": "https://chan.sankakucomplex.com/?tags={keywords}&commit=Search",
+    "artstationuser": "https://www.artstation.com/{keywords}",
+    "idolcomplex": "https://idol.sankakucomplex.com/?tags={keywords}&commit=Search",
+    "twitter": "https://twitter.com/{keywords}",
+    "tumblr": "https://{keywords}.tumblr.com",
+    "deviantartuser": "https://deviantart.com/{keywords}",
+    "fanbox": "https://{keywords}.fanbox.cc",
+    "fantia": "https://fantia.jp/fanclubs/{keywords}",
+    "webtoons": "https://webtoons.com/{keywords}",
+    "kemonoparty": "https://kemono.party/{keywords}",
+    # While coomer only supports onlyfans and this could be `/onlyfans/user/{keywords}`
+    # instead, it will be a massive pain for end users to edit their existing subs later
+    # if coomer adds other services.
+    "coomerparty": "https://coomer.party/{keywords}",
+    "baraag": "https://baraag.net/@{keywords}",
+    "pawoo": "https://pawoo.net/@{keywords}",
+    "seisoparty": "https://seiso.party/artists/{keywords}",
+    "hentaifoundry": "https://www.hentai-foundry.com/user/{keywords}/profile",
+    "yandere": "https://yande.re/post?tags={keywords}",
+    "rule34": "https://rule34.xxx/index.php?page=post&s=list&tags={keywords}",
+    "e621": "https://e621.net/posts?tags={keywords}",
+    "furaffinity": "https://www.furaffinity.net/user/{keywords}/",
+    "instagram": "https://instagram.com/{keywords}"
+}
+
 def subscription_data_to_url(downloader: str, keywords: str, allow_fail: bool = False) -> str:
     """
     This function takes a hydownloader downloader name (not the same as a gallery-dl downloader name!)
     and some keywords and generates a (usually gallery) URL for gallery-dl to download.
     In Hydrus terms, this does the same thing as a GUG (gallery URL generator).
     """
-    if downloader == "gelbooru":
-        return f"https://gelbooru.com/index.php?page=post&s=list&tags={keywords}"
-    if downloader == "pixivuser":
-        return f"https://www.pixiv.net/en/users/{keywords}"
-    if downloader == "pixivranking":
-        return f"https://www.pixiv.net/ranking.php?mode={keywords}"
-    if downloader == "pixivtagsearch":
-        return f"https://www.pixiv.net/en/tags/{keywords}/artworks?s_mode=s_tag"
-    if downloader == "raw":
-        return keywords
-    if downloader == "nijieuser":
-        return f"https://nijie.info/members.php?id={keywords}"
-    if downloader == "lolibooru":
-        return f"https://lolibooru.moe/post?tags={keywords}"
-    if downloader == "patreon":
-        return f"https://www.patreon.com/{keywords}/posts"
-    if downloader == "danbooru":
-        return f"https://danbooru.donmai.us/posts?tags={keywords}"
-    if downloader == "3dbooru":
-        return f"http://behoimi.org/post/index?tags={keywords}"
-    if downloader == "sankaku":
-        return f"https://chan.sankakucomplex.com/?tags={keywords}&commit=Search"
-    if downloader == "artstationuser":
-        return f"https://www.artstation.com/{keywords}"
-    if downloader == "idolcomplex":
-        return f"https://idol.sankakucomplex.com/?tags={keywords}&commit=Search"
-    if downloader == "twitter":
-        return f"https://twitter.com/{keywords}"
-    if downloader == "tumblr":
-        return f"https://{keywords}.tumblr.com"
-    if downloader == "deviantartuser":
-        return f"https://deviantart.com/{keywords}"
-    if downloader == "fanbox":
-        return f"https://{keywords}.fanbox.cc"
-    if downloader == "fantia":
-        return f"https://fantia.jp/fanclubs/{keywords}"
-    if downloader == "webtoons":
-        return f"https://webtoons.com/{keywords}"
-    if downloader == "kemonoparty":
-        return f"https://kemono.party/{keywords}"
-    if downloader == "coomerparty":
-        # While coomer only supports onlyfans and this could be `/onlyfans/user/{keywords}`
-        # instead, it will be a massive pain for end users to edit their existing subs later
-        # if coomer adds other services.
-        return f"https://coomer.party/{keywords}"
-    if downloader == "baraag":
-        return f"https://baraag.net/@{keywords}"
-    if downloader == "pawoo":
-        return f"https://pawoo.net/@{keywords}"
-    if downloader == "seisoparty":
-        return f"https://seiso.party/artists/{keywords}"
-    if downloader == "hentaifoundry":
-        return f"https://www.hentai-foundry.com/user/{keywords}/profile"
-    if downloader == "yandere":
-        return f"https://yande.re/post?tags={keywords}"
-    if downloader == "rule34":
-        return f"https://rule34.xxx/index.php?page=post&s=list&tags={keywords}"
-    if downloader == "e621":
-        return f"https://e621.net/posts?tags={keywords}"
-    if downloader == "furaffinity":
-        return f"https://www.furaffinity.net/user/{keywords}/"
-    if downloader == "instagram":
-                return f"https://instagram.com/{keywords}"
+    if downloader in downloaders:
+        return downloaders[downloader].replace("{keywords}", keywords)
     if not allow_fail:
         log.fatal("hydownloader", f"Invalid downloader: {downloader}")
     else:

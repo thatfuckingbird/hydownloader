@@ -190,6 +190,9 @@ For subscriptions, hydownloader has additional support for some sites beyond wha
 subscribable and extracting keywords from them. This makes it possible to store these subscriptions not as URLs, but as a downloader plus keywords pair,
 making subscription management much nicer and allowing for features such as directly adding subscriptions from your browser via Hydrus Companion.
 
+Each supported downloader has an associated URL pattern, where the given keywords will be filled in. The final URL obtained this way is then passed to gallery-dl.
+You can use the "downloaders" command of hydownloader-tools to list available downloaders and their URL patterns.
+
 You can still subscribe to sites that gallery-dl supports but hydownloader does not recognize the URL as subscribable, by using the `raw` downloader. For this downloader, the keywords field
 should contain the full URL for the gallery you want to subscribe to.
 

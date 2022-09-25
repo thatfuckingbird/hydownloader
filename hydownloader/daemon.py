@@ -626,6 +626,11 @@ def route_kill_current_url() -> dict:
     log.warning("hydownloader", "Current URL download force-stopped via API")
     return {'status': True}
 
+@route('/downloaders', method='POST')
+def route_downloaders() -> dict:
+    check_access()
+    return urls.downloaders
+
 @route('/')
 def route_index() -> str:
     return "hydownloader daemon"
