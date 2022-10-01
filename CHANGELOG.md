@@ -1,6 +1,7 @@
-# 0.25.0 (?)
+# 0.25.0 (2022-10-01)
 
 * Add the "downloaders" command to hydownloader-tools to list available downloaders (for subscriptions)
+* Updated gallery-dl to 1.23.2
 
 # 0.24.0 (2022-09-18)
 

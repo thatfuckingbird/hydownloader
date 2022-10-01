@@ -570,6 +570,14 @@ def check_and_update_db() -> None:
                     log.info("hydownloader", "Updating version number...")
                     cur.execute('update version set version = \'0.24.0\'')
                 log.info("hydownloader", "Upgraded database to version 0.24.0")
+            elif version == "0.24.0": # 0.24.0 -> 0.25.0
+                log.info("hydownloader", "Starting database upgrade to version 0.25.0")
+                with sqlite3.connect(_path+"/hydownloader.db") as connection:
+                    cur = connection.cursor()
+                    cur.execute('begin exclusive transaction')
+                    log.info("hydownloader", "Updating version number...")
+                    cur.execute('update version set version = \'0.25.0\'')
+                log.info("hydownloader", "Upgraded database to version 0.25.0")
             else:
                 log.fatal("hydownloader", "Unsupported hydownloader database version found")
 
