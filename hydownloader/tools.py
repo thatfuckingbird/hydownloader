@@ -634,6 +634,20 @@ def download_pixiv_user_profiles(path: str, cookies: str, user_agent: str):
         counter += 1
     log.info("hydownloader-tools", "Finished downloading Pixiv profile data")
 
+"""
+TODO: generate csv + save raw json
+include downloader+site columns in the csv
+@cli.command(help='Query information about banned artists on danbooru.')
+@click.option('--path', type=str, required=True, help='Database path.')
+@click.option('--after', type=str, required=False, help='TODO')
+@click.option('--url-filter', type=str, required=False, default=".*", help='Only')
+@click.option('--only-subscribable-urls', type=bool, required=False, default=False, is_flag=True, help='')
+@click.option('--create-subscriptions', type=bool, required=False, default=False, is_flag=True, help='')
+def danbooru_banned_artists(path: str, after: str, url_filter: str, only_subscribable_urls: bool) -> None:
+    log.init(path, True)
+    curl --globoff -X GET -L "https://danbooru.donmai.us/artists.json?search[is_banned]=true&search[order]=updated_at&limit=1000&only=id,name,group_name,other_names,is_banned,is_deleted,created_at,updated_at,tag,urls" 
+"""
+
 @cli.command(help='Force a reparsing of all logfiles.')
 @click.option('--path', type=str, required=True, help='Database path.')
 def reparse_all_logfiles(path: str) -> None:
