@@ -1,3 +1,8 @@
+# 0.26.0 (2022-10-??)
+
+* Updated gallery-dl to 1.23.3
+* Updated yt-dlp to latest version
+
 # 0.25.0 (2022-10-01)
 
 * Add the "downloaders" command to hydownloader-tools to list available downloaders (for subscriptions)
