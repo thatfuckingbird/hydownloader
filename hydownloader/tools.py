@@ -420,6 +420,9 @@ def test_internal(sites: str) -> bool:
         elif site == "lolibooru":
             log.info("hydownloader-test", "Testing lolibooru.moe...")
             should_break = not check_results_of_post_url(post_url_data['lolibooru'], site) or should_break
+        elif site == "aibooru":
+            log.info("hydownloader-test", "Testing aibooru.online...")
+            should_break = not check_results_of_post_url(post_url_data['aibooru'], site) or should_break
         elif site == "3dbooru":
             log.info("hydownloader-test", "Testing 3dbooru...")
             should_break = not check_results_of_post_url(post_url_data['3dbooru'], site) or should_break
@@ -653,7 +656,7 @@ include downloader+site columns in the csv
 @click.option('--create-subscriptions', type=bool, required=False, default=False, is_flag=True, help='')
 def danbooru_banned_artists(path: str, after: str, url_filter: str, only_subscribable_urls: bool) -> None:
     log.init(path, True)
-    curl --globoff -X GET -L "https://danbooru.donmai.us/artists.json?search[is_banned]=true&search[order]=updated_at&limit=1000&only=id,name,group_name,other_names,is_banned,is_deleted,created_at,updated_at,tag,urls" 
+    curl --globoff -X GET -L "https://danbooru.donmai.us/artists.json?search[is_banned]=true&search[order]=updated_at&limit=1000&only=id,name,group_name,other_names,is_banned,is_deleted,created_at,updated_at,tag,urls"
 """
 
 @cli.command(help='Force a reparsing of all logfiles.')

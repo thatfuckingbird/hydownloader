@@ -104,6 +104,7 @@ leave the test environment untouched so you can investigate the error.
 | pixiv | yes | yes | yes |
 | gelbooru | yes | yes | yes |
 | danbooru | yes | yes | yes |
+| aibooru | yes | yes | yes |
 | lolibooru.moe | yes | yes | yes |
 | 3dbooru | yes | yes | yes |
 | artstation | yes | yes | yes |
