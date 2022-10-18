@@ -123,7 +123,7 @@ def subs_with_missed_checks(path: str, reason: int, only_urls: bool):
 
 @cli.command(help='Test downloading from a list of sites.')
 @click.option('--path', type=str, required=True, help='Database path.')
-@click.option('--sites', type=str, required=True, help='A comma-separated list of sites to test downloading from. Currently supported: environment, gelbooru, pixiv, lolibooru, patreon, danbooru, 3dbooru, nijie, sankaku, idolcomplex, artstation, twitter, deviantart, webtoons, baraag, pawoo, yandere, hentaifoundry, rule34, e621, furaffinity, instagram. WARNING: this will attempt to download "sensitive" content.')
+@click.option('--sites', type=str, required=True, help='A comma-separated list of sites to test downloading from. Currently supported: environment, gelbooru, pixiv, lolibooru, patreon, danbooru, aibooru, 3dbooru, nijie, sankaku, idolcomplex, artstation, twitter, deviantart, webtoons, baraag, pawoo, yandere, hentaifoundry, rule34, e621, furaffinity, instagram. WARNING: this will attempt to download "sensitive" content.')
 def test(path: str, sites: str) -> None:
     log.init(path, True)
     db.init(path)
@@ -154,6 +154,14 @@ def test_internal(sites: str) -> bool:
                 "danbooru/danbooru_4455434_e110444217827ef3f82fb33b45e1841f.png": []
             },
             'anchors': ["danbooru4455434"]
+        },
+        'aibooru': {
+            'url': "https://aibooru.online/posts/2446",
+            'filenames': {
+                "aibooru/aibooru_2446_0c540b58dc26913e77d86e318b0552d4.png.json": ["1girl ", "bare_shoulders"],
+                "aibooru/aibooru_2446_0c540b58dc26913e77d86e318b0552d4.png": []
+            },
+            'anchors': ["aibooru2446"]
         },
         'pixiv': {
             'url': "https://www.pixiv.net/en/artworks/98309573",

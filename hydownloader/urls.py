@@ -96,6 +96,7 @@ downloaders = {
     "lolibooru": "https://lolibooru.moe/post?tags={keywords}",
     "patreon": "https://www.patreon.com/{keywords}/posts",
     "danbooru": "https://danbooru.donmai.us/posts?tags={keywords}",
+    "aibooru": "https://aibooru.online/posts?tags={keywords}",
     "3dbooru": "http://behoimi.org/post/index?tags={keywords}",
     "sankaku": "https://chan.sankakucomplex.com/?tags={keywords}&commit=Search",
     "artstationuser": "https://www.artstation.com/{keywords}",
@@ -161,6 +162,8 @@ def subscription_data_from_url(url: str) -> tuple[str, str]:
         return ('patreon', m.group('username'))
     if m := re.match(r"https?://danbooru\.donmai\.us/posts\?(page=[0-9]+&)?tags=(?P<keywords>[^&]+)(&.*)?", u):
         return ('danbooru', m.group('keywords').lower())
+    if m := re.match(r"https?://aibooru\.online/posts\?(page=[0-9]+&)?tags=(?P<keywords>[^&]+)(&.*)?", u):
+        return ('aibooru', m.group('keywords').lower())
     if m := re.match(r"https?://(www\.)?behoimi\.org/post(/index)?\?tags=(?P<keywords>[^&]+)(&.*)?", u):
         return ('3dbooru', m.group('keywords').lower())
     if m := re.match(r"https?://(chan|beta)\.sankakucomplex\.com/(post/index)?\?tags=(?P<keywords>[^&]*)(&.*)?", u):
@@ -229,6 +232,7 @@ def anchor_patterns_from_url(url: str) -> list[str]:
     pixiv: pixiv88847570, pixiv88536044_p00, ..., pixiv88536044_p117
     gelbooru: gelbooru5994487
     danbooru: danbooru4442363
+    aibooru: aibooru3874
     lolibooru.moe: lolibooru178123
     3dbooru: 3dbooru52352
     artstation: artstation9322141 (difficult, extracted from URL components)
@@ -264,6 +268,8 @@ def anchor_patterns_from_url(url: str) -> list[str]:
         return [f"lolibooru{m.group('id')}"]
     if m := re.match(r"https?://danbooru\.donmai\.us/(posts|post/show|post/view)/(?P<id>[0-9]+)(&.*)?", u):
         return [f"danbooru{m.group('id')}"]
+    if m := re.match(r"https?://aibooru.online/(posts|post/show|post/view)/(?P<id>[0-9]+)(&.*)?", u):
+        return [f"aibooru{m.group('id')}"]
     if m := re.match(r"https?://(www\.)?behoimi\.org/post/show/(?P<id>[0-9]+)(&.*)?", u):
         return [f"3dbooru{m.group('id')}"]
     if m := re.match(r"https?://(www\.)?behoimi\.org/post/show/(?P<id>[0-9]+)/.+", u):
