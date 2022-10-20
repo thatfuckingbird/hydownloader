@@ -1,8 +1,9 @@
-# 0.26.0 (2022-10-??)
+# 0.26.0 (2022-10-21)
 
 * Updated gallery-dl to 1.23.3
 * Updated yt-dlp to latest version
 * Added support for aibooru.online (currently requires patched gallery-dl, as the relevant pull request is not merged yet into upstream gallery-dl)
+* Added a command to hydownloader-tools to easily query & process danbooru banned artist data/URLs for mass scraping or analysis
 
 # 0.25.0 (2022-10-01)
 
