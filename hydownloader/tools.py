@@ -685,8 +685,8 @@ def danbooru_banned_artists(path: str, after: str, url_filter: str, only_subscri
             sub_datas.add((sub['downloader'],sub['keywords'],sub['comment']))
     for artist in artist_data:
         if after:
-            created_datetime = dateutil.parser.parse(artist['updated_at'], fuzzy=True)
-            if datetime.datetime.timestamp(created_datetime) < datetime.datetime.timestamp(after_datetime):
+            updated_datetime = dateutil.parser.parse(artist['updated_at'], fuzzy=True)
+            if datetime.datetime.timestamp(updated_datetime) <= datetime.datetime.timestamp(after_datetime):
                 continue
         artist_urls = []
         first_matching_filter = None
@@ -713,13 +713,15 @@ def danbooru_banned_artists(path: str, after: str, url_filter: str, only_subscri
                 artist_urls.append(url_data)
         if artist_urls:
             filtered_artists_urls.append((artist, artist_urls))
-    final_rows = [['artist_id', 'artist_name', 'artist_tag', 'artist_tag_id', 'is_deleted', 'is_banned', 'other_names', 'url', 'domain', 'downloader', 'keywords']]
+    final_rows = [['artist_id', 'artist_name', 'artist_tag', 'artist_tag_id', 'created_at', 'updated_at', 'is_deleted', 'is_banned', 'other_names', 'url', 'domain', 'downloader', 'keywords']]
     for d in filtered_artists_urls:
         row_base = [
             d[0]['id'],
             d[0]['name'],
             d[0]['tag']['name'],
             d[0]['tag']['id'],
+            d[0]['created_at'],
+            d[0]['updated_at'],
             d[0]['is_deleted'],
             d[0]['is_banned'],
             '\x1F'.join(d[0]['other_names']) #ASCII unit separator
