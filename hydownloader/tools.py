@@ -19,8 +19,11 @@
 import shutil
 import os
 import sys
+import csv
 import random
 import datetime
+import dateutil.parser
+import json
 import sqlite3
 import time
 import signal
@@ -645,19 +648,93 @@ def download_pixiv_user_profiles(path: str, cookies: str, user_agent: str):
         counter += 1
     log.info("hydownloader-tools", "Finished downloading Pixiv profile data")
 
-"""
-TODO: generate csv + save raw json
-include downloader+site columns in the csv
 @cli.command(help='Query information about banned artists on danbooru.')
 @click.option('--path', type=str, required=True, help='Database path.')
-@click.option('--after', type=str, required=False, help='TODO')
-@click.option('--url-filter', type=str, required=False, default=".*", help='Only')
-@click.option('--only-subscribable-urls', type=bool, required=False, default=False, is_flag=True, help='')
-@click.option('--create-subscriptions', type=bool, required=False, default=False, is_flag=True, help='')
-def danbooru_banned_artists(path: str, after: str, url_filter: str, only_subscribable_urls: bool) -> None:
+@click.option('--after', type=str, default="", required=False, help='Only process entries updated after this datetime (it will recognize any common datetime string format, but ISO-8601 is recommended).')
+@click.option('--url-filter', type=str, required=False, default=".*", help='Only process entries that have any URLs matching this regex.')
+@click.option('--only-subscribable-urls', type=bool, required=False, default=False, is_flag=True, help='Only add URLs to the result that are recognized as subscribable by hydownloader.')
+@click.option('--create-subscriptions', type=bool, required=False, default=False, is_flag=True, help='Automatically create subscriptions for recognized URLs (these will start paused and the comment field will indicate their origin, duplicate subscriptions will be skipped).')
+def danbooru_banned_artists(path: str, after: str, url_filter: str, only_subscribable_urls: bool, create_subscriptions: bool) -> None:
     log.init(path, True)
-    curl --globoff -X GET -L "https://danbooru.donmai.us/artists.json?search[is_banned]=true&search[order]=updated_at&limit=1000&only=id,name,group_name,other_names,is_banned,is_deleted,created_at,updated_at,tag,urls"
-"""
+    db.init(path)
+
+    page = 0
+    artist_data = []
+    while True:
+        log.info("hydownloader-tools", f"Querying banned artist data from danbooru (page: {page})...")
+        page = page + 1
+        timestamp = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+        resp = requests.get(f'https://danbooru.donmai.us/artists.json?search[is_banned]=true&search[order]=updated_at&page={page}&limit=1000&only=id,name,group_name,other_names,is_banned,is_deleted,created_at,updated_at,tag,urls')
+        if resp.status_code != 200:
+            log.error("hydownloader-tools", f"Error {resp.status_code} while getting list of banned artists from danbooru")
+            break
+        outfname = db.get_rootpath()+f"/logs/danbooru-banned-artists-page{page}-{timestamp}.json"
+        outfile = open(outfname, "w", encoding='utf-8')
+        outfile.write(resp.text)
+        log.info("hydownloader-tools", f"Danbooru banned artist raw API response written to: {outfname}")
+        arr = json.loads(resp.text)
+        artist_data.extend(arr)
+        if not arr: break
+
+    if after: after_datetime = dateutil.parser.parse(after, fuzzy=True)
+    filtered_artists_urls = []
+    if create_subscriptions:
+        all_subs = db.get_subs_by_range()
+        sub_datas = set()
+        for sub in all_subs:
+            sub_datas.add((sub['downloader'],sub['keywords'],sub['comment']))
+    for artist in artist_data:
+        if after:
+            created_datetime = dateutil.parser.parse(artist['updated_at'], fuzzy=True)
+            if datetime.datetime.timestamp(created_datetime) < datetime.datetime.timestamp(after_datetime):
+                continue
+        artist_urls = []
+        for urlobj in artist['urls']:
+            if re.match(url_filter, urlobj['url']):
+                url_data = (urlobj['url'], *urls.subscription_data_from_url(urlobj['url']))
+                if only_subscribable_urls and not url_data[1] and not url_data[2]:
+                    continue
+                if create_subscriptions and (url_data[1] or url_data[2]):
+                    sub_data = (url_data[1], url_data[2], f"automatically created danbooru banned artist sub for artist {artist['tag']['name']}")
+                    if sub_data in sub_datas:
+                        continue
+                    else:
+                        sub_datas.add(sub_data)
+                        db.add_or_update_subscriptions([{'downloader':sub_data[0], 'keywords':sub_data[1], 'paused': True, 'comment': sub_data[2], 'additional_data': json.dumps(artist), 'check_interval': 2*86400}])
+                artist_urls.append(url_data)
+        if artist_urls:
+            filtered_artists_urls.append((artist, artist_urls))
+    final_rows = [['artist_id', 'artist_name', 'artist_tag', 'artist_tag_id', 'is_deleted', 'is_banned', 'other_names', 'url', 'domain', 'downloader', 'keywords']]
+    for d in filtered_artists_urls:
+        row_base = [
+            d[0]['id'],
+            d[0]['name'],
+            d[0]['tag']['name'],
+            d[0]['tag']['id'],
+            d[0]['is_deleted'],
+            d[0]['is_banned'],
+            '\x1F'.join(d[0]['other_names']) #ASCII unit separator
+        ]
+        for url_data in d[1]:
+            row = row_base[:]
+            domain = ''
+            row.append(url_data[0])
+            try:
+                domain = urllib.parse.urlparse(url_data[0]).netloc
+                if domain.startswith('www.'):
+                    domain = domain[4:]
+            except:
+                pass
+            row.append(domain)
+            row.append(url_data[1])
+            row.append(url_data[2])
+            final_rows.append(row)
+    csv_fname = db.get_rootpath()+f"/logs/danbooru-banned-artists-{timestamp}.csv"
+    with open(csv_fname, "w", encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile)
+        for row in final_rows:
+            writer.writerow(row)
+    log.info("hydownloader-tools", f"Danbooru banned artist data written to file: {csv_fname}")
 
 @cli.command(help='Force a reparsing of all logfiles.')
 @click.option('--path', type=str, required=True, help='Database path.')
