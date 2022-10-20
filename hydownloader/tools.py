@@ -651,7 +651,7 @@ def download_pixiv_user_profiles(path: str, cookies: str, user_agent: str):
 @cli.command(help='Query information about banned artists on danbooru.')
 @click.option('--path', type=str, required=True, help='Database path.')
 @click.option('--after', type=str, default="", required=False, help='Only process entries updated after this datetime (it will recognize any common datetime string format, but ISO-8601 is recommended).')
-@click.option('--url-filter', type=str, required=False, default=".*", help='Only process entries that have any URLs matching this regex.')
+@click.option('--url-filter', type=str, required=False, default=[".*"], multiple=True, help='Only process entries that have any URLs matching this regex. You can pass this argument multiple times and the first matching one will be used (this is for establishing priorities: "use site A, but if there is no such URL, use site B, etc.")')
 @click.option('--only-subscribable-urls', type=bool, required=False, default=False, is_flag=True, help='Only add URLs to the result that are recognized as subscribable by hydownloader.')
 @click.option('--create-subscriptions', type=bool, required=False, default=False, is_flag=True, help='Automatically create subscriptions for recognized URLs (these will start paused and the comment field will indicate their origin, duplicate subscriptions will be skipped).')
 def danbooru_banned_artists(path: str, after: str, url_filter: str, only_subscribable_urls: bool, create_subscriptions: bool) -> None:
@@ -689,8 +689,17 @@ def danbooru_banned_artists(path: str, after: str, url_filter: str, only_subscri
             if datetime.datetime.timestamp(created_datetime) < datetime.datetime.timestamp(after_datetime):
                 continue
         artist_urls = []
+        first_matching_filter = None
         for urlobj in artist['urls']:
-            if re.match(url_filter, urlobj['url']):
+            for filt in url_filter:
+                if re.match(filt, urlobj['url']):
+                    first_matching_filter = filt
+                    break
+            if first_matching_filter is not None: break
+        if first_matching_filter is None:
+            continue
+        for urlobj in artist['urls']:
+            if re.match(first_matching_filter, urlobj['url']):
                 url_data = (urlobj['url'], *urls.subscription_data_from_url(urlobj['url']))
                 if only_subscribable_urls and not url_data[1] and not url_data[2]:
                     continue
