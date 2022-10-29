@@ -129,7 +129,7 @@ graph = ["objgraph (>=1.7.2)"]
 
 [[package]]
 name = "gallery-dl"
-version = "1.23.3"
+version = "1.23.4"
 description = "Command-line program to download image galleries and collections from several image hosting sites"
 category = "main"
 optional = false
@@ -390,7 +390,7 @@ websockets = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "3a9ba549fd24e8ff48f22a15a1364febae5cad2b14959b864e1bf6c902f3139c"
+content-hash = "fc7f393ee32f34ab4e88540f2f7b07d5f50c309f4d1e8e683d974e7848e0e4e8"
 
 [metadata.files]
 astroid = []

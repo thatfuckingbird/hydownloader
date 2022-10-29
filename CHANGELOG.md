@@ -1,3 +1,7 @@
+# 0.27.0 (2022-10-29)
+
+* Updated gallery-dl to 1.23.4
+
 # 0.26.0 (2022-10-21)
 
 * Updated gallery-dl to 1.23.3
